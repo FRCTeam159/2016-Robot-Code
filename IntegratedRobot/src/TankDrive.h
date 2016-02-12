@@ -7,10 +7,9 @@
 
 #ifndef SRC_TANKDRIVE_H_
 #define SRC_TANKDRIVE_H_
-class CANTalon;
+#include "WPILib.h"
 class SRXSlave;
-class Joystick;
-class TankDrive {
+class TankDrive: public PIDOutput {
 private:
 	int config=0;
 	CANTalon *leftMotor, *rightMotor;
@@ -26,7 +25,10 @@ public:
 	void ConfigTeleop(float, float, float);
 	bool CloseEnough(float);
 	void Obey();
+	void PIDWrite(float output);
+	void ConfigForPID();
 	virtual ~TankDrive();
+	float previousPID=0;
 };
 
 #endif /* SRC_TANKDRIVE_H_ */

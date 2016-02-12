@@ -23,6 +23,7 @@ Target::Target(USBCamera* a){
 
 Target::~Target() {
 	// TODO Auto-generated destructor stub
+	m_pidSource=PIDSourceType::kDisplacement;
 }
 
 void Target::AcquireImage()
@@ -101,13 +102,13 @@ void Target::ScoreParticles()
 	}
 }
 
-Particle Target::GetBestParticle()
+Particle* Target::GetBestParticle()
 {
 	PostThresholdProcessing();
 	InitAndSortArrays();
 	ScoreParticles();
 
-	int bestScoreId=sortMe[0].id;
+	bestScoreId=sortMe[0].id;
 	double holder;
 	if(particleCount>0){
 		for(int index=1; index<particleCount+1;index++){
@@ -118,13 +119,22 @@ Particle Target::GetBestParticle()
 		double pain;
 		imaqMeasureParticle(filteredFrame, bestScoreId,0, IMAQ_MT_CENTER_OF_MASS_X, &(pain));
 		allParticles[bestScoreId].CenterX=pain;
-		return(allParticles[bestScoreId]);
+		std::cout<<"best score is "<<allParticles[bestScoreId].finalScore<<std::endl;
+		if(allParticles[bestScoreId].finalScore>76)
+		{
+			return(&allParticles[bestScoreId]);
+		}
+		else
+		{
+			allParticles[bestScoreId].CenterX=1234;
+			return(&allParticles[bestScoreId]);
+		}
 	}
 	else{
 		std::cout<<"No Particles!";
 		Particle err;
 		err.finalScore=0;
-		return(err);
+		return(&err);
 	}
 
 }
@@ -134,13 +144,13 @@ void Target::CreateDebugImage()
 	imaqDuplicate(debugFrame, frame);
 }
 
-void Target::AnnotateDebugImage(Particle best)
+void Target::AnnotateDebugImage(Particle* best)
 {
 	Rect box;
-	box.top=best.GetBoundingRectTop();
-	box.left=best.GetBoundingRectLeft();
-	box.height=abs(best.GetBoundingRectBottom()-box.top);
-	box.width=abs(best.GetBoundingRectRight()-box.left);
+	box.top=best->GetBoundingRectTop();
+	box.left=best->GetBoundingRectLeft();
+	box.height=abs(best->GetBoundingRectBottom()-box.top);
+	box.width=abs(best->GetBoundingRectRight()-box.left);
 	imaqDrawShapeOnImage(debugFrame, debugFrame, box, DrawMode::IMAQ_DRAW_VALUE, ShapeMode::IMAQ_SHAPE_RECT, 5000.8f);
 }
 
@@ -151,6 +161,15 @@ void Target::SendDebugImage()
 
 float Target::calculateTargetOffset(float range)
 {
-	float offsetPixels=(CAMERA_OFFSET/(2*range*.5))*SCREEN_WIDTH;// .5 is a placeholder for the sine of half the horizontal view angle
+	float offsetPixels=(CAMERA_OFFSET/(2*range*.39))*SCREEN_WIDTH;// .39 is a placeholder for the sine of half the horizontal view angle
 	return(offsetPixels);
+}
+
+double Target::PIDGet()
+{
+	return(allParticles[bestScoreId].CenterX-160);
+}
+void Target::SetPIDSourceType(PIDSourceType type)
+{
+	m_pidSource=type;
 }

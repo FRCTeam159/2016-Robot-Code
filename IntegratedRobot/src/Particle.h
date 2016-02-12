@@ -23,7 +23,7 @@ private:
 	double holeRatio;
 public:
 	double finalScore;
-	double CenterX;
+	double CenterX=160;
 
 	double DetermineScore(double, double);
 	double AreaOverBoundingArea();

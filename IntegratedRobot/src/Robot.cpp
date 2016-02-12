@@ -199,7 +199,7 @@ private:
 		}
 		if(state==ProcessTargetImage)
 		{
-			int currentOffset=(horizontal->GetBestParticle()).CenterX-160;
+			int currentOffset=(horizontal->GetBestParticle())->CenterX-160;
 			float targetOffset=horizontal->calculateTargetOffset(range);
 			currentOffset=(currentOffset/320)*range;//convert pixels to centimeters
 			targetOffset=(targetOffset/320)*range;

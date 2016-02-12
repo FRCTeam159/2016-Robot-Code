@@ -133,3 +133,16 @@ bool TankDrive::CloseEnough(float tolerance)
 	bool rightGood=(currentRight>rightTarget-tolerance&&currentRight<rightTarget+tolerance);
 	return(leftGood&&rightGood);
 }
+
+void TankDrive::PIDWrite(float output)
+{
+	leftTarget=output*-1;
+	rightTarget=output;
+	previousPID=output;
+}
+
+void TankDrive::ConfigForPID()
+{
+	leftMotor->SetControlMode(CANTalon::kPercentVbus);
+	rightMotor->SetControlMode(CANTalon::kPercentVbus);
+}
