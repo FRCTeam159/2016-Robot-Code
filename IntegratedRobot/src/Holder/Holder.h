@@ -9,7 +9,7 @@
 #define SRC_HOLDER_H_
 #define CANTALON_PUSHER
 #define CANTALON_GATE
-#define GATEMOTOR_GR 26.9
+#define GATEMOTOR_GR 71
 #define GATEMOTOR_ET 7
 #include <WPILib.h>
 enum {

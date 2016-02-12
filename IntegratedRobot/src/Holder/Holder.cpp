@@ -8,9 +8,13 @@
 #include <Holder/Holder.h>
 #define GATEMOTORSPEED 0.1
 #define PUSHERMOTORSPEED 0.1
-#define BALLDETECTIONDELAY 3
+#define BALLDETECTIONDELAY 1
 #define SENSORTRIPPED 0
-
+#define FORWARDLIMITPOSITION (gateTicksPerRevolution/4)
+#define MAXERRORTICKS 100
+#define P 0.001
+#define I 0
+#define D 0
 
 Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
 : gateMotor(mtr1), pushMotor(mtr2),revGateLimit(ls1),fwdGateLimit(ls2),IRsensor(IR){
@@ -25,7 +29,7 @@ Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
 	//gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SoftPositionLimits);
 	//gateMotor.Enable();
 	//gateMotor.SetPosition(0);
-	gateMotor.ConfigSoftPositionLimits(gateTicksPerRevolution/4,0);
+	gateMotor.ConfigSoftPositionLimits(0,gateTicksPerRevolution/4);
 	//gateMotor.SetInverted(true);
 	gateMotor.SetFeedbackDevice(CANTalon::QuadEncoder);
 #endif
@@ -48,6 +52,7 @@ void Holder::Init(){
 	atForwardLimit=false;
 	atReverseLimit=false;
 	gateMotor.SetControlMode(CANSpeedController::kPercentVbus);
+	gateMotor.ConfigNeutralMode(CANSpeedController::NeutralMode::kNeutralMode_Brake);
 	gateMotor.Enable();
 	gateMotor.Set(-GATEMOTORSPEED);
 	printf("Holder Init, Motor:%d, Motor Inverted:%d\n",
@@ -59,16 +64,16 @@ void Holder::Init(){
 //- call from teleop periodic
 //===========================================
 void Holder::FindZero(){
-	bool atTarget=isAtReverseLimit();
+	bool atTarget=gateMotor.IsRevLimitSwitchClosed();
 	printf("looking for zero\n");
 	if(atTarget && !atReverseLimit){
 		printf("atTarget:%d\n",atTarget);
 		gateMotor.Set(0);
-		//gateMotor.SetControlMode(CANSpeedController::kPosition);
-		//gateMotor.Enable();
-		//gateMotor.SetPosition(0);
-		//gateMotor.Set(0);
-		//gateMotor.SetPID(0.1, 0.001, 3);
+		gateMotor.SetControlMode(CANSpeedController::kPosition);
+		gateMotor.ConfigSoftPositionLimits(gateTicksPerRevolution/4,0);
+		gateMotor.SetPosition(0);
+		gateMotor.Set(0);
+		gateMotor.SetPID(P,I,D);
 		atReverseLimit=true;
 		state=WAIT_FOR_BALL_TO_ENTER;
 	}
@@ -140,11 +145,13 @@ void Holder::TeleopPeriodic(){
 
 void Holder::WaitForBallToEnter(){
 	int ballDetected = IRsensor.Get();
+	printf("waiting for ball detection\n");
 	if(ballDetected == SENSORTRIPPED){
 		printf("WAIT_FOR_BALL_TO_ENTER ball is detected, going to forward limit\n");
 		gateMotor.Set(0);
-		Wait(ballDetectionDelay);
-		gateMotor.Set(GATEMOTORSPEED);
+		//Wait(ballDetectionDelay);
+		//gateMotor.Set(GATEMOTORSPEED);
+		gateMotor.Set(FORWARDLIMITPOSITION);
 		state=GO_TO_FORWARD_LIMIT;
 	}
 }
@@ -153,10 +160,13 @@ void Holder::WaitForBallToLeave(){
 	int ballDetected = IRsensor.Get();
 	if(ballDetected != SENSORTRIPPED){
 		printf("WAIT_FOR_BALL_TO_LEAVE ball is not detected, going to reverse limit\n");
-		gateMotor.Set(0);
-		Wait(ballDetectionDelay);
+		//gateMotor.Set(0);
+		//Wait(ballDetectionDelay);
+		gateMotor.SetPID(P,I,D);
 		state=GO_TO_REVERSE_LIMIT;
-		gateMotor.Set(-GATEMOTORSPEED);
+		//gateMotor.SetPosition(FORWARDLIMITPOSITION);
+		//gateMotor.Set(-GATEMOTORSPEED);
+		gateMotor.Set(0);
 	}
 }
 
@@ -165,7 +175,10 @@ void Holder::SetGateToForwardLimit(){
 	if(atTarget){
 		printf("GO_TO_FORWARD_LIMIT at forward limit, waiting for ball to leave\n");
 		state=WAIT_FOR_BALL_TO_LEAVE;
-		gateMotor.Set(0);
+		//gateMotor.Set(0);
+		//gateMotor.Disable();
+		gateMotor.SetPID(0,0,0);
+		//gateMotor.ClearIaccum();
 	}
 }
 
@@ -179,11 +192,28 @@ void Holder::SetGateToReverseLimit(){
 }
 
 bool Holder::isAtReverseLimit(){
-	return gateMotor.IsRevLimitSwitchClosed();
+	bool motionEnabled = gateMotor.GetReverseLimitOK();
+	int position = gateMotor.GetEncPosition();
+	printf("position:%d motionEnabled:%d\n",position,motionEnabled);
+	double error = position-0;
+//	printf("rev position:%d rev error:%g real position:%g\n",
+	//		position,error,gateMotor.Get());
+	if(motionEnabled)
+		return false;
+	else
+		return true;
 }
 
 bool Holder::isAtForwardLimit(){
-	return gateMotor.IsFwdLimitSwitchClosed();
+	bool motionEnabled = gateMotor.GetForwardLimitOK();
+	int position = gateMotor.GetEncPosition();
+	printf("position:%d motionEnabled:%d\n",position,motionEnabled);
+	double error = position-FORWARDLIMITPOSITION;
+	//printf("fwd position:%d fwd error:%g\n",position,error);
+	if(motionEnabled == true)
+		return false;
+	else
+		return true;
 }
 
 
