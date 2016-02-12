@@ -11,7 +11,9 @@
 #include <Shooter.h>
 #include <TankDrive.h>
 #include <Target.h>
+#include <AngleAccelerometer.h>
 #define TICKS_PER_CM 500
+#define NO_TARGET 1234
 class Robot: public IterativeRobot
 {
 private:
@@ -31,13 +33,14 @@ private:
 	CANTalon *leftDrive, *rightDrive;
 	SRXSlave *leftSlave, *rightSlave;
 	TankDrive *mydrive;
-	SRXPosition *shooterAngleMotor;
-	AngleAdjuster *shooterAngle;
-
+	CANTalon *shooterAngleMotor;
+	AngleAccelerometer *shooterAngle;
 	Lidar *lidar;
 
 	SRXSpeed *flyWheelOne, *flyWheelTwo;
 	Launcher *mylauncher;
+	PIDController *vertAnglePID;
+
 	void RobotInit()
 	{
 		chooser = new SendableChooser();
@@ -61,9 +64,10 @@ private:
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
 		flyWheelOne= new SRXSpeed(5,0,0,0,1);//zeros are PID, 1 is maxticks
 		flyWheelTwo= new SRXSpeed(6,0,0,0,1);
-		shooterAngleMotor = new SRXPosition(4,0,0,0,true);//The zeros are PID. Tune the constants
-		shooterAngle = new AngleAdjuster(shooterAngleMotor, 1);//int is ticks/degree
-		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, shooterAngle);
+		shooterAngleMotor = new CANTalon(7);
+		shooterAngle = new AngleAccelerometer();
+		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);
+		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, shooterAngle, vertAnglePID);
 		lidar = new Lidar(I2C::kMXP, 0x62);
 		stick= new Joystick(0);
 
@@ -168,17 +172,18 @@ private:
 		if(state==StartCalibrations)
 		{
 			firstCalibration=true;
-			mydrive->ConfigAuto(0,0,0);//INPUT CONSTANTS TODO
+			mydrive->ConfigForPID();//INPUT CONSTANTS TODO
+			vertAnglePID->Enable();
 		}
 		if(state==GetRangeFromLIDAR)
 		{
 			range = lidar->GetDistance();
-			float angle=shooterAngle->GetCurrentAngle();
-			range=range*cos(angle);
+			float angle=shooterAngle->PIDGet();
+			range=range*cos(angle*3.14/180);
 			//calculate the required angle from the range here TODO
 			//calculate the required flywheel speed here
 			mylauncher->SetTargetSpeed(1);//in ticks/sec
-			mylauncher->SetAngle(1);//target angle in degrees
+			mylauncher->SetAngle(20);//target angle in degrees
 			state=AcquireTargetImage;
 		}
 		if(state==AcquireTargetImage)
@@ -210,7 +215,7 @@ private:
 		}
 		if(state==WaitForCalibrations)
 		{
-			shooterAngle->CloseEnough(400);//use this
+			mylauncher->AngleGood(2);//use this
 			mylauncher->SpeedGood(200);//use this too
 			if(true)//check to see if motors are close enough to target positions TODO
 			{
