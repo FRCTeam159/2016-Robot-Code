@@ -12,13 +12,22 @@
 #define GATEMOTOR_GR 26.9
 #define GATEMOTOR_ET 7
 #include <WPILib.h>
+enum {
+	FIND_ZERO,
+	WAIT_FOR_BALL_TO_ENTER,
+	GO_TO_FORWARD_LIMIT,
+	WAIT_FOR_BALL_TO_LEAVE,
+	GO_TO_REVERSE_LIMIT
+};
 
 
 class Holder {
 	double gateTicksPerRevolution;
 	DigitalInput IRsensor;
-	bool isAtReverseLimit;
-	bool isAtForwardLimit;
+	bool atReverseLimit;
+	bool atForwardLimit;
+	int state;
+	double ballDetectionDelay;
 #ifdef CANTALON_PUSHER
 	CANTalon pushMotor;
 #else
@@ -27,12 +36,12 @@ class Holder {
 
 #ifdef CANTALON_GATE
 	CANTalon gateMotor;
-	int readyToFire;
-	int readyToLoad;
+	int revGateLimit;
+	int fwdGateLimit;
 #else
 	Victor gateMotor;
-	DigitalInput readyToFire;
-	DigitalInput readyToLoad;
+	DigitalInput revGateLimit;
+	DigitalInput fwdGateLimit;
 #endif
 
 
@@ -44,9 +53,21 @@ class Holder {
 	void FindZero();
 public:
 	Holder(int mtr1,int mtr2,int ls1, int ls2,int IR);
+	bool isAtReverseLimit();
+	bool isAtForwardLimit();
 	void AutoHold();
 	bool IsLoaded();
+	void WaitForBallToEnter();
+	void WaitForBallToLeave();
+	void SetGateToForwardLimit();
+	void SetGateToReverseLimit();
 	void Init();
+	void Test();
+	void TestInit();
+	void TeleopInit();
+	void Disable();
+	void TestPeriodic();
+	void TeleopPeriodic();
 };
 
 #endif /* SRC_HOLDER_H_ */

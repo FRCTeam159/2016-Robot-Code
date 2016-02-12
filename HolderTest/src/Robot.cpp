@@ -2,9 +2,9 @@
 #include "Holder/Holder.h"
 #define GATEMOTOR 1
 #define PUSHERMOTOR 2
-#define RDYTOFIRE 1
-#define RDYTOLOAD 2
-#define IRSENSOR 3
+#define REVGATELIMIT 1
+#define FWDGATELIMIT 2
+#define IRSENSOR 0
 
 class Robot: public IterativeRobot
 {
@@ -16,13 +16,14 @@ private:
 	std::string autoSelected;
 	Holder *holder;
 
+
 	void RobotInit()
 	{
 		chooser = new SendableChooser();
 		chooser->AddDefault(autoNameDefault, (void*)&autoNameDefault);
 		chooser->AddObject(autoNameCustom, (void*)&autoNameCustom);
 		SmartDashboard::PutData("Auto Modes", chooser);
-		holder=new Holder(GATEMOTOR,PUSHERMOTOR,RDYTOLOAD,RDYTOFIRE,IRSENSOR);
+		holder=new Holder(GATEMOTOR,PUSHERMOTOR,REVGATELIMIT,FWDGATELIMIT,IRSENSOR);
 	}
 
 
@@ -59,17 +60,35 @@ private:
 
 	void TeleopInit()
 	{
-
+		holder->TeleopInit();
 	}
 
 	void TeleopPeriodic()
 	{
+		holder->TeleopPeriodic();
+	}
 
+	void TestInit()
+	{
+		//lw->SetEnabled(false);
+		//holder->TestInit();
+		//Scheduler::GetInstance()->SetEnabled(true);
+//		printf("TestInit\n");
+//		Wait(0.2);
 	}
 
 	void TestPeriodic()
 	{
+		//bool isEnabled = false;
 		lw->Run();
+		//holder->TestPeriodic();
+		//printf("TestPeriodic\n");
+
+	}
+
+	void DisabledPeriodic()
+	{
+		//holder->Disable();
 	}
 };
 
