@@ -119,7 +119,16 @@ Particle* Target::GetBestParticle()
 		double pain;
 		imaqMeasureParticle(filteredFrame, bestScoreId,0, IMAQ_MT_CENTER_OF_MASS_X, &(pain));
 		allParticles[bestScoreId].CenterX=pain;
-		return(&allParticles[bestScoreId]);
+		std::cout<<"best score is "<<allParticles[bestScoreId].finalScore<<std::endl;
+		if(allParticles[bestScoreId].finalScore>76)
+		{
+			return(&allParticles[bestScoreId]);
+		}
+		else
+		{
+			allParticles[bestScoreId].CenterX=1234;
+			return(&allParticles[bestScoreId]);
+		}
 	}
 	else{
 		std::cout<<"No Particles!";

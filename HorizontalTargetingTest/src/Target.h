@@ -25,7 +25,7 @@ private:
 	Particle allParticles[MAX_PARTICLES];
 
 	Range Hue_Range= {0, 255};
-	Range Sat_Range={0, 255};
+	Range Sat_Range={230, 255};
 	Range Val_Range={180, 255};
 	ParticleFilterCriteria2 criteria={IMAQ_MT_AREA_BY_IMAGE_AREA, 0, .3, false, true};
 	ParticleFilterOptions2 filterOptions = {0,0,0,1};

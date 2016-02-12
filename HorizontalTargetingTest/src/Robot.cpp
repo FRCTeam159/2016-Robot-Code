@@ -5,6 +5,7 @@
 #include "AngleAccelerometer.h"
 #include "TankDrive.h"
 #include "SRXSlave.h"
+#define NO_TARGET 1234
 class Robot: public IterativeRobot
 {
 private:
@@ -120,14 +121,19 @@ private:
 		if(state==3)
 		{
 			myTarget->CreateDebugImage();
-			myTarget->SendDebugImage();
 			state=4;
 		}
 		if(state==4)
 		{
 			Particle *best=myTarget->GetBestParticle();
 			float currentOffset=best->CenterX-160;
-			drivepid->SetSetpoint(0);
+			if(currentOffset==NO_TARGET-160)
+			{
+				drivepid->SetSetpoint(currentOffset);
+			}
+			else{
+				drivepid->SetSetpoint(0);
+			}
 			std::cout<<"error in pixels = "<<currentOffset<<std::endl;
 			float targetOffset=myTarget->calculateTargetOffset(hRange);
 			currentOffset=(currentOffset/320)*2*hRange*.39;//convert pixels to centimeters
@@ -137,6 +143,12 @@ private:
 			std::cout<<"current offset = "<<COdeg<<"target offset = "<<TOdeg<<std::endl;
 			double horizError=atan(currentOffset/hRange)-atan(targetOffset/hRange);//get how many radians off we are
 			std::cout<<"error (radians) = "<<horizError<<std::endl;
+			state=5;
+		}
+		if(state==5)
+		{
+			myTarget->AnnotateDebugImage(myTarget->GetBestParticle());
+			myTarget->SendDebugImage();
 			state=0;
 		}
 
