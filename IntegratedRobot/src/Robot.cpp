@@ -259,11 +259,15 @@ private:
 #if HORIZONTAL_TARGETING == 1
 			if(best->CenterX!=1234)//1234 is error
 			{
+				if(!drivePID->IsEnabled())
+				{
+					drivePID->Enable();
+				}
 				drivePID->SetSetpoint(targetOffset);
 			}
 			else
 			{
-				drivePID->SetSetpoint(best->CenterX-160);
+				drivePID->Disable();
 			}
 #endif
 			state=WaitForCalibrations;
@@ -272,7 +276,7 @@ private:
 		{
 			bool good = mylauncher->AngleGood(2);//use this
 			good = good && mylauncher->SpeedGood(200);//use this too
-			good = good && drivePID->GetError()<3;//this is also handy
+			good = good && drivePID->GetError()<3 && drivePID->IsEnabled();//this is also handy
 			if(good)//check to see if motors are close enough to target positions TODO
 			{
 				if(firstCalibration)
