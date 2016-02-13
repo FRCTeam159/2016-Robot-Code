@@ -22,6 +22,7 @@ public:
 	void Obey();
 	bool AngleGood(float);
 	bool SpeedGood(float);
+	void Aim(float);
 	virtual ~Launcher();
 };
 
