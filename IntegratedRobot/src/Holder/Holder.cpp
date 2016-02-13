@@ -15,7 +15,7 @@
 #define FORWARDLIMITPOSITION (gateTicksPerRevolution/4)
 #define MAXERRORTICKS 100
 #define ENCMULT 1988
-#define PUSHMOTORSPEED 20
+#define PUSHMOTORSPEED .5
 #define P 0.1
 #define I 0
 #define D 0
@@ -63,7 +63,7 @@ void Holder::Init(){
 #endif
 
 #ifdef CANTALON_PUSHER
-	pushMotor.SetControlMode(CANSpeedController::kSpeed);
+	pushMotor.SetControlMode(CANSpeedController::kPercentVbus);
 	pushMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SrxDisableSwitchInputs);
 #endif
 }

@@ -63,15 +63,15 @@ private:
 		reverseCamera->StartCapture();
 
 		horizontal = new Target(forwardCamera);
-		leftDrive= new CANTalon(0);
-		rightDrive = new CANTalon(1);
-		leftSlave = new SRXSlave(2,0);
-		rightSlave = new SRXSlave(3,1);
+		leftDrive= new CANTalon(CAN_LEFT_DRIVE);
+		rightDrive = new CANTalon(CAN_RIGHT_DRIVE);
+		leftSlave = new SRXSlave(CAN_LEFT_SLAVE,CAN_LEFT_DRIVE);
+		rightSlave = new SRXSlave(CAN_RIGHT_SLAVE,CAN_RIGHT_DRIVE);
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
 		drivePID= new PIDController(0,0,0, horizontal, mydrive);//TODO
-		flyWheelOne= new SRXSpeed(5,0,0,0,1);//zeros are PID, 1 is maxticks
-		flyWheelTwo= new SRXSpeed(6,0,0,0,1);
-		shooterAngleMotor = new CANTalon(7);
+		flyWheelOne= new SRXSpeed(CAN_FLYWHEEL_L,0,0,0,1);//zeros are PID, 1 is maxticks
+		flyWheelTwo= new SRXSpeed(CAN_FLYWHEEL_R,0,0,0,1);
+		shooterAngleMotor = new CANTalon(CAN_SHOOT_ANGLE);
 		shooterAngle = new AngleAccelerometer();
 		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
 		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, vertAnglePID);
@@ -79,8 +79,6 @@ private:
 		stick= new Joystick(0);
 		holder = new Holder(HOLDER_GATE,HOLDER_PUSHER,REVGATELIMIT,FWDGATELIMIT,IRSENSOR);
 		sendMe=imaqCreateImage(IMAQ_IMAGE_HSL, 0);
-
-		test =  new PWM(0);
 
 	}
 
