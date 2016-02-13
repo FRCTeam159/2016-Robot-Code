@@ -55,6 +55,7 @@ void Launcher::Aim(float range)//takes horizontal range, in meters
 	float V0= sqrt(pow(Vh0,2)+pow(Vv0, 2));
 	float r=.058;
 	float Iwheel=19.42;
-	float targetSpeed= r*V0*sqrt(1+(.295/Iwheel));
+	float targetSpeed= r*V0*sqrt(1+(.295/Iwheel));//target speed in m
+	targetSpeed*=7500;//convert from meters to ticks
 	SetTargetSpeed(targetSpeed);
 }
