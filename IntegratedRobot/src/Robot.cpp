@@ -51,6 +51,7 @@ private:
 		chooser->AddDefault(autoNameDefault, (void*)&autoNameDefault);
 		chooser->AddObject(autoNameCustom, (void*)&autoNameCustom);
 		SmartDashboard::PutData("Auto Modes", chooser);
+
 		forwardCamera= new USBCamera("cam2", true);
 		reverseCamera= new USBCamera("cam3", true);
 
@@ -102,6 +103,7 @@ private:
 			//Custom Auto goes here
 		} else {
 			//Default Auto goes here
+
 		}
 		mydrive->ConfigAuto(0,0,0);
 	}
@@ -112,6 +114,7 @@ private:
 			//Custom Auto goes here
 		} else {
 			//Default Auto goes here
+
 		}
 	}
 
@@ -173,13 +176,15 @@ private:
 		GetRangeFromLIDAR = 9,
 		StartCalibrations = 10,
 		WaitForCalibrations =11,
-		ExitLoop = 12
+		ExitLoop = 12,
+		ShootBall = 13
 	};
 	int visionStateMachine(int state)
 	{
 		static int range;
 		static float horizError;
 		static bool firstCalibration;
+		static Particle *best=NULL;
 		//states 0 and 1 get and send images from the forward camera
 		if (state==GetForwardImage)
 		{
@@ -220,10 +225,7 @@ private:
 			range = lidar->GetDistance();
 			float angle=shooterAngle->PIDGet();
 			range=range*cos(angle*3.14/180);
-			//calculate the required angle from the range here TODO
-			//calculate the required flywheel speed here
-			mylauncher->SetTargetSpeed(1);//in ticks/sec
-			mylauncher->SetAngle(20);//target angle in degrees
+			mylauncher->Aim(range/100);
 			state=AcquireTargetImage;
 		}
 		if(state==AcquireTargetImage)
@@ -245,6 +247,7 @@ private:
 		if(state==ProcessTargetImage)
 		{
 			float targetOffset=horizontal->calculateTargetOffset(range);
+			best=horizontal->GetBestParticle();
 #if HORIZONTAL_TARGETING == 0
 			int currentOffset=(horizontal->GetBestParticle())->CenterX-160;
 			currentOffset=(currentOffset/320)*range;//convert pixels to centimeters
@@ -254,7 +257,14 @@ private:
 			mydrive->SetPosTargets(-1*horizError, horizError);//set drive targets
 #endif
 #if HORIZONTAL_TARGETING == 1
-			drivePID->SetSetpoint(targetOffset);
+			if(best->CenterX!=1234)//1234 is error
+			{
+				drivePID->SetSetpoint(targetOffset);
+			}
+			else
+			{
+				drivePID->SetSetpoint(best->CenterX-160);
+			}
 #endif
 			state=WaitForCalibrations;
 		}
@@ -273,28 +283,35 @@ private:
 
 				else
 				{
+					horizontal->AnnotateDebugImage(best);
+					horizontal->SendDebugImage();
 					state=RequestConfirmation;
 				}
 
 			}
 			else
 			{
-				state=WaitForCalibrations;
+				state=AcquireTargetImage;
+
 			}
 
 		}
 		if(state==RequestConfirmation)// waits for operator confirmation
 		{
-			if(stick->GetRawButton(3))//operator rejects image
+
+			if(stick->GetRawButton(2))//operator rejects image
 			{
-				state=0;
+				state=GetForwardImage;
 			}
-			if(stick->GetRawButton(4))//operator accepts imae
+			if(stick->GetRawButton(1))//operator accepts imae
 			{
-				state=9;
+				state=ShootBall;
 			}
 		}
-
+		if(state==ShootBall)
+		{
+			//holder->PushBall();
+		}
 		if(state==ExitLoop)
 		{
 			state=GetForwardImage;
