@@ -65,7 +65,6 @@ void Holder::Init(){
 #ifdef CANTALON_PUSHER
 	pushMotor.SetControlMode(CANSpeedController::kSpeed);
 	pushMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SrxDisableSwitchInputs);
-
 #endif
 }
 //===========================================
@@ -117,6 +116,10 @@ void Holder::PushBall(){
 	pushRequested = true;
 	pushComplete = false;
 }
+bool Holder::CheckPushed(){
+	return pushComplete;
+}
+
 bool Holder::IsLoaded(){
 	return IRsensor.Get();
 }
@@ -147,6 +150,17 @@ void Holder::TeleopPeriodic(){
 	AutoHold();
 }
 
+//===========================================
+//void Holder::WaitForBallToEnter
+//===========================================
+//- This State machine state : WAIT_FOR_BALL_TO_ENTER
+//- Caller state machine state: GO_TO_REVERSE_LIMIT
+//  or FIND_ZERO
+//- Assumes gate is at reverse limit
+//- Waits for IR sensor to detect ball
+//- when ball is detected move gate to forward limit
+//  and push ball into pusher wheel (push motor is off)
+//===========================================
 void Holder::WaitForBallToEnter(){
 	int ballDetected = IRsensor.Get();
 	if(ballDetected == SENSORTRIPPED){
@@ -161,7 +175,16 @@ void Holder::WaitForBallToEnter(){
 		state=GO_TO_FORWARD_LIMIT;
 	}
 }
-
+//===========================================
+//void Holder::SetGateToForwardLimit
+//===========================================
+//- This State machine state : GO_TO_FORWARD_LIMIT
+//- Caller state machine state: WAIT_FOR_BALL_TO_ENTER
+//- Calls
+//- Waits for IR sensor to detect ball
+//- when ball is detected move gate to forward limit
+//  and push ball into pusher wheel (push motor is off)
+//===========================================
 void Holder::SetGateToForwardLimit(){
 	bool atTarget = isAtForwardLimit();
 	if(atTarget){
@@ -241,9 +264,6 @@ void Holder::SetPushMotorSpeed(double speed){
 #endif
 }
 
-bool Holder::CheckPushed(){
-	return pushComplete;
-}
 
 int Holder::deltaTime(struct timeb* first, struct timeb* after){
 	int diff =after->time-first->time;
