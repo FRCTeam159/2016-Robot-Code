@@ -20,7 +20,7 @@
 #define I 0
 #define D 0
 
-#define PUSH_EMULATION
+//#define PUSH_EMULATION
 
 Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
 : gateMotor(mtr1), pushMotor(mtr2),revGateLimit(ls1),fwdGateLimit(ls2),IRsensor(IR){
@@ -83,7 +83,9 @@ void Holder::FindZero(){
 		gateMotor.Set(0);
 		gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SoftPositionLimits);
 		gateMotor.ConfigSoftPositionLimits(496,0);
-		gateMotor.SetPID(P,I,D);
+		gateMotor.SetP(P);
+		gateMotor.SetI(I);
+		gateMotor.SetD(D);
 		atReverseLimit=true;
 		state=WAIT_FOR_BALL_TO_ENTER;
 	}

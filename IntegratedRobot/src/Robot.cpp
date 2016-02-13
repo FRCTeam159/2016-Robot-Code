@@ -12,6 +12,7 @@
 #include <TankDrive.h>
 #include <Target.h>
 #include <AngleAccelerometer.h>
+#include <Assignments.h>
 
 #define TICKS_PER_CM 500
 #define NO_TARGET 1234
@@ -76,7 +77,7 @@ private:
 		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, vertAnglePID);
 		lidar = new Lidar(I2C::kMXP, 0x62);
 		stick= new Joystick(0);
-
+		holder = new Holder(HOLDER_GATE,HOLDER_PUSHER,REVGATELIMIT,FWDGATELIMIT,IRSENSOR);
 		sendMe=imaqCreateImage(IMAQ_IMAGE_HSL, 0);
 
 		test =  new PWM(0);
@@ -103,7 +104,6 @@ private:
 			//Custom Auto goes here
 		} else {
 			//Default Auto goes here
-
 		}
 		mydrive->ConfigAuto(0,0,0);
 	}
@@ -122,11 +122,13 @@ private:
 	{
 		mydrive->ConfigTeleop(0,0,0);
 		visionState = 0;
+		holder->TeleopInit();
 	}
 
 	void TeleopPeriodic()
 	{
 		visionState = visionStateMachine(visionState);
+		holder->AutoHold();
 		bool button2=stick->GetRawButton(2);
 		if(button2 && !pButton2)
 		{
@@ -187,7 +189,8 @@ private:
 		StartCalibrations = 10,
 		WaitForCalibrations =11,
 		ExitLoop = 12,
-		ShootBall = 13
+		ShootBall = 13,
+		CheckBall = 14
 	};
 	int visionStateMachine(int state)
 	{
@@ -324,7 +327,19 @@ private:
 		}
 		if(state==ShootBall)
 		{
-			//holder->PushBall();
+			holder->PushBall();
+			state=CheckBall;
+		}
+		if(state==CheckBall)
+		{
+			if(holder->CheckPushed())
+			{
+				state=ExitLoop;
+			}
+			else
+			{
+				state=CheckBall;
+			}
 		}
 		if(state==ExitLoop)
 		{

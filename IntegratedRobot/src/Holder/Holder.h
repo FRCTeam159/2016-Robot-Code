@@ -51,7 +51,7 @@ class Holder {
 	DigitalInput revGateLimit;
 	DigitalInput fwdGateLimit;
 #endif
-	void PushBall();
+
 	void LoadBall();
 	void FindZero();
 	void WaitForBallToEnter();
@@ -63,6 +63,7 @@ class Holder {
 	int deltaTime(struct timeb* first, struct timeb* after);
 public:
 	Holder(int mtr1,int mtr2,int ls1, int ls2,int IR);
+	void PushBall();
 	bool isAtReverseLimit();
 	bool isAtForwardLimit();
 	void AutoHold();
