@@ -12,22 +12,30 @@
 #define GATEMOTOR_GR 71
 #define GATEMOTOR_ET 7
 #include <WPILib.h>
+#include <time.h>
+#include <sys/timeb.h>
 enum {
 	FIND_ZERO,
 	WAIT_FOR_BALL_TO_ENTER,
 	GO_TO_FORWARD_LIMIT,
+	WAIT_FOR_PUSH_REQUEST,
 	WAIT_FOR_BALL_TO_LEAVE,
 	GO_TO_REVERSE_LIMIT
 };
 
 
 class Holder {
-	double gateTicksPerRevolution;
 	DigitalInput IRsensor;
+	double gateTicksPerRevolution;
+	double ballDetectionDelay;
+	double pushTimeout;
+	struct timeb start_time;
+	struct timeb end_time;
 	bool atReverseLimit;
 	bool atForwardLimit;
+	bool pushComplete;
+	bool pushRequested;
 	int state;
-	double ballDetectionDelay;
 #ifdef CANTALON_PUSHER
 	CANTalon pushMotor;
 #else
@@ -43,24 +51,22 @@ class Holder {
 	DigitalInput revGateLimit;
 	DigitalInput fwdGateLimit;
 #endif
-
-
-	/* LimitSwitch *open
-	 LimitSwitch *closed */
-	void GrabBall();//TODO
 	void PushBall();
 	void LoadBall();
 	void FindZero();
+	void WaitForBallToEnter();
+	void WaitForBallToLeave();
+	void WaitForPushRequest();
+	void SetGateToForwardLimit();
+	void SetGateToReverseLimit();
+	void SetPushMotorSpeed(double);
+	int deltaTime(struct timeb* first, struct timeb* after);
 public:
 	Holder(int mtr1,int mtr2,int ls1, int ls2,int IR);
 	bool isAtReverseLimit();
 	bool isAtForwardLimit();
 	void AutoHold();
 	bool IsLoaded();
-	void WaitForBallToEnter();
-	void WaitForBallToLeave();
-	void SetGateToForwardLimit();
-	void SetGateToReverseLimit();
 	void Init();
 	void Test();
 	void TestInit();
@@ -68,6 +74,7 @@ public:
 	void Disable();
 	void TestPeriodic();
 	void TeleopPeriodic();
+	bool CheckPushed();
 };
 
 #endif /* SRC_HOLDER_H_ */
