@@ -41,6 +41,7 @@ private:
 	Launcher *mylauncher;
 	PIDController *vertAnglePID;
 
+	bool pButton1=false, pButton2=false;
 	void RobotInit()
 	{
 		chooser = new SendableChooser();
@@ -118,6 +119,33 @@ private:
 	void TeleopPeriodic()
 	{
 		visionState = visionStateMachine(visionState);
+		bool button2=stick->GetRawButton(2);
+		if(button2 && !pButton2)
+		{
+			if(visionState>3)
+			{
+				visionState=ExitLoop;
+			}
+			else if(visionState==GetForwardImage||visionState==SendForwardImage)
+			{
+				visionState=GetReverseImage;
+			}
+			else if(visionState==GetReverseImage||visionState==SendReverseImage)
+			{
+				visionState=GetForwardImage;
+			}
+		}
+		pButton2=button2;
+
+		bool button1=stick->GetRawButton(1);
+		if(visionState<4)
+		{
+			if(button1&&!pButton1)
+			{
+				visionState = StartCalibrations;
+			}
+		}
+		pButton1 = button1;
 		mylauncher->Obey();
 
 	}
@@ -139,7 +167,8 @@ private:
 		RequestConfirmation = 8,
 		GetRangeFromLIDAR = 9,
 		StartCalibrations = 10,
-		WaitForCalibrations =11
+		WaitForCalibrations =11,
+		ExitLoop = 12
 	};
 	int visionStateMachine(int state)
 	{
@@ -249,8 +278,13 @@ private:
 			}
 		}
 
+		if(state==ExitLoop)
+		{
+			state=GetForwardImage;
+			mydrive->ConfigTeleop(0,0,0);//TODO
+			vertAnglePID->Disable();//TODO we need to decide how to zero the shooter when
+		}//							  exiting the loop. Do we stall the exit until shooter is zeroed?
 		return(state);
-		//the rest should be for aiming/shooting
 	}
 };
 
