@@ -154,6 +154,16 @@ private:
 			}
 		}
 		pButton1 = button1;
+
+		if(!vertAnglePID->IsEnabled())
+		{
+			if(true)//change this to !limit switch TODO
+			shooterAngleMotor->Set(-1);
+			else
+			{
+				shooterAngleMotor->Set(0);
+			}
+		}
 		mylauncher->Obey();
 		mydrive->Obey();
 	}
@@ -320,9 +330,10 @@ private:
 		{
 			state=GetForwardImage;
 			drivePID->Disable();
+			mylauncher->SetTargetSpeed(0);
 			mydrive->ConfigTeleop(0,0,0);//TODO
-			vertAnglePID->Disable();//TODO we need to decide how to zero the shooter when
-		}//							  exiting the loop. Do we stall the exit until shooter is zeroed?
+			vertAnglePID->Disable();
+		}
 		return(state);
 	}
 };
