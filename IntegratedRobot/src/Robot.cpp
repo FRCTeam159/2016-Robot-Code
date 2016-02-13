@@ -153,7 +153,6 @@ private:
 		pButton1 = button1;
 		mylauncher->Obey();
 		mydrive->Obey();
-
 	}
 
 	void TestPeriodic()
@@ -261,10 +260,10 @@ private:
 		}
 		if(state==WaitForCalibrations)
 		{
-			mylauncher->AngleGood(2);//use this
-			mylauncher->SpeedGood(200);//use this too
-			drivePID->GetError();//this is also handy
-			if(true)//check to see if motors are close enough to target positions TODO
+			bool good = mylauncher->AngleGood(2);//use this
+			good = good && mylauncher->SpeedGood(200);//use this too
+			good = good && drivePID->GetError()<3;//this is also handy
+			if(good)//check to see if motors are close enough to target positions TODO
 			{
 				if(firstCalibration)
 				{
