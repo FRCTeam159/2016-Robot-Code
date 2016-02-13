@@ -11,7 +11,10 @@
 #include <Shooter.h>
 #include <TankDrive.h>
 #include <Target.h>
+#include <AngleAccelerometer.h>
 #define TICKS_PER_CM 500
+#define NO_TARGET 1234
+#define HORIZONTAL_TARGETING 1//0 is by angle, 1 is by pixel difference and drivePID
 class Robot: public IterativeRobot
 {
 private:
@@ -31,13 +34,15 @@ private:
 	CANTalon *leftDrive, *rightDrive;
 	SRXSlave *leftSlave, *rightSlave;
 	TankDrive *mydrive;
-	SRXPosition *shooterAngleMotor;
-	AngleAdjuster *shooterAngle;
-
+	CANTalon *shooterAngleMotor;
+	AngleAccelerometer *shooterAngle;
 	Lidar *lidar;
 
 	SRXSpeed *flyWheelOne, *flyWheelTwo;
 	Launcher *mylauncher;
+	PIDController *vertAnglePID, *drivePID;
+
+	bool pButton1=false, pButton2=false;
 	void RobotInit()
 	{
 		chooser = new SendableChooser();
@@ -59,17 +64,20 @@ private:
 		leftSlave = new SRXSlave(2,0);
 		rightSlave = new SRXSlave(3,1);
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
+		drivePID= new PIDController(0,0,0, horizontal, mydrive);//TODO
 		flyWheelOne= new SRXSpeed(5,0,0,0,1);//zeros are PID, 1 is maxticks
 		flyWheelTwo= new SRXSpeed(6,0,0,0,1);
-		shooterAngleMotor = new SRXPosition(4,0,0,0,true);//The zeros are PID. Tune the constants
-		shooterAngle = new AngleAdjuster(shooterAngleMotor, 1);//int is ticks/degree
-		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, shooterAngle);
+		shooterAngleMotor = new CANTalon(7);
+		shooterAngle = new AngleAccelerometer();
+		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
+		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, vertAnglePID);
 		lidar = new Lidar(I2C::kMXP, 0x62);
 		stick= new Joystick(0);
 
 		sendMe=imaqCreateImage(IMAQ_IMAGE_HSL, 0);
 
 		test =  new PWM(0);
+
 	}
 
 
@@ -114,7 +122,35 @@ private:
 	void TeleopPeriodic()
 	{
 		visionState = visionStateMachine(visionState);
+		bool button2=stick->GetRawButton(2);
+		if(button2 && !pButton2)
+		{
+			if(visionState>3)
+			{
+				visionState=ExitLoop;
+			}
+			else if(visionState==GetForwardImage||visionState==SendForwardImage)
+			{
+				visionState=GetReverseImage;
+			}
+			else if(visionState==GetReverseImage||visionState==SendReverseImage)
+			{
+				visionState=GetForwardImage;
+			}
+		}
+		pButton2=button2;
+
+		bool button1=stick->GetRawButton(1);
+		if(visionState<4)
+		{
+			if(button1&&!pButton1)
+			{
+				visionState = StartCalibrations;
+			}
+		}
+		pButton1 = button1;
 		mylauncher->Obey();
+		mydrive->Obey();
 
 	}
 
@@ -135,7 +171,8 @@ private:
 		RequestConfirmation = 8,
 		GetRangeFromLIDAR = 9,
 		StartCalibrations = 10,
-		WaitForCalibrations =11
+		WaitForCalibrations =11,
+		ExitLoop = 12
 	};
 	int visionStateMachine(int state)
 	{
@@ -168,17 +205,24 @@ private:
 		if(state==StartCalibrations)
 		{
 			firstCalibration=true;
-			mydrive->ConfigAuto(0,0,0);//INPUT CONSTANTS TODO
+#if HORIZONTAL_TARGETING ==1
+			mydrive->ConfigForPID();
+			drivePID->Enable();
+#endif
+#if HORIZONTAL_TARGETING ==0
+			mydrive->ConfigAuto(0,0,0);
+#endif
+			vertAnglePID->Enable();
 		}
 		if(state==GetRangeFromLIDAR)
 		{
 			range = lidar->GetDistance();
-			float angle=shooterAngle->GetCurrentAngle();
-			range=range*cos(angle);
+			float angle=shooterAngle->PIDGet();
+			range=range*cos(angle*3.14/180);
 			//calculate the required angle from the range here TODO
 			//calculate the required flywheel speed here
 			mylauncher->SetTargetSpeed(1);//in ticks/sec
-			mylauncher->SetAngle(1);//target angle in degrees
+			mylauncher->SetAngle(20);//target angle in degrees
 			state=AcquireTargetImage;
 		}
 		if(state==AcquireTargetImage)
@@ -199,19 +243,25 @@ private:
 		}
 		if(state==ProcessTargetImage)
 		{
-			int currentOffset=(horizontal->GetBestParticle()).CenterX-160;
 			float targetOffset=horizontal->calculateTargetOffset(range);
+#if HORIZONTAL_TARGETING == 0
+			int currentOffset=(horizontal->GetBestParticle())->CenterX-160;
 			currentOffset=(currentOffset/320)*range;//convert pixels to centimeters
 			targetOffset=(targetOffset/320)*range;
 			horizError=atan(currentOffset/range)-atan(targetOffset/range);//get how many radians off we are
 			horizError=(11*2.54)*TICKS_PER_CM;//convert angle to ticks (this will need a little tuning)
 			mydrive->SetPosTargets(-1*horizError, horizError);//set drive targets
+#endif
+#if HORIZONTAL_TARGETING == 1
+			drivePID->SetSetpoint(targetOffset);
+#endif
 			state=WaitForCalibrations;
 		}
 		if(state==WaitForCalibrations)
 		{
-			shooterAngle->CloseEnough(400);//use this
+			mylauncher->AngleGood(2);//use this
 			mylauncher->SpeedGood(200);//use this too
+			drivePID->GetError();//this is also handy
 			if(true)//check to see if motors are close enough to target positions TODO
 			{
 				if(firstCalibration)
@@ -244,8 +294,14 @@ private:
 			}
 		}
 
+		if(state==ExitLoop)
+		{
+			state=GetForwardImage;
+			drivePID->Disable();
+			mydrive->ConfigTeleop(0,0,0);//TODO
+			vertAnglePID->Disable();//TODO we need to decide how to zero the shooter when
+		}//							  exiting the loop. Do we stall the exit until shooter is zeroed?
 		return(state);
-		//the rest should be for aiming/shooting
 	}
 };
 

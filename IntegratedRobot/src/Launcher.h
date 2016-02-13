@@ -8,15 +8,15 @@
 #ifndef SRC_LAUNCHER_H_
 #define SRC_LAUNCHER_H_
 class SRXSpeed;
-#include <AngleAdjuster.h>
+class PIDController;
 class Launcher {
 private:
 	SRXSpeed *left, *right;
-	AngleAdjuster *angler;
+	PIDController *pid;
 	float targetSpeed=0;
 	float targetAngle=0;
 public:
-	Launcher(SRXSpeed*, SRXSpeed*, AngleAdjuster*);
+	Launcher(SRXSpeed*, SRXSpeed*, PIDController*);
 	void SetTargetSpeed(float);
 	void SetAngle(float);
 	void Obey();

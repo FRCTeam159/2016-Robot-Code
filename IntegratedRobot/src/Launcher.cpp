@@ -8,8 +8,8 @@
 #include <Launcher.h>
 #include <WPILib.h>
 #include <SRXConfigs/SRXSpeed.h>
-Launcher::Launcher(SRXSpeed *l, SRXSpeed* r, AngleAdjuster* a)
-:left(l), right(r), angler(a){
+Launcher::Launcher(SRXSpeed *l, SRXSpeed* r, PIDController* p)
+:left(l), right(r), pid(p){
 }
 
 Launcher::~Launcher() {
@@ -32,15 +32,15 @@ void Launcher::Obey()
 {
 	left->SetTargetSpeed(targetSpeed);
 	right->SetTargetSpeed(targetSpeed);
-	angler->SetAngle(targetAngle);
 }
 
 void Launcher::SetAngle(float angle)
 {
 	targetAngle=angle;
+	pid->SetSetpoint(angle);
 }
 
 bool Launcher::AngleGood(float tolerance)
 {
-	return(angler->CloseEnough(tolerance));
+	return(fabs(pid->GetError()<tolerance));
 }

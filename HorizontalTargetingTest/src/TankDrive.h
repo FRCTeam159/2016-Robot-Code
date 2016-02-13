@@ -26,7 +26,6 @@ public:
 	bool CloseEnough(float);
 	void Obey();
 	void PIDWrite(float output);
-	void ConfigForPID();
 	virtual ~TankDrive();
 	float previousPID=0;
 };

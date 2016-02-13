@@ -7,7 +7,7 @@
 
 #include <TankDrive.h>
 #include <WPILib.h>
-#include <SRXConfigs/SRXSlave.h>
+#include <SRXSlave.h>
 TankDrive::TankDrive(CANTalon* a, CANTalon* b, SRXSlave* c, SRXSlave* d, int e):leftMotor(a),
 rightMotor(b), leftSlave(c), rightSlave(d), maxTicks(e){
 }
@@ -136,13 +136,7 @@ bool TankDrive::CloseEnough(float tolerance)
 
 void TankDrive::PIDWrite(float output)
 {
-	leftTarget=output*-1;
-	rightTarget=output;
-	previousPID=output;//for debugging purposes
-}
-
-void TankDrive::ConfigForPID()
-{
-	leftMotor->SetControlMode(CANTalon::kPercentVbus);
-	rightMotor->SetControlMode(CANTalon::kPercentVbus);
+	leftMotor->Set(output*-1);
+	rightMotor->Set(output);
+	previousPID=output;
 }

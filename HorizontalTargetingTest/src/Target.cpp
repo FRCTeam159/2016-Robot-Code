@@ -9,7 +9,7 @@
 #include "string.h"
 #include <WPILib.h>
 #include <Particle.h>
-#define CAMERA_OFFSET 5
+#define CAMERA_OFFSET 10
 #define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 Target::Target(USBCamera* a){
