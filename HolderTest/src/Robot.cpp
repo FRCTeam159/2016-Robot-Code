@@ -1,10 +1,11 @@
 #include "WPILib.h"
 #include "Holder/Holder.h"
-#define GATEMOTOR 1
-#define PUSHERMOTOR 2
-#define REVGATELIMIT 1
-#define FWDGATELIMIT 2
-#define IRSENSOR 0
+#include "Assignments.h"
+//#define GATEMOTOR 1
+//#define PUSHERMOTOR 2
+//#define REVGATELIMIT 1
+//#define FWDGATELIMIT 2
+//#define IRSENSOR 0
 
 class Robot: public IterativeRobot
 {
@@ -23,7 +24,7 @@ private:
 		chooser->AddDefault(autoNameDefault, (void*)&autoNameDefault);
 		chooser->AddObject(autoNameCustom, (void*)&autoNameCustom);
 		SmartDashboard::PutData("Auto Modes", chooser);
-		holder=new Holder(GATEMOTOR,PUSHERMOTOR,REVGATELIMIT,FWDGATELIMIT,IRSENSOR);
+		holder=new Holder(HOLDER_GATE,HOLDER_PUSHER,REVGATELIMIT,FWDGATELIMIT,IRSENSOR);
 	}
 
 

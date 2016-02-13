@@ -12,13 +12,14 @@
 #define SENSORTRIPPED 0
 #define FORWARDLIMITPOSITION (gateTicksPerRevolution/4)
 #define MAXERRORTICKS 100
+#define ENCMULT 1988
 #define P 0.001
 #define I 0
 #define D 0
 
 Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
 : gateMotor(mtr1), pushMotor(mtr2),revGateLimit(ls1),fwdGateLimit(ls2),IRsensor(IR){
-	gateTicksPerRevolution = GATEMOTOR_ET*GATEMOTOR_GR;
+	gateTicksPerRevolution = (double)GATEMOTOR_ET*GATEMOTOR_GR/ENCMULT;
 	atForwardLimit=false;
 	atReverseLimit=false;
 	state=FIND_ZERO;
@@ -29,7 +30,7 @@ Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
 	//gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SoftPositionLimits);
 	//gateMotor.Enable();
 	//gateMotor.SetPosition(0);
-	gateMotor.ConfigSoftPositionLimits(0,gateTicksPerRevolution/4);
+	gateMotor.ConfigSoftPositionLimits(gateTicksPerRevolution/4,0);
 	//gateMotor.SetInverted(true);
 	gateMotor.SetFeedbackDevice(CANTalon::QuadEncoder);
 #endif
@@ -70,7 +71,7 @@ void Holder::FindZero(){
 		printf("atTarget:%d\n",atTarget);
 		gateMotor.Set(0);
 		gateMotor.SetControlMode(CANSpeedController::kPosition);
-		gateMotor.ConfigSoftPositionLimits(gateTicksPerRevolution/4,0);
+		gateMotor.ConfigSoftPositionLimits(gateTicksPerRevolution/4,1);
 		gateMotor.SetPosition(0);
 		gateMotor.Set(0);
 		gateMotor.SetPID(P,I,D);
@@ -145,7 +146,7 @@ void Holder::TeleopPeriodic(){
 
 void Holder::WaitForBallToEnter(){
 	int ballDetected = IRsensor.Get();
-	printf("waiting for ball detection\n");
+	//printf("waiting for ball detection\n");
 	if(ballDetected == SENSORTRIPPED){
 		printf("WAIT_FOR_BALL_TO_ENTER ball is detected, going to forward limit\n");
 		gateMotor.Set(0);
@@ -194,7 +195,7 @@ void Holder::SetGateToReverseLimit(){
 bool Holder::isAtReverseLimit(){
 	bool motionEnabled = gateMotor.GetReverseLimitOK();
 	int position = gateMotor.GetEncPosition();
-	printf("position:%d motionEnabled:%d\n",position,motionEnabled);
+	//printf("position:%d motionEnabled:%d\n",position,motionEnabled);
 	double error = position-0;
 //	printf("rev position:%d rev error:%g real position:%g\n",
 	//		position,error,gateMotor.Get());
@@ -207,7 +208,7 @@ bool Holder::isAtReverseLimit(){
 bool Holder::isAtForwardLimit(){
 	bool motionEnabled = gateMotor.GetForwardLimitOK();
 	int position = gateMotor.GetEncPosition();
-	printf("position:%d motionEnabled:%d\n",position,motionEnabled);
+	//printf("position:%d motionEnabled:%d\n",position,motionEnabled);
 	double error = position-FORWARDLIMITPOSITION;
 	//printf("fwd position:%d fwd error:%g\n",position,error);
 	if(motionEnabled == true)

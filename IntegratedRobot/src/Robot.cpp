@@ -12,6 +12,7 @@
 #include <TankDrive.h>
 #include <Target.h>
 #include <AngleAccelerometer.h>
+
 #define TICKS_PER_CM 500
 #define NO_TARGET 1234
 #define HORIZONTAL_TARGETING 1//0 is by angle, 1 is by pixel difference and drivePID
@@ -36,6 +37,7 @@ private:
 	TankDrive *mydrive;
 	CANTalon *shooterAngleMotor;
 	AngleAccelerometer *shooterAngle;
+	Holder *holder;
 	Lidar *lidar;
 
 	SRXSpeed *flyWheelOne, *flyWheelTwo;
