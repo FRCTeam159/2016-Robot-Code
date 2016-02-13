@@ -14,6 +14,7 @@
 #include <AngleAccelerometer.h>
 #define TICKS_PER_CM 500
 #define NO_TARGET 1234
+#define HORIZONTAL_TARGETING 1//0 is by angle, 1 is by pixel difference and drivePID
 class Robot: public IterativeRobot
 {
 private:
@@ -39,7 +40,7 @@ private:
 
 	SRXSpeed *flyWheelOne, *flyWheelTwo;
 	Launcher *mylauncher;
-	PIDController *vertAnglePID;
+	PIDController *vertAnglePID, *drivePID;
 
 	bool pButton1=false, pButton2=false;
 	void RobotInit()
@@ -63,6 +64,7 @@ private:
 		leftSlave = new SRXSlave(2,0);
 		rightSlave = new SRXSlave(3,1);
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
+		drivePID= new PIDController(0,0,0, horizontal, mydrive);//TODO
 		flyWheelOne= new SRXSpeed(5,0,0,0,1);//zeros are PID, 1 is maxticks
 		flyWheelTwo= new SRXSpeed(6,0,0,0,1);
 		shooterAngleMotor = new CANTalon(7);
@@ -75,6 +77,7 @@ private:
 		sendMe=imaqCreateImage(IMAQ_IMAGE_HSL, 0);
 
 		test =  new PWM(0);
+
 	}
 
 
@@ -147,6 +150,7 @@ private:
 		}
 		pButton1 = button1;
 		mylauncher->Obey();
+		mydrive->Obey();
 
 	}
 
@@ -201,7 +205,13 @@ private:
 		if(state==StartCalibrations)
 		{
 			firstCalibration=true;
+#if HORIZONTAL_TARGETING ==1
 			mydrive->ConfigForPID();
+			drivePID->Enable();
+#endif
+#if HORIZONTAL_TARGETING ==0
+			mydrive->ConfigAuto(0,0,0);
+#endif
 			vertAnglePID->Enable();
 		}
 		if(state==GetRangeFromLIDAR)
@@ -233,19 +243,25 @@ private:
 		}
 		if(state==ProcessTargetImage)
 		{
-			int currentOffset=(horizontal->GetBestParticle())->CenterX-160;
 			float targetOffset=horizontal->calculateTargetOffset(range);
+#if HORIZONTAL_TARGETING == 0
+			int currentOffset=(horizontal->GetBestParticle())->CenterX-160;
 			currentOffset=(currentOffset/320)*range;//convert pixels to centimeters
 			targetOffset=(targetOffset/320)*range;
 			horizError=atan(currentOffset/range)-atan(targetOffset/range);//get how many radians off we are
 			horizError=(11*2.54)*TICKS_PER_CM;//convert angle to ticks (this will need a little tuning)
 			mydrive->SetPosTargets(-1*horizError, horizError);//set drive targets
+#endif
+#if HORIZONTAL_TARGETING == 1
+			drivePID->SetSetpoint(targetOffset);
+#endif
 			state=WaitForCalibrations;
 		}
 		if(state==WaitForCalibrations)
 		{
 			mylauncher->AngleGood(2);//use this
 			mylauncher->SpeedGood(200);//use this too
+			drivePID->GetError();//this is also handy
 			if(true)//check to see if motors are close enough to target positions TODO
 			{
 				if(firstCalibration)
@@ -281,6 +297,7 @@ private:
 		if(state==ExitLoop)
 		{
 			state=GetForwardImage;
+			drivePID->Disable();
 			mydrive->ConfigTeleop(0,0,0);//TODO
 			vertAnglePID->Disable();//TODO we need to decide how to zero the shooter when
 		}//							  exiting the loop. Do we stall the exit until shooter is zeroed?

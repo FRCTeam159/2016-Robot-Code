@@ -138,7 +138,7 @@ void TankDrive::PIDWrite(float output)
 {
 	leftTarget=output*-1;
 	rightTarget=output;
-	previousPID=output;
+	previousPID=output;//for debugging purposes
 }
 
 void TankDrive::ConfigForPID()
