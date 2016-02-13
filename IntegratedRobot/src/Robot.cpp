@@ -66,8 +66,8 @@ private:
 		flyWheelTwo= new SRXSpeed(6,0,0,0,1);
 		shooterAngleMotor = new CANTalon(7);
 		shooterAngle = new AngleAccelerometer();
-		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);
-		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, shooterAngle, vertAnglePID);
+		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
+		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, vertAnglePID);
 		lidar = new Lidar(I2C::kMXP, 0x62);
 		stick= new Joystick(0);
 
@@ -172,7 +172,7 @@ private:
 		if(state==StartCalibrations)
 		{
 			firstCalibration=true;
-			mydrive->ConfigForPID();//INPUT CONSTANTS TODO
+			mydrive->ConfigForPID();
 			vertAnglePID->Enable();
 		}
 		if(state==GetRangeFromLIDAR)
