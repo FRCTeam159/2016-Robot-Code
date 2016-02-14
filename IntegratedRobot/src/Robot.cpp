@@ -40,7 +40,7 @@ private:
 	AngleAccelerometer *shooterAngle;
 	Holder *holder;
 	Lidar *lidar;
-
+	DigitalInput *shooterLimit;
 	SRXSpeed *flyWheelOne, *flyWheelTwo;
 	Launcher *mylauncher;
 	PIDController *vertAnglePID, *drivePID;
@@ -62,6 +62,7 @@ private:
 		forwardCamera->StartCapture();
 		reverseCamera->StartCapture();
 
+		shooterLimit= new DigitalInput(SHOOTER_LIMIT);
 		horizontal = new Target(forwardCamera);
 		leftDrive= new CANTalon(CAN_LEFT_DRIVE);
 		rightDrive = new CANTalon(CAN_RIGHT_DRIVE);
@@ -157,8 +158,10 @@ private:
 
 		if(!vertAnglePID->IsEnabled())
 		{
-			if(true)//change this to !limit switch TODO
-			shooterAngleMotor->Set(-1);
+			if(!shooterLimit->Get())
+			{
+				shooterAngleMotor->Set(-1);
+			}
 			else
 			{
 				shooterAngleMotor->Set(0);
