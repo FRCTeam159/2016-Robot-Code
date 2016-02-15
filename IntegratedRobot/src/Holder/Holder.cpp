@@ -29,6 +29,7 @@ Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
 	atReverseLimit=false;
 	state=FIND_ZERO;
 	ballDetectionDelay = BALLDETECTIONDELAY;
+	foundZero=false;
 #ifdef CANTALON_GATE
 	gateMotor.ConfigEncoderCodesPerRev(gateTicksPerRevolution);
 	gateMotor.SetControlMode(CANSpeedController::kPosition);
@@ -87,6 +88,7 @@ void Holder::FindZero(){
 		gateMotor.SetI(I);
 		gateMotor.SetD(D);
 		atReverseLimit=true;
+		foundZero=true;
 		state=WAIT_FOR_BALL_TO_ENTER;
 	}
 }
@@ -134,6 +136,11 @@ void Holder::TestInit(){
 	Init();
 }
 
+//===========================================
+//void Holder::TeleopInit
+//===========================================
+//- Starts the state machine
+//===========================================
 void Holder::TeleopInit(){
 	Init();
 	state=FIND_ZERO;
@@ -153,10 +160,26 @@ void Holder::TeleopPeriodic(){
 }
 
 //===========================================
+//void Holder::AutonomousInit
+//===========================================
+//- First time check to see if FindZero has been called
+//- then sets the limit mode to switches only and changes state
+//===========================================
+void Holder::AutonomousInit(){
+	if(foundZero==false){
+		gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
+	}
+	state=WAIT_FOR_BALL_TO_ENTER;
+}
+
+void Holder::AutonomousPeriodic(){
+	AutoHold();
+}
+//===========================================
 //void Holder::WaitForBallToEnter
 //===========================================
 //- This State machine state : WAIT_FOR_BALL_TO_ENTER
-//- Caller state machine state: GO_TO_REVERSE_LIMIT
+//- Caller state machine state : GO_TO_REVERSE_LIMIT
 //  or FIND_ZERO
 //- Assumes gate is at reverse limit
 //- Waits for IR sensor to detect ball
@@ -181,14 +204,12 @@ void Holder::WaitForBallToEnter(){
 //void Holder::SetGateToForwardLimit
 //===========================================
 //- This State machine state : GO_TO_FORWARD_LIMIT
-//- Caller state machine state: WAIT_FOR_BALL_TO_ENTER
-//- Calls
-//- Waits for IR sensor to detect ball
-//- when ball is detected move gate to forward limit
-//  and push ball into pusher wheel (push motor is off)
+//- Caller state machine state : WAIT_FOR_BALL_TO_ENTER
+//- Waits for soft or hard limit
+//- then go to next state and fake pushRequested
 //===========================================
 void Holder::SetGateToForwardLimit(){
-	bool atTarget = isAtForwardLimit();
+	bool atTarget = IsAtForwardLimit();
 	if(atTarget){
 		printf("GO_TO_FORWARD_LIMIT at forward limit, waiting for ball to leave\n");
 		state=WAIT_FOR_PUSH_REQUEST;
@@ -202,6 +223,15 @@ void Holder::SetGateToForwardLimit(){
 	}
 }
 
+//===========================================
+//void Holder::WaitForPushRequest
+//===========================================
+//- This State machine state : WAIT_FOR_PUSH_REQUEST
+//- Caller state machine state : GO_TO_FORWARD_LIMIT
+//- Waits for a push request (pushRequested is faked)
+//- then push ball with pushMotor, reset pushRequested then
+//- change state and start ftime function
+//===========================================
 void Holder::WaitForPushRequest(){
 	if(pushRequested){
 		printf("pushing ball to fly wheels\n");
@@ -212,6 +242,15 @@ void Holder::WaitForPushRequest(){
 	}
 }
 
+//===========================================
+//void Holder::WaitForBallToLeave
+//===========================================
+//- This State machine state : WAIT_FOR_BALL_TO_LEAVE
+//- Caller state machine state : WAIT_FOR_PUSH_REQUEST
+//- Wait for the IR sensor to stop detecting the ball
+//- then end ftime function, and use output as a delay
+//- and set gateMotor to reverse speed
+//===========================================
 void Holder::WaitForBallToLeave(){
 	int ballDetected = IRsensor.Get();
 	if(ballDetected != SENSORTRIPPED){
@@ -232,9 +271,21 @@ void Holder::WaitForBallToLeave(){
 	}
 }
 
-
+//===========================================
+//void Holder::SetGateToReverseLimit
+//===========================================
+//- This State machine state : GO_TO_REVERSE_LIMIT
+//- Caller state machine state : WAIT_FOR_BALL_TO_LEAVE
+//- If FindZero has not been called, call FindZero
+//- Otherwise find reverse limit,
+//- then stop motor and go to next state in the state machine
+//===========================================
 void Holder::SetGateToReverseLimit(){
-	bool atTarget = isAtReverseLimit();
+	bool atTarget = IsAtReverseLimit();
+	if(foundZero==false){
+		state=FIND_ZERO;
+		return;
+	}
 	if(atTarget){
 		printf("GO_TO_REVERSE_LIMIT at reverse limit\n");
 		state=WAIT_FOR_BALL_TO_ENTER;
@@ -242,16 +293,28 @@ void Holder::SetGateToReverseLimit(){
 	}
 }
 
-bool Holder::isAtReverseLimit(){
+//===========================================
+//void Holder::IsAtReverseLimit
+//===========================================
+//- Checks if the soft limit has been reached
+//- or if the reverse limit switch is closed
+//===========================================
+bool Holder::IsAtReverseLimit(){
 	bool motionEnabled = gateMotor.GetReverseLimitOK();
-	bool atTarget=gateMotor.IsFwdLimitSwitchClosed();
+	bool atTarget=gateMotor.IsRevLimitSwitchClosed();
 	if((motionEnabled == false) || atTarget == true)
 		return true;
 	else
 		return false;
 }
 
-bool Holder::isAtForwardLimit(){
+//===========================================
+//void Holder::IsAtForwardLimit
+//===========================================
+//- Checks if the soft limit has been reached
+//- or if the forward limit switch is closed
+//===========================================
+bool Holder::IsAtForwardLimit(){
 	bool motionEnabled = gateMotor.GetForwardLimitOK();
 	bool atTarget=gateMotor.IsFwdLimitSwitchClosed();
 	if((motionEnabled == false) || atTarget == true)
@@ -260,13 +323,22 @@ bool Holder::isAtForwardLimit(){
 		return false;
 }
 
+//===========================================
+//void Holder::SetPushMotorSpeed
+//===========================================
+//- Sets pushMotor speed with a double.
+//===========================================
 void Holder::SetPushMotorSpeed(double speed){
 #ifdef CANTALON_PUSHER
 	pushMotor.Set(speed);
 #endif
 }
 
-
+//===========================================
+//void Holder::deltaTime
+//===========================================
+//- Used to measure time through code.
+//===========================================
 int Holder::deltaTime(struct timeb* first, struct timeb* after){
 	int diff =after->time-first->time;
 	int mdiff= after->millitm-first->millitm;

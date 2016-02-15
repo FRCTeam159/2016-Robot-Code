@@ -42,7 +42,7 @@ private:
 		autoSelected = *((std::string*)chooser->GetSelected());
 		//std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
 		std::cout << "Auto selected: " << autoSelected << std::endl;
-
+		holder->AutonomousInit();
 		if(autoSelected == autoNameCustom){
 			//Custom Auto goes here
 		} else {
