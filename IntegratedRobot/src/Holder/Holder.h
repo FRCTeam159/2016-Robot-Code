@@ -65,8 +65,8 @@ class Holder {
 public:
 	Holder(int mtr1,int mtr2,int ls1, int ls2,int IR);
 	void PushBall();
-	bool isAtReverseLimit();
-	bool isAtForwardLimit();
+	bool IsAtReverseLimit();
+	bool IsAtForwardLimit();
 	void AutoHold();
 	bool IsLoaded();
 	void Init();

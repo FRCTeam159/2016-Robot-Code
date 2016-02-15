@@ -136,6 +136,11 @@ void Holder::TestInit(){
 	Init();
 }
 
+//===========================================
+//void Holder::TeleopInit
+//===========================================
+//- Starts the state machine
+//===========================================
 void Holder::TeleopInit(){
 	Init();
 	state=FIND_ZERO;
@@ -154,6 +159,12 @@ void Holder::TeleopPeriodic(){
 	AutoHold();
 }
 
+//===========================================
+//void Holder::AutonomousInit
+//===========================================
+//- First time check to see if FindZero has been called
+//- then sets the limit mode to switches only and changes state
+//===========================================
 void Holder::AutonomousInit(){
 	if(foundZero==false){
 		gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
@@ -198,7 +209,7 @@ void Holder::WaitForBallToEnter(){
 //- then go to next state and fake pushRequested
 //===========================================
 void Holder::SetGateToForwardLimit(){
-	bool atTarget = isAtForwardLimit();
+	bool atTarget = IsAtForwardLimit();
 	if(atTarget){
 		printf("GO_TO_FORWARD_LIMIT at forward limit, waiting for ball to leave\n");
 		state=WAIT_FOR_PUSH_REQUEST;
@@ -238,7 +249,7 @@ void Holder::WaitForPushRequest(){
 //- Caller state machine state : WAIT_FOR_PUSH_REQUEST
 //- Wait for the IR sensor to stop detecting the ball
 //- then end ftime function, and use output as a delay
-//-
+//- and set gateMotor to reverse speed
 //===========================================
 void Holder::WaitForBallToLeave(){
 	int ballDetected = IRsensor.Get();
@@ -260,9 +271,17 @@ void Holder::WaitForBallToLeave(){
 	}
 }
 
-
+//===========================================
+//void Holder::SetGateToReverseLimit
+//===========================================
+//- This State machine state : GO_TO_REVERSE_LIMIT
+//- Caller state machine state : WAIT_FOR_BALL_TO_LEAVE
+//- If FindZero has not been called, call FindZero
+//- Otherwise find reverse limit,
+//- then stop motor and go to next state in the state machine
+//===========================================
 void Holder::SetGateToReverseLimit(){
-	bool atTarget = isAtReverseLimit();
+	bool atTarget = IsAtReverseLimit();
 	if(foundZero==false){
 		state=FIND_ZERO;
 		return;
@@ -274,16 +293,28 @@ void Holder::SetGateToReverseLimit(){
 	}
 }
 
-bool Holder::isAtReverseLimit(){
+//===========================================
+//void Holder::IsAtReverseLimit
+//===========================================
+//- Checks if the soft limit has been reached
+//- or if the reverse limit switch is closed
+//===========================================
+bool Holder::IsAtReverseLimit(){
 	bool motionEnabled = gateMotor.GetReverseLimitOK();
-	bool atTarget=gateMotor.IsFwdLimitSwitchClosed();
+	bool atTarget=gateMotor.IsRevLimitSwitchClosed();
 	if((motionEnabled == false) || atTarget == true)
 		return true;
 	else
 		return false;
 }
 
-bool Holder::isAtForwardLimit(){
+//===========================================
+//void Holder::IsAtForwardLimit
+//===========================================
+//- Checks if the soft limit has been reached
+//- or if the forward limit switch is closed
+//===========================================
+bool Holder::IsAtForwardLimit(){
 	bool motionEnabled = gateMotor.GetForwardLimitOK();
 	bool atTarget=gateMotor.IsFwdLimitSwitchClosed();
 	if((motionEnabled == false) || atTarget == true)
@@ -292,13 +323,22 @@ bool Holder::isAtForwardLimit(){
 		return false;
 }
 
+//===========================================
+//void Holder::SetPushMotorSpeed
+//===========================================
+//- Sets pushMotor speed with a double.
+//===========================================
 void Holder::SetPushMotorSpeed(double speed){
 #ifdef CANTALON_PUSHER
 	pushMotor.Set(speed);
 #endif
 }
 
-
+//===========================================
+//void Holder::deltaTime
+//===========================================
+//- Used to measure time through code.
+//===========================================
 int Holder::deltaTime(struct timeb* first, struct timeb* after){
 	int diff =after->time-first->time;
 	int mdiff= after->millitm-first->millitm;
