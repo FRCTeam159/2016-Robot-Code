@@ -29,6 +29,7 @@ Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
 	atReverseLimit=false;
 	state=FIND_ZERO;
 	ballDetectionDelay = BALLDETECTIONDELAY;
+	foundZero=false;
 #ifdef CANTALON_GATE
 	gateMotor.ConfigEncoderCodesPerRev(gateTicksPerRevolution);
 	gateMotor.SetControlMode(CANSpeedController::kPosition);
@@ -85,6 +86,7 @@ void Holder::FindZero(){
 		gateMotor.ConfigSoftPositionLimits(496,0);
 		gateMotor.SetPID(P,I,D);
 		atReverseLimit=true;
+		foundZero=true;
 		state=WAIT_FOR_BALL_TO_ENTER;
 	}
 }
@@ -150,11 +152,21 @@ void Holder::TeleopPeriodic(){
 	AutoHold();
 }
 
+void Holder::AutonomousInit(){
+	if(foundZero==false){
+		gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
+	}
+	state=WAIT_FOR_BALL_TO_ENTER;
+}
+
+void Holder::AutonomousPeriodic(){
+	AutoHold();
+}
 //===========================================
 //void Holder::WaitForBallToEnter
 //===========================================
 //- This State machine state : WAIT_FOR_BALL_TO_ENTER
-//- Caller state machine state: GO_TO_REVERSE_LIMIT
+//- Caller state machine state : GO_TO_REVERSE_LIMIT
 //  or FIND_ZERO
 //- Assumes gate is at reverse limit
 //- Waits for IR sensor to detect ball
@@ -179,11 +191,9 @@ void Holder::WaitForBallToEnter(){
 //void Holder::SetGateToForwardLimit
 //===========================================
 //- This State machine state : GO_TO_FORWARD_LIMIT
-//- Caller state machine state: WAIT_FOR_BALL_TO_ENTER
-//- Calls
-//- Waits for IR sensor to detect ball
-//- when ball is detected move gate to forward limit
-//  and push ball into pusher wheel (push motor is off)
+//- Caller state machine state : WAIT_FOR_BALL_TO_ENTER
+//- Waits for soft or hard limit
+//- then go to next state and fake pushRequested
 //===========================================
 void Holder::SetGateToForwardLimit(){
 	bool atTarget = isAtForwardLimit();
@@ -200,6 +210,15 @@ void Holder::SetGateToForwardLimit(){
 	}
 }
 
+//===========================================
+//void Holder::WaitForPushRequest
+//===========================================
+//- This State machine state : WAIT_FOR_PUSH_REQUEST
+//- Caller state machine state : GO_TO_FORWARD_LIMIT
+//- Waits for a push request (pushRequested is faked)
+//- then push ball with pushMotor, reset pushRequested then
+//- change state and start ftime function
+//===========================================
 void Holder::WaitForPushRequest(){
 	if(pushRequested){
 		printf("pushing ball to fly wheels\n");
@@ -210,6 +229,15 @@ void Holder::WaitForPushRequest(){
 	}
 }
 
+//===========================================
+//void Holder::WaitForBallToLeave
+//===========================================
+//- This State machine state : WAIT_FOR_BALL_TO_LEAVE
+//- Caller state machine state : WAIT_FOR_PUSH_REQUEST
+//- Wait for the IR sensor to stop detecting the ball
+//- then end ftime function, and use output as a delay
+//-
+//===========================================
 void Holder::WaitForBallToLeave(){
 	int ballDetected = IRsensor.Get();
 	if(ballDetected != SENSORTRIPPED){
@@ -233,6 +261,10 @@ void Holder::WaitForBallToLeave(){
 
 void Holder::SetGateToReverseLimit(){
 	bool atTarget = isAtReverseLimit();
+	if(foundZero==false){
+		state=FIND_ZERO;
+		return;
+	}
 	if(atTarget){
 		printf("GO_TO_REVERSE_LIMIT at reverse limit\n");
 		state=WAIT_FOR_BALL_TO_ENTER;

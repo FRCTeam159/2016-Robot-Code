@@ -35,6 +35,7 @@ class Holder {
 	bool atForwardLimit;
 	bool pushComplete;
 	bool pushRequested;
+	bool foundZero;
 	int state;
 #ifdef CANTALON_PUSHER
 	CANTalon pushMotor;
@@ -75,6 +76,8 @@ public:
 	void TestPeriodic();
 	void TeleopPeriodic();
 	bool CheckPushed();
+	void AutonomousInit();
+	void AutonomousPeriodic();
 };
 
 #endif /* SRC_HOLDER_H_ */
