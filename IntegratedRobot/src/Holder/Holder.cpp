@@ -15,12 +15,12 @@
 #define FORWARDLIMITPOSITION (gateTicksPerRevolution/4)
 #define MAXERRORTICKS 100
 #define ENCMULT 1988
-#define PUSHMOTORSPEED 20
+#define PUSHMOTORSPEED .5
 #define P 0.1
 #define I 0
 #define D 0
 
-#define PUSH_EMULATION
+//#define PUSH_EMULATION
 
 Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
 : gateMotor(mtr1), pushMotor(mtr2),revGateLimit(ls1),fwdGateLimit(ls2),IRsensor(IR){
@@ -64,7 +64,7 @@ void Holder::Init(){
 #endif
 
 #ifdef CANTALON_PUSHER
-	pushMotor.SetControlMode(CANSpeedController::kSpeed);
+	pushMotor.SetControlMode(CANSpeedController::kPercentVbus);
 	pushMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SrxDisableSwitchInputs);
 #endif
 }
@@ -84,7 +84,9 @@ void Holder::FindZero(){
 		gateMotor.Set(0);
 		gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SoftPositionLimits);
 		gateMotor.ConfigSoftPositionLimits(496,0);
-		gateMotor.SetPID(P,I,D);
+		gateMotor.SetP(P);
+		gateMotor.SetI(I);
+		gateMotor.SetD(D);
 		atReverseLimit=true;
 		foundZero=true;
 		state=WAIT_FOR_BALL_TO_ENTER;
