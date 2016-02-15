@@ -37,6 +37,12 @@ enum dio_ids {
 	SHOOTER_LIMIT = 1,
 };
 
+enum joystick_buttons {
+	AIM = 1,
+	SWITCH_CAMERA = 2,
+	TOGGLE_LOADER = 3,
+	TOGGLE_INTAKE = 5,
+};
 #ifdef CANTALON_PUSHER
 #define HOLDER_PUSHER CAN_HOLDER_PUSHER
 #else

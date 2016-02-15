@@ -7,16 +7,22 @@
 
 #ifndef SRC_LOADER_H_
 #define SRC_LOADER_H_
-class AngleAdjuster;
+class PIDController;
 class Victor;
 class Loader {
 private:
-	AngleAdjuster *liftMotor;//has an encoder, and a single limit switch for zeroing
+	PIDController *liftMotor;//has an accelerometer, and a single limit switch for zeroing
 	Victor *rollerMotor;
+	void SetAngle(float);
+	void SpinRoller(float);
 public:
-	Loader(AngleAdjuster*, Victor*);
-	bool SetAngle(float);
-	void SpinRoller();
+	Loader(PIDController*, Victor*);
+	void StartRoller();
+	void StopRoller();
+	void LowerLifter();
+	void RaiseLifter();
+	bool AngleGood(float);
+	void Obey();
 	virtual ~Loader();
 };
 

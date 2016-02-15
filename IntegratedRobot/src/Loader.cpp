@@ -16,12 +16,3 @@ Loader::~Loader() {
 	// TODO Auto-generated destructor stub
 }
 
-bool Loader::SetAngle(float target)
-{
-	return(liftMotor->CloseEnough(200));
-}
-
-void Loader::SpinRoller()
-{
-	rollerMotor->Set(.8);
-}
