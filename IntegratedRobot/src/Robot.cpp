@@ -45,6 +45,7 @@ private:
 	Launcher *mylauncher;
 	PIDController *vertAnglePID, *drivePID;
 
+	int autoState;
 	bool pButton1=false, pButton2=false;
 	void RobotInit()
 	{
@@ -105,6 +106,10 @@ private:
 			//Default Auto goes here
 		}
 		mydrive->ConfigAuto(0,0,0);
+		holder->AutonomousInit();
+		//TODO drop loader arm
+		mydrive->SetPosTargets(2400,2400);//TODO
+		autoState=1;
 	}
 
 	void AutonomousPeriodic()
@@ -115,6 +120,43 @@ private:
 			//Default Auto goes here
 
 		}
+		mydrive->Obey();
+		if(autoState==1)
+		{
+			bool done= mydrive->CloseEnough(200);//TODO change this
+			//done = done && loader->close enough TODO
+			if (done)
+			{
+				mydrive->ZeroMotors();
+				autoState=2;
+			}
+
+		}
+		if (autoState==2)
+		{
+			mydrive->SetPosTargets(2400,2400);//TODO
+			if(mydrive->CloseEnough(200))
+			{
+				autoState=3;
+				mydrive->ZeroMotors();
+			}
+		}
+		if (autoState==3)
+		{
+			mydrive->SetPosTargets(500,-500);
+			if(mydrive->CloseEnough(30))//TODO
+			{
+				mydrive->SetPosTargets(0,0);
+				mydrive->ConfigForPID();
+				autoState=GetRangeFromLIDAR;
+			}
+		}
+		if (autoState==GetRangeFromLIDAR)
+		{
+
+		}
+
+
 	}
 
 	void TeleopInit()
@@ -227,7 +269,6 @@ private:
 			firstCalibration=true;
 #if HORIZONTAL_TARGETING ==1
 			mydrive->ConfigForPID();
-			drivePID->Enable();
 #endif
 #if HORIZONTAL_TARGETING ==0
 			mydrive->ConfigAuto(0,0,0);

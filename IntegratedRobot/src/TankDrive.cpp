@@ -85,6 +85,8 @@ void TankDrive::ConfigAuto(float p, float i, float d)
 	rightMotor->SetD(d);
 	rightMotor->SetFeedbackDevice(CANTalon::QuadEncoder);
 	rightMotor->EnableControl();
+	leftTarget=0;
+	rightTarget=0;
 	config=1;
 }
 void TankDrive::ConfigTeleop(float p, float i, float d)
@@ -101,6 +103,8 @@ void TankDrive::ConfigTeleop(float p, float i, float d)
 	rightMotor->SetD(d);
 	rightMotor->SetFeedbackDevice(CANTalon::QuadEncoder);
 	rightMotor->EnableControl();
+	leftTarget=0;
+	rightTarget=0;
 	config=2;
 }
 void TankDrive::Obey()
@@ -145,4 +149,6 @@ void TankDrive::ConfigForPID()
 {
 	leftMotor->SetControlMode(CANTalon::kPercentVbus);
 	rightMotor->SetControlMode(CANTalon::kPercentVbus);
+	leftTarget=0;
+	rightTarget=0;
 }

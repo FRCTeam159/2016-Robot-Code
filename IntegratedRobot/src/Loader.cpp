@@ -8,7 +8,7 @@
 #include <Loader.h>
 #include <WPILib.h>
 #include <AngleAdjuster.h>
-Loader::Loader(AngleAdjuster* a, Victor* b):liftMotor(a), rollerMotor(b) {
+Loader::Loader(PIDController* a, Victor* b):liftMotor(a), rollerMotor(b) {
 	//TODO Auto-generated contructtor stub
 }
 

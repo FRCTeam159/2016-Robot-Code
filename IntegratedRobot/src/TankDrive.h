@@ -22,6 +22,7 @@ public:
 	void SetPosTargets(float, float);
 	void ArcadeDrive(Joystick*);
 	void ConfigAuto(float, float, float);
+	void ZeroMotors();
 	void ConfigTeleop(float, float, float);
 	bool CloseEnough(float);
 	void Obey();
