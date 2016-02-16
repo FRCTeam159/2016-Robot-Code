@@ -53,22 +53,18 @@ class Holder {
 	DigitalInput fwdGateLimit;
 #endif
 
-	void LoadBall();
 	void FindZero();
 	void WaitForBallToEnter();
-	void WaitForBallToLeave();
-	void WaitForPushRequest();
 	void SetGateToForwardLimit();
+	void WaitForPushRequest();
+	void WaitForBallToLeave();
 	void SetGateToReverseLimit();
 	void SetPushMotorSpeed(double);
 	int deltaTime(struct timeb* first, struct timeb* after);
 public:
 	Holder(int mtr1,int mtr2,int ls1, int ls2,int IR);
 	void PushBall();
-	bool IsAtReverseLimit();
-	bool IsAtForwardLimit();
 	void AutoHold();
-	bool IsLoaded();
 	void Init();
 	void Test();
 	void TestInit();
@@ -76,9 +72,12 @@ public:
 	void Disable();
 	void TestPeriodic();
 	void TeleopPeriodic();
-	bool CheckPushed();
 	void AutonomousInit();
 	void AutonomousPeriodic();
+	bool CheckPushed();
+	bool IsLoaded();
+	bool IsAtForwardLimit();
+	bool IsAtReverseLimit();
 };
 
 #endif /* SRC_HOLDER_H_ */

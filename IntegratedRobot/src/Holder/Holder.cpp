@@ -15,7 +15,7 @@
 #define FORWARDLIMITPOSITION (gateTicksPerRevolution/4)
 #define MAXERRORTICKS 100
 #define ENCMULT 1988
-#define PUSHMOTORSPEED .5
+#define PUSHMOTORSPEED .1
 #define P 0.1
 #define I 0
 #define D 0
@@ -53,12 +53,16 @@ void Holder::Init(){
 	gateMotor.Enable();
 	gateMotor.ConfigRevLimitSwitchNormallyOpen(true);
 	gateMotor.ConfigFwdLimitSwitchNormallyOpen(true);
-	gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
+	if(foundZero == false){
+		gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
+	}
+	else{
+		gateMotor.SetPosition(0);
+	}
+	gateMotor.Set(-GATEMOTORSPEED);
 	gateMotor.SetControlMode(CANSpeedController::kPercentVbus);
 	gateMotor.ConfigNeutralMode(CANSpeedController::NeutralMode::kNeutralMode_Brake);
 	gateMotor.Enable();
-	gateMotor.SetPosition(0);
-	gateMotor.Set(-GATEMOTORSPEED);
 	printf("Holder Init, Motor:%d, Motor Inverted:%d\n",
 			gateMotor.IsEnabled(),gateMotor.GetInverted());
 #endif
@@ -143,7 +147,13 @@ void Holder::TestInit(){
 //===========================================
 void Holder::TeleopInit(){
 	Init();
-	state=FIND_ZERO;
+	if(foundZero == false){
+		state=FIND_ZERO;
+	}
+	else
+	{
+		state = WAIT_FOR_BALL_TO_ENTER;
+	}
 }
 
 void Holder::Disable()
@@ -163,9 +173,10 @@ void Holder::TeleopPeriodic(){
 //void Holder::AutonomousInit
 //===========================================
 //- First time check to see if FindZero has been called
-//- then sets the limit mode to switches only and changes state
+//  then sets the limit mode to switches only and changes state
 //===========================================
 void Holder::AutonomousInit(){
+	Init();
 	if(foundZero==false){
 		gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
 	}
@@ -229,8 +240,8 @@ void Holder::SetGateToForwardLimit(){
 //- This State machine state : WAIT_FOR_PUSH_REQUEST
 //- Caller state machine state : GO_TO_FORWARD_LIMIT
 //- Waits for a push request (pushRequested is faked)
-//- then push ball with pushMotor, reset pushRequested then
-//- change state and start ftime function
+//  then push ball with pushMotor and change state
+//- start ftime function
 //===========================================
 void Holder::WaitForPushRequest(){
 	if(pushRequested){
@@ -248,8 +259,8 @@ void Holder::WaitForPushRequest(){
 //- This State machine state : WAIT_FOR_BALL_TO_LEAVE
 //- Caller state machine state : WAIT_FOR_PUSH_REQUEST
 //- Wait for the IR sensor to stop detecting the ball
-//- then end ftime function, and use output as a delay
-//- and set gateMotor to reverse speed
+//  then end ftime function, and use output as a delay
+//- Set gateMotor to reverse speed
 //===========================================
 void Holder::WaitForBallToLeave(){
 	int ballDetected = IRsensor.Get();
@@ -259,6 +270,7 @@ void Holder::WaitForBallToLeave(){
 		//printf("WAIT_FOR_BALL_TO_LEAVE ball is not detected delt=%g\n",delt);
 		if(delt >= ballDetectionDelay){
 			pushComplete = true;
+			SetPushMotorSpeed(0);
 			printf("going to reverse limit\n");
 			//gateMotor.Set(0);
 			//Wait(ballDetectionDelay);
@@ -278,7 +290,7 @@ void Holder::WaitForBallToLeave(){
 //- Caller state machine state : WAIT_FOR_BALL_TO_LEAVE
 //- If FindZero has not been called, call FindZero
 //- Otherwise find reverse limit,
-//- then stop motor and go to next state in the state machine
+//  then stop motor and go to next state in the state machine
 //===========================================
 void Holder::SetGateToReverseLimit(){
 	bool atTarget = IsAtReverseLimit();
@@ -297,7 +309,7 @@ void Holder::SetGateToReverseLimit(){
 //void Holder::IsAtReverseLimit
 //===========================================
 //- Checks if the soft limit has been reached
-//- or if the reverse limit switch is closed
+//  or if the reverse limit switch is closed
 //===========================================
 bool Holder::IsAtReverseLimit(){
 	bool motionEnabled = gateMotor.GetReverseLimitOK();
@@ -312,7 +324,7 @@ bool Holder::IsAtReverseLimit(){
 //void Holder::IsAtForwardLimit
 //===========================================
 //- Checks if the soft limit has been reached
-//- or if the forward limit switch is closed
+//  or if the forward limit switch is closed
 //===========================================
 bool Holder::IsAtForwardLimit(){
 	bool motionEnabled = gateMotor.GetForwardLimitOK();
@@ -337,7 +349,7 @@ void Holder::SetPushMotorSpeed(double speed){
 //===========================================
 //void Holder::deltaTime
 //===========================================
-//- Used to measure time through code.
+//- Used to measure time elapsed through code.
 //===========================================
 int Holder::deltaTime(struct timeb* first, struct timeb* after){
 	int diff =after->time-first->time;

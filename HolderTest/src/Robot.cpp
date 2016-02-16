@@ -16,17 +16,27 @@ private:
 	const std::string autoNameCustom = "My Auto";
 	std::string autoSelected;
 	Holder *holder;
+	Joystick *joystick;
+	int state;
+	bool pButton;
 
 
 	void RobotInit()
 	{
+		joystick = new Joystick(0);
 		chooser = new SendableChooser();
 		chooser->AddDefault(autoNameDefault, (void*)&autoNameDefault);
 		chooser->AddObject(autoNameCustom, (void*)&autoNameCustom);
 		SmartDashboard::PutData("Auto Modes", chooser);
 		holder=new Holder(HOLDER_GATE,HOLDER_PUSHER,REVGATELIMIT,FWDGATELIMIT,IRSENSOR);
+		state = WAIT_FOR_BUTTON;
 	}
 
+	enum {
+		SHOOT_BALL,
+		CHECK_BALL,
+		WAIT_FOR_BUTTON
+	};
 
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select between different autonomous modes
@@ -37,35 +47,44 @@ private:
 	 * You can add additional auto modes by adding additional comparisons to the if-else structure below with additional strings.
 	 * If using the SendableChooser make sure to add them to the chooser code above as well.
 	 */
+
+	//immediately fire for testing
 	void AutonomousInit()
 	{
-		autoSelected = *((std::string*)chooser->GetSelected());
-		//std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
-		std::cout << "Auto selected: " << autoSelected << std::endl;
 		holder->AutonomousInit();
-		if(autoSelected == autoNameCustom){
-			//Custom Auto goes here
-		} else {
-			//Default Auto goes here
-		}
+		holder->PushBall();
 	}
 
 	void AutonomousPeriodic()
 	{
-		if(autoSelected == autoNameCustom){
-			//Custom Auto goes here
-		} else {
-			//Default Auto goes here
-		}
+		holder->AutoHold();
 	}
 
 	void TeleopInit()
 	{
 		holder->TeleopInit();
+		state = WAIT_FOR_BUTTON;
+		pButton = false;
 	}
 
 	void TeleopPeriodic()
 	{
+		bool button = joystick->GetRawButton(2);
+		switch(state){
+		case WAIT_FOR_BUTTON:
+			if(button && !pButton){
+				holder->PushBall();
+				pButton = true;
+				state = CHECK_BALL;
+			}
+			break;
+		case CHECK_BALL:
+			if(holder->CheckPushed()){
+				state = WAIT_FOR_BUTTON;
+				pButton = false;
+			}
+			break;
+		}
 		holder->TeleopPeriodic();
 	}
 
