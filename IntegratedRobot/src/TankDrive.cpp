@@ -152,3 +152,9 @@ void TankDrive::ConfigForPID()
 	leftTarget=0;
 	rightTarget=0;
 }
+
+void TankDrive::ZeroMotors()
+{
+	leftMotor->SetEncPosition(0);
+	rightMotor->SetEncPosition(0);
+}

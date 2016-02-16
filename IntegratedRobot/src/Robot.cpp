@@ -151,10 +151,7 @@ private:
 				autoState=GetRangeFromLIDAR;
 			}
 		}
-		if (autoState==GetRangeFromLIDAR)
-		{
 
-		}
 
 
 	}
@@ -360,7 +357,7 @@ private:
 
 			if(stick->GetRawButton(2))//operator rejects image
 			{
-				state=GetForwardImage;
+				state=ExitLoop;
 			}
 			if(stick->GetRawButton(1))//operator accepts imae
 			{
