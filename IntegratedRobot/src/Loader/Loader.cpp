@@ -5,7 +5,7 @@
  *      Author: alpin
  */
 
-#include <Loader.h>
+#include <Loader/Loader.h>
 #include <WPILib.h>
 #include <AngleAdjuster.h>
 Loader::Loader(PIDController* a, Victor* b):liftMotor(a), rollerMotor(b) {
