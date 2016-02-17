@@ -121,40 +121,9 @@ private:
 			//Default Auto goes here
 
 		}
+		static int currentState=0;
+		AutoStateMachine(currentState);
 		mydrive->Obey();
-		if(autoState==1)
-		{
-			bool done= mydrive->CloseEnough(200);//TODO change this
-			//done = done && loader->close enough TODO
-			if (done)
-			{
-				mydrive->ZeroMotors();
-				autoState=2;
-			}
-
-		}
-		if (autoState==2)
-		{
-			mydrive->SetPosTargets(2400,2400);//TODO
-			if(mydrive->CloseEnough(200))
-			{
-				autoState=3;
-				mydrive->ZeroMotors();
-			}
-		}
-		if (autoState==3)
-		{
-			mydrive->SetPosTargets(500,-500);
-			if(mydrive->CloseEnough(30))//TODO
-			{
-				mydrive->SetPosTargets(0,0);
-				mydrive->ConfigForPID();
-				autoState=GetRangeFromLIDAR;
-			}
-		}
-
-
-
 	}
 
 	void TeleopInit()
@@ -292,9 +261,15 @@ private:
 				mylauncher->Aim(range/100);
 				state=AcquireTargetImage;
 			}
+			else if(confirmrange>range)
+			{
+				range=confirmrange;
+				mylauncher->Aim(range/100);
+				state=AcquireTargetImage;
+			}
 			else
 			{
-				state=ExitLoop;
+				state=GetRangeFromLIDAR;
 			}
 		}
 		if(state==AcquireTargetImage)
@@ -376,7 +351,7 @@ private:
 			{
 				state=ExitLoop;
 			}
-			if(stick->GetRawButton(1))//operator accepts imae
+			if(stick->GetRawButton(1))//operator accepts image
 			{
 				state=ShootBall;
 			}
@@ -407,6 +382,166 @@ private:
 		}
 		return(state);
 	}
+	int AutoStateMachine(int state)
+	{
+		static bool firstCalibration;
+		static float range;
+		static Particle *best;
+		if(state==StartCalibrations)
+				{
+					firstCalibration=true;
+		#if HORIZONTAL_TARGETING ==1
+					mydrive->ConfigForPID();
+		#endif
+		#if HORIZONTAL_TARGETING ==0
+					mydrive->ConfigAuto(0,0,0);
+		#endif
+					range = lidar->GetDistance();
+					vertAnglePID->Enable();
+					vertAnglePID->SetSetpoint(20);
+					state= SetInitialAngle;
+				}
+				if(state==SetInitialAngle)
+				{
+					if(vertAnglePID->GetAvgError()<1)
+						state=GetRangeFromLIDAR;
+				}
+				if(state==GetRangeFromLIDAR)
+				{
+					int confirmrange = lidar->GetDistance();
+					float angle=shooterAngle->PIDGet();
+					confirmrange=confirmrange*cos(angle*3.14/180);
+					range=(range+confirmrange)/2;
+					mylauncher->Aim(range/100);
+					state=AcquireTargetImage;
+				}
+				if(state==AcquireTargetImage)
+				{
+					horizontal->AcquireImage();
+					state=ThresholdTargetImage;
+				}
+				if(state==ThresholdTargetImage)
+				{
+					horizontal->ThresholdImage();
+					state=CreateDebugImage;
+				}
+				if(state==CreateDebugImage)
+				{
+
+					horizontal->CreateDebugImage();
+					state=ProcessTargetImage;
+				}
+				if(state==ProcessTargetImage)
+				{
+					float targetOffset=horizontal->calculateTargetOffset(range);
+					best=horizontal->GetBestParticle();
+		#if HORIZONTAL_TARGETING == 0
+					int currentOffset=(horizontal->GetBestParticle())->CenterX-160;
+					currentOffset=(currentOffset/320)*range;//convert pixels to centimeters
+					targetOffset=(targetOffset/320)*range;
+					horizError=atan(currentOffset/range)-atan(targetOffset/range);//get how many radians off we are
+					horizError=(11*2.54)*TICKS_PER_CM;//convert angle to ticks (this will need a little tuning)
+					mydrive->SetPosTargets(-1*horizError, horizError);//set drive targets
+		#endif
+		#if HORIZONTAL_TARGETING == 1
+					if(best->CenterX!=1234)//1234 is error
+					{
+						if(!drivePID->IsEnabled())
+						{
+							drivePID->Enable();
+						}
+						drivePID->SetSetpoint(targetOffset);
+					}
+					else
+					{
+						drivePID->Disable();
+					}
+		#endif
+					state=WaitForCalibrations;
+				}
+		if(state==WaitForCalibrations)
+		{
+			bool good = mylauncher->AngleGood(2);//use this
+			good = good && mylauncher->SpeedGood(200);//use this too
+			good = good && drivePID->GetError()<3 && drivePID->IsEnabled();//this is also handy
+			if(good)//check to see if motors are close enough to target positions TODO
+			{
+				if(firstCalibration)
+				{
+					state=AcquireTargetImage;
+					firstCalibration=false;
+				}
+					else
+				{
+					state=ShootBall;
+				}
+				}
+			else
+			{
+				state=AcquireTargetImage;
+			}
+		}
+		if(state==ShootBall)
+		{
+			holder->PushBall();
+			state=CheckBall;
+		}
+		if(state==CheckBall)
+		{
+			if(holder->CheckPushed())
+			{
+				state=ExitLoop;
+			}
+			else
+			{
+				state=CheckBall;
+			}
+		}
+		if(state==ExitLoop)
+		{
+			state=GetForwardImage;
+			drivePID->Disable();
+			mylauncher->SetTargetSpeed(0);
+			mydrive->ConfigTeleop(0,0,0);//TODO
+			vertAnglePID->Disable();
+		}
+		return state;
+	}
 };
 
 START_ROBOT_CLASS(Robot)
+//this is potentially something to sue for moving before starting aiming
+/*if(autoState==1)
+{
+	bool done= mydrive->CloseEnough(200);//TODO change this
+	//done = done && loader->close enough TODO
+	if (done)
+	{
+		mydrive->ZeroMotors();
+		autoState=2;
+	}
+
+}
+if (autoState==2)
+{
+	mydrive->SetPosTargets(2400,2400);//TODO
+	if(mydrive->CloseEnough(200))
+	{
+		autoState=3;
+		mydrive->ZeroMotors();
+	}
+}
+if (autoState==3)
+{
+	mydrive->SetPosTargets(500,-500);
+	if(mydrive->CloseEnough(30))//TODO
+	{
+		mydrive->SetPosTargets(0,0);
+		mydrive->ConfigForPID();
+		autoState=GetRangeFromLIDAR;
+	}
+}
+
+
+ *
+ */
