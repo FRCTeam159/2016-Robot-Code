@@ -42,7 +42,7 @@ void Launcher::SetAngle(float angle)
 
 bool Launcher::AngleGood(float tolerance)
 {
-	return(fabs(pid->GetError())<tolerance);
+	return(fabs(pid->GetAvgError())<tolerance);
 }
 void Launcher::Aim(float range)//takes horizontal range, in meters
 {
