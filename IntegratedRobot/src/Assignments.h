@@ -23,6 +23,8 @@ enum can_ids {
 	CAN_SHOOT_ANGLE = 7,
 	CAN_FLYWHEEL_L = 8,
 	CAN_FLYWHEEL_R = 9,
+	CAN_ROLLER = 10,
+	CAN_LIFTER = 11,
 };
 
 enum pwm_ids {
@@ -40,8 +42,8 @@ enum dio_ids {
 enum joystick_buttons {
 	AIM = 1,
 	SWITCH_CAMERA = 2,
-	TOGGLE_LOADER = 3,
-	TOGGLE_INTAKE = 5,
+	TOGGLE_LIFTER = 3,
+	TOGGLE_ROLLER = 5,
 };
 #ifdef CANTALON_PUSHER
 #define HOLDER_PUSHER CAN_HOLDER_PUSHER

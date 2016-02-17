@@ -7,7 +7,7 @@
 
 #include <VerticalTargeter.h>
 #include <Launcher.h>
-#include <Lidar.h>
+#include <Sensors/Lidar.h>
 VerticalTargeter::VerticalTargeter(Launcher* s, Lidar* l):siege(s), laser(l) {
 	// TODO Auto-generated constructor stub
 

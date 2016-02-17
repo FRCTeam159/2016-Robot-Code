@@ -1,17 +1,16 @@
 #include "WPILib.h"
-#include <AngleAdjuster.h>
 #include <SRXConfigs/SRXSlave.h>
 #include <SRXConfigs/SRXPosition.h>
 #include <SRXConfigs/SRXSpeed.h>
 #include <Holder/Holder.h>
 #include <Launcher.h>
-#include <Lidar.h>
+#include <Sensors/Lidar.h>
 #include <Loader/Loader.h>
 #include <Particle.h>
 #include <Shooter.h>
 #include <TankDrive.h>
 #include <Target.h>
-#include <AngleAccelerometer.h>
+#include <Sensors/AngleAccelerometer.h>
 #include <Assignments.h>
 
 #define TICKS_PER_CM 500

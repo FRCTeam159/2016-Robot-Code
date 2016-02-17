@@ -1,15 +1,24 @@
 #include "WPILib.h"
+#include "Loader/Loader.h"
+#include "Assignments.h"
+#define LOW_ANGLE 0
+#define MID_ANGLE 30
+#define HIGH_ANGLE 50
 
 class Robot: public IterativeRobot
 {
 private:
 	LiveWindow *lw = LiveWindow::GetInstance();
 	SendableChooser *chooser;
+	Loader *loader;
+	Joystick *joystick;
 
 	void RobotInit()
 	{
 		chooser = new SendableChooser();
 		SmartDashboard::PutData("Auto Modes", chooser);
+		loader = new Loader(1,2,I2C::kOnboard);
+		joystick = new Joystick(0);
 	}
 
 
