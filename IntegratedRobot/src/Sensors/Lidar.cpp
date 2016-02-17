@@ -5,7 +5,7 @@
  *      Author: alpin
  */
 
-#include <Lidar.h>
+#include <Sensors/Lidar.h>
 #include <WPILib.h>
 Lidar::Lidar(Port a, uint8_t b):I2C(a,b){
 }

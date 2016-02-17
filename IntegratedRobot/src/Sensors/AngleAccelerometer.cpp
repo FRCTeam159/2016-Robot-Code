@@ -5,7 +5,7 @@
  *      Author: alpin
  */
 
-#include <AngleAccelerometer.h>
+#include <Sensors/AngleAccelerometer.h>
 #define PI 3.14159265
 AngleAccelerometer::AngleAccelerometer(I2C::Port p) {
 	accel = new ADXL345_I2C(p, Accelerometer::Range::kRange_4G);
