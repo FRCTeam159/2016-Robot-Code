@@ -74,8 +74,9 @@ private:
 		flyWheelOne= new SRXSpeed(CAN_FLYWHEEL_L,0,0,0,1);//zeros are PID, 1 is maxticks
 		flyWheelTwo= new SRXSpeed(CAN_FLYWHEEL_R,0,0,0,1);
 		shooterAngleMotor = new CANTalon(CAN_SHOOT_ANGLE);
-		shooterAngle = new AngleAccelerometer();
+		shooterAngle = new AngleAccelerometer(I2C::Port::kMXP);
 		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
+		vertAnglePID->SetToleranceBuffer(5);
 		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, vertAnglePID);
 		lidar = new Lidar(I2C::kMXP, 0x62);
 		stick= new Joystick(0);
@@ -167,7 +168,7 @@ private:
 	{
 		visionState = visionStateMachine(visionState);
 		holder->AutoHold();
-		bool button2=stick->GetRawButton(2);
+		bool button2=stick->GetRawButton(SWITCH_CAMERA);
 		if(button2 && !pButton2)
 		{
 			if(visionState>3)
@@ -185,7 +186,7 @@ private:
 		}
 		pButton2=button2;
 
-		bool button1=stick->GetRawButton(1);
+		bool button1=stick->GetRawButton(AIM);
 		if(visionState<4)
 		{
 			if(button1&&!pButton1)
@@ -230,7 +231,8 @@ private:
 		WaitForCalibrations =11,
 		ExitLoop = 12,
 		ShootBall = 13,
-		CheckBall = 14
+		CheckBall = 14,
+		SetInitialAngle = 15,
 	};
 	int visionStateMachine(int state)
 	{
@@ -270,15 +272,30 @@ private:
 #if HORIZONTAL_TARGETING ==0
 			mydrive->ConfigAuto(0,0,0);
 #endif
+			range = lidar->GetDistance();
 			vertAnglePID->Enable();
+			vertAnglePID->SetSetpoint(20);
+			state= SetInitialAngle;
+		}
+		if(state==SetInitialAngle)
+		{
+			if(vertAnglePID->GetAvgError()<1)
+				state=GetRangeFromLIDAR;
 		}
 		if(state==GetRangeFromLIDAR)
 		{
-			range = lidar->GetDistance();
+			int confirmrange = lidar->GetDistance();
 			float angle=shooterAngle->PIDGet();
-			range=range*cos(angle*3.14/180);
-			mylauncher->Aim(range/100);
-			state=AcquireTargetImage;
+			confirmrange=confirmrange*cos(angle*3.14/180);
+			if(fabs(confirmrange-range)<5){
+				range=(range+confirmrange)/2;
+				mylauncher->Aim(range/100);
+				state=AcquireTargetImage;
+			}
+			else
+			{
+				state=ExitLoop;
+			}
 		}
 		if(state==AcquireTargetImage)
 		{
@@ -333,7 +350,7 @@ private:
 			{
 				if(firstCalibration)
 				{
-					state=GetRangeFromLIDAR;
+					state=AcquireTargetImage;
 					firstCalibration=false;
 				}
 

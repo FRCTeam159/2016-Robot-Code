@@ -7,8 +7,8 @@
 
 #include <AngleAccelerometer.h>
 #define PI 3.14159265
-AngleAccelerometer::AngleAccelerometer() {
-	accel = new ADXL345_I2C(I2C::Port::kOnboard, Accelerometer::Range::kRange_4G);
+AngleAccelerometer::AngleAccelerometer(I2C::Port p) {
+	accel = new ADXL345_I2C(p, Accelerometer::Range::kRange_4G);
 	m_pidSource = PIDSourceType::kDisplacement;
 }
 

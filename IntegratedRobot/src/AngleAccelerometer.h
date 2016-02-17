@@ -24,7 +24,7 @@ private:
 public:
 	void SetPIDSourceType(PIDSourceType);
 	double PIDGet();
-	AngleAccelerometer();
+	AngleAccelerometer(I2C::Port);
 	virtual ~AngleAccelerometer();
 };
 
