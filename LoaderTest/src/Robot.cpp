@@ -49,7 +49,19 @@ private:
 
 	void TeleopPeriodic()
 	{
-		loader->TeleopPeriodic();
+		bool button3 = joystick->GetRawButton(3);
+		bool button4 = joystick->GetRawButton(4);
+		bool button2 = joystick->GetRawButton(2);
+			if(button3){
+				loader->SetLowPosition();
+			}
+			if(button4){
+				loader->GrabBall();
+			}
+			if(button2){
+				loader->Waiting();
+			}
+		loader->Obey();
 	}
 
 
@@ -57,6 +69,12 @@ private:
 	{
 		lw->Run();
 	}
+
+	void DisabledInit()
+	{
+		loader->Waiting();
+	}
+
 };
 
 START_ROBOT_CLASS(Robot)

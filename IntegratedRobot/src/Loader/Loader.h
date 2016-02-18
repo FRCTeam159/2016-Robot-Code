@@ -12,6 +12,7 @@
 #include <WPILib.h>
 #include <Sensors/AngleAccelerometer.h>
 
+
 class Loader {
 private:
 	//PIDController *liftMotor;//has an accelerometer, and a single limit switch for zeroing
@@ -22,9 +23,11 @@ private:
 	void SpinRoller(bool);
 	int state;
 	enum {
-		SETLOWPOSITON,
+		SETLOWPOSITION,
+		WAITING,
 		GRABBALL,
 	};
+
 
 #ifdef CANTALON_LIFTMOTOR
 	CANTalon liftMotor;
@@ -34,11 +37,13 @@ private:
 
 #ifdef CANTALON_ROLLERMOTOR
 	CANTalon rollerMotor;
+	int zeroLimitSwitch;
 #else
 	Victor rollerMotor;
 #endif
-	void setLowPosition();
-	void grabBall();
+	void GoToZeroLimitSwitch();
+	bool IsAtLimit();
+	void GrabbingBall();
 public:
 	Loader(int motor1, int motor2, I2C::Port p);
 	void StartRoller();
@@ -52,6 +57,9 @@ public:
 	void TeleopPeriodic();
 	void AutonomousInit();
 	void AutonomousPeriodic();
+	void SetLowPosition();
+	void GrabBall();
+	void Waiting();
 };
 
 #endif /* SRC_LOADER_H_ */
