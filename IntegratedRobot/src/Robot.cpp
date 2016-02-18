@@ -67,7 +67,7 @@ private:
 		leftSlave = new SRXSlave(CAN_LEFT_SLAVE,CAN_LEFT_DRIVE);
 		rightSlave = new SRXSlave(CAN_RIGHT_SLAVE,CAN_RIGHT_DRIVE);
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
-		drivePID= new PIDController(0,0,0, horizontal, mydrive);//TODO
+		drivePID= new PIDController(0,0,0, horizontal, mydrive);//TODO set constants for this and flywheels
 		flyWheelOne= new SRXSpeed(CAN_FLYWHEEL_L,0,0,0,1);//zeros are PID, 1 is maxticks
 		flyWheelTwo= new SRXSpeed(CAN_FLYWHEEL_R,0,0,0,1);
 		shooterAngleMotor = new CANTalon(CAN_SHOOT_ANGLE);
@@ -166,6 +166,11 @@ private:
 		if(!vertAnglePID->IsEnabled())
 		{//TODO make sure the correct limit switches are plugged into this motor
 			shooterAngleMotor->Set(-.2);//it should stop automatically when it hits the limit switch
+		}
+
+		if(!drivePID->IsEnabled())
+		{
+			mydrive->ArcadeDrive(stick);
 		}
 		mylauncher->Obey();
 		mydrive->Obey();
@@ -450,7 +455,7 @@ private:
 			bool good = mylauncher->AngleGood(2);//use this
 			good = good && mylauncher->SpeedGood(200);//use this too
 			good = good && drivePID->GetError()<3 && drivePID->IsEnabled();//this is also handy
-			if(good)//check to see if motors are close enough to target positions TODO
+			if(good)//check to see if motors are close enough to target positions
 			{
 				if(firstCalibration)
 				{
