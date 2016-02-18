@@ -57,8 +57,8 @@ void Launcher::Aim(float range)//takes horizontal range, in meters
 	std::cout<<"target angle = "<<atan(Vv0/Vh0)*(180/3.1415)<<"degrees"<<std::endl;
 	float V0= sqrt(pow(Vh0,2)+pow(Vv0, 2));
 	float r=.058;
-	float rball = .127;
-	float Iwheel=19.42;//the .168 below is ~ distance from flywheel center to center of shooter
+	float rball = .127;//Iwheel is in m^2kg, and has been calculated
+	float Iwheel=.004891;//the .168 below is ~ distance from flywheel center to center of shooter
 	float targetSpeed= V0*((((.168)/Iwheel)*(.295/2))+(1/r));//target speed in rad/s
 	targetSpeed*=900/(2*3.1415);//convert from radians to ticks
 	std::cout<<"target speed = "<<targetSpeed<<std::endl;
