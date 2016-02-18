@@ -18,11 +18,11 @@ private:
 	//PIDController *liftMotor;//has an accelerometer, and a single limit switch for zeroing
 	//Victor *rollerMotor;
 	PIDController *sAngCtrl;
-	AngleAccelerometer accel;
 	void SetAngle(float);
 	void SpinRoller(bool);
 	int state;
-	double angle;
+	bool atLimit;
+	double targetAngle;
 	enum {
 		SETLOWPOSITION,
 		WAITING,
@@ -38,15 +38,17 @@ private:
 
 #ifdef CANTALON_ROLLERMOTOR
 	CANTalon rollerMotor;
-	int zeroLimitSwitch;
 #else
 	Victor rollerMotor;
 #endif
+	AngleAccelerometer accel;
 	void GoToZeroLimitSwitch();
 	bool IsAtLimit();
 	void GrabbingBall();
 public:
 	Loader(int motor1, int motor2, I2C::Port p);
+	bool AtGrabAngle();
+	bool AtZeroAngle();
 	void StartRoller();
 	void StopRoller();
 	void LowerLifter();

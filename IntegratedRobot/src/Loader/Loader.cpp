@@ -10,6 +10,7 @@
 #define SETZEROSPEED -0.3
 #define ROLLERMOTORSPEED 0.6
 #define ANGLE 30
+#define MINIMUM_ANGLE_ERROR 1
 
 
 //end goal is two state:
@@ -17,16 +18,16 @@
 //state 2: roller motors stop and roller goes to limit switch
 
 Loader::Loader(int a, int b, I2C::Port p):liftMotor(a), rollerMotor(b), accel(p) {
-	//TODO Auto-generated contructtor stub
 	liftMotor.ConfigRevLimitSwitchNormallyOpen(true);
 	liftMotor.SetControlMode(CANTalon::kPercentVbus);
 	liftMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
 	sAngCtrl= new PIDController(1,0,0, &accel, &liftMotor);
-	angle = ANGLE;
+	targetAngle = ANGLE;
+	state = WAITING;
+	atLimit = false;
 }
 
 Loader::~Loader() {
-	// TODO Auto-generated destructor stub
 	delete sAngCtrl;
 }
 
@@ -45,7 +46,7 @@ void Loader::Obey(){
 }
 
 void Loader::SetAngle(float a){
-	angle=a;
+	targetAngle=a;
 }
 void Loader::SpinRoller(bool){
 
@@ -81,7 +82,7 @@ void Loader::SetLowPosition(){
 void Loader::GrabBall(){
 	state=GRABBALL;
 	sAngCtrl->Enable();
-	sAngCtrl->SetSetpoint(angle);
+	sAngCtrl->SetSetpoint(targetAngle);
 }
 
 //Stop state: Disables the PID Controller to stop liftMotor
@@ -101,9 +102,21 @@ void Loader::GrabbingBall(){
 	rollerMotor.Set(ROLLERMOTORSPEED);
 }
 
+bool Loader::AtGrabAngle(){
+	float angle=accel.PIDGet();
+	if(fabs(angle-targetAngle) < MINIMUM_ANGLE_ERROR){
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
-
-
+bool Loader::AtZeroAngle(){
+	atLimit = liftMotor.IsRevLimitSwitchClosed();
+	return atLimit;
+}
 
 
 
