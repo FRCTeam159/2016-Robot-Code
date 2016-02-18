@@ -28,14 +28,14 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Loader</name>
+			<name>src/Loader</name>
 			<type>2</type>
-			<location>C:/Users/159/2016-Robot-Code/IntegratedRobot/src/Loader</location>
+			<locationURI>WORKSPACE_LOC/IntegratedRobot/src/Loader</locationURI>
 		</link>
 		<link>
-			<name>Sensors</name>
+			<name>src/Sensors</name>
 			<type>2</type>
-			<location>C:/Users/159/2016-Robot-Code/IntegratedRobot/src/Sensors</location>
+			<locationURI>WORKSPACE_LOC/IntegratedRobot/src/Sensors</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

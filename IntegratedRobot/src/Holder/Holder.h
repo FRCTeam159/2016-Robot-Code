@@ -25,7 +25,6 @@ enum {
 
 
 class Holder {
-	DigitalInput IRsensor;
 	double gateTicksPerRevolution;
 	double ballDetectionDelay;
 	double pushTimeout;
@@ -37,6 +36,12 @@ class Holder {
 	bool pushRequested;
 	bool foundZero;
 	int state;
+#ifdef CANTALON_GATE
+	CANTalon gateMotor;
+#else
+	Victor gateMotor;
+#endif
+
 #ifdef CANTALON_PUSHER
 	CANTalon pushMotor;
 #else
@@ -44,14 +49,14 @@ class Holder {
 #endif
 
 #ifdef CANTALON_GATE
-	CANTalon gateMotor;
 	int revGateLimit;
 	int fwdGateLimit;
 #else
-	Victor gateMotor;
 	DigitalInput revGateLimit;
 	DigitalInput fwdGateLimit;
 #endif
+
+	DigitalInput IRsensor;
 
 	void FindZero();
 	void WaitForBallToEnter();
