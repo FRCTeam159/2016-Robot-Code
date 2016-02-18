@@ -55,7 +55,7 @@ void Launcher::Aim(float range)//takes horizontal range, in meters
 	float V0= sqrt(pow(Vh0,2)+pow(Vv0, 2));
 	float r=.058;
 	float rball = .127;
-	float Iwheel=19.42;//the .168 below is ~ distance from flywheel center to center of shooter
+	float Iwheel=.004891;//the .168 below is ~ distance from flywheel center to center of shooter
 	float targetSpeed= V0*((((.168)/Iwheel)*(.295/2))+(1/r));//target speed in rad/s
 	targetSpeed*=900/(2*3.1415);//convert from radians to ticks
 	SetTargetSpeed(targetSpeed);
