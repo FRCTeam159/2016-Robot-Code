@@ -39,7 +39,6 @@ private:
 	AngleAccelerometer *shooterAngle;
 	Holder *holder;
 	Lidar *lidar;
-	DigitalInput *shooterLimit;
 	SRXSpeed *flyWheelOne, *flyWheelTwo;
 	Launcher *mylauncher;
 	PIDController *vertAnglePID, *drivePID;
@@ -62,7 +61,6 @@ private:
 		forwardCamera->StartCapture();
 		reverseCamera->StartCapture();
 
-		shooterLimit= new DigitalInput(SHOOTER_LIMIT);
 		horizontal = new Target(forwardCamera);
 		leftDrive= new CANTalon(CAN_LEFT_DRIVE);
 		rightDrive = new CANTalon(CAN_RIGHT_DRIVE);
@@ -73,6 +71,8 @@ private:
 		flyWheelOne= new SRXSpeed(CAN_FLYWHEEL_L,0,0,0,1);//zeros are PID, 1 is maxticks
 		flyWheelTwo= new SRXSpeed(CAN_FLYWHEEL_R,0,0,0,1);
 		shooterAngleMotor = new CANTalon(CAN_SHOOT_ANGLE);
+		shooterAngleMotor->ConfigRevLimitSwitchNormallyOpen(false);
+		shooterAngleMotor->SetControlMode(CANTalon::kPercentVbus);
 		shooterAngle = new AngleAccelerometer(I2C::Port::kMXP);
 		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
 		vertAnglePID->SetToleranceBuffer(5);
@@ -108,7 +108,6 @@ private:
 		mydrive->ConfigAuto(0,0,0);
 		holder->AutonomousInit();
 		//TODO drop loader arm
-		mydrive->SetPosTargets(2400,2400);//TODO
 		autoState=1;
 	}
 
@@ -165,15 +164,8 @@ private:
 		pButton1 = button1;
 
 		if(!vertAnglePID->IsEnabled())
-		{
-			if(!shooterLimit->Get())
-			{
-				shooterAngleMotor->Set(-1);
-			}
-			else
-			{
-				shooterAngleMotor->Set(0);
-			}
+		{//TODO make sure the correct limit switches are plugged into this motor
+			shooterAngleMotor->Set(-.2);//it should stop automatically when it hits the limit switch
 		}
 		mylauncher->Obey();
 		mydrive->Obey();
@@ -320,7 +312,7 @@ private:
 			bool good = mylauncher->AngleGood(2);//use this
 			good = good && mylauncher->SpeedGood(200);//use this too
 			good = good && drivePID->GetError()<3 && drivePID->IsEnabled();//this is also handy
-			if(good)//check to see if motors are close enough to target positions TODO
+			if(good)//check to see if motors are close enough to target positions
 			{
 				if(firstCalibration)
 				{
@@ -344,13 +336,8 @@ private:
 
 		}
 		if(state==RequestConfirmation)// waits for operator confirmation
-		{
-
-			if(stick->GetRawButton(2))//operator rejects image
-			{
-				state=ExitLoop;
-			}
-			if(stick->GetRawButton(1))//operator accepts image
+		{//the operator can exit loop by hitting button 2 (controlled in Teleop periodic)
+			if(stick->GetRawButton(AIM))//operator accepts image
 			{
 				state=ShootBall;
 			}
