@@ -27,7 +27,7 @@ void TankDrive::ArcadeDrive(Joystick* stick)
 
 	if(!zAxis==0)
 	{
-		left=zAxis;
+		left=-1*zAxis;
 		right=zAxis;
 	}
 

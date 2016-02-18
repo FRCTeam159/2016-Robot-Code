@@ -1,6 +1,7 @@
 #include "WPILib.h"
 #include "Loader/Loader.h"
 #include "Assignments.h"
+#include <Sensors/AngleAccelerometer.h>
 #define LOW_ANGLE 0
 #define MID_ANGLE 30
 #define HIGH_ANGLE 50
@@ -43,13 +44,14 @@ private:
 
 	void TeleopInit()
 	{
-
+		loader->TeleopInit();
 	}
 
 	void TeleopPeriodic()
 	{
-
+		loader->TeleopPeriodic();
 	}
+
 
 	void TestPeriodic()
 	{
