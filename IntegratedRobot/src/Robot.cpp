@@ -271,14 +271,9 @@ private:
 		if(state==ThresholdTargetImage)
 		{
 			horizontal->ThresholdImage();
-			state=CreateDebugImage;
-		}
-		if(state==CreateDebugImage)
-		{
-
-			horizontal->CreateDebugImage();
 			state=ProcessTargetImage;
 		}
+
 		if(state==ProcessTargetImage)
 		{
 			float targetOffset=horizontal->calculateTargetOffset(range);
@@ -322,9 +317,7 @@ private:
 
 				else
 				{
-					horizontal->AnnotateDebugImage(best);
-					horizontal->SendDebugImage();
-					state=RequestConfirmation;
+					state=CreateDebugImage;
 				}
 
 			}
@@ -334,6 +327,13 @@ private:
 
 			}
 
+		}
+		if(state==CreateDebugImage)
+		{
+			horizontal->CreateDebugImage();
+			horizontal->AnnotateDebugImage(best);
+			horizontal->SendDebugImage();
+			state=RequestConfirmation;
 		}
 		if(state==RequestConfirmation)// waits for operator confirmation
 		{//the operator can exit loop by hitting button 2 (controlled in Teleop periodic)
