@@ -22,6 +22,7 @@ private:
 	void SetAngle(float);
 	void SpinRoller(bool);
 	int state;
+	double angle;
 	enum {
 		SETLOWPOSITION,
 		WAITING,

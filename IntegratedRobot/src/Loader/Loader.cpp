@@ -9,6 +9,7 @@
 #include <WPILib.h>
 #define SETZEROSPEED -0.3
 #define ROLLERMOTORSPEED 0.6
+#define ANGLE 30
 
 
 //end goal is two state:
@@ -21,6 +22,7 @@ Loader::Loader(int a, int b, I2C::Port p):liftMotor(a), rollerMotor(b), accel(p)
 	liftMotor.SetControlMode(CANTalon::kPercentVbus);
 	liftMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
 	sAngCtrl= new PIDController(1,0,0, &accel, &liftMotor);
+	angle = ANGLE;
 }
 
 Loader::~Loader() {
@@ -42,8 +44,8 @@ void Loader::Obey(){
 	}
 }
 
-void Loader::SetAngle(float angle){
-
+void Loader::SetAngle(float a){
+	angle=a;
 }
 void Loader::SpinRoller(bool){
 
@@ -79,9 +81,11 @@ void Loader::SetLowPosition(){
 void Loader::GrabBall(){
 	state=GRABBALL;
 	sAngCtrl->Enable();
-	sAngCtrl->SetSetpoint(20);
+	sAngCtrl->SetSetpoint(angle);
 }
 
+//Stop state: Disables the PID Controller to stop liftMotor
+//also stops the roller motor.
 void Loader::Waiting(){
 	state=WAITING;
 	sAngCtrl->Disable();
