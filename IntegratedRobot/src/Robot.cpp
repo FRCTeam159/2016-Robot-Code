@@ -45,7 +45,7 @@ private:
 	Loader *loader;
 
 	int autoState;
-	bool pButton1=false, pButton2=false;
+	bool pButton1=false, pButton2=false, pButton3=false;
 	void RobotInit()
 	{
 		chooser = new SendableChooser();
@@ -68,7 +68,7 @@ private:
 		leftSlave = new SRXSlave(CAN_LEFT_SLAVE,CAN_LEFT_DRIVE);
 		rightSlave = new SRXSlave(CAN_RIGHT_SLAVE,CAN_RIGHT_DRIVE);
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
-		drivePID= new PIDController(0,0,0, horizontal, mydrive);//TODO set constants for this and flywheels
+		drivePID= new PIDController(0.05,0,0, horizontal, mydrive);//TODO set constants for this and flywheels
 		drivePID->SetOutputRange(-1, 1);
 		flyWheelOne= new SRXSpeed(CAN_FLYWHEEL_L,0,0,0,1);//zeros are PID, 1 is maxticks
 		flyWheelTwo= new SRXSpeed(CAN_FLYWHEEL_R,0,0,0,1);
@@ -140,7 +140,8 @@ private:
 	void TeleopPeriodic()
 	{
 		visionState = visionStateMachine(visionState);
-		holder->AutoHold();
+		bool button3=stick->GetRawButton(TOGGLE_LIFTER);
+		//TODO make a request for loader based on holder state and current loader state
 		bool button2=stick->GetRawButton(SWITCH_CAMERA);
 		if(button2 && !pButton2)
 		{
@@ -174,10 +175,12 @@ private:
 			shooterAngleMotor->Set(-.2);//it should stop automatically when it hits the limit switch
 		}
 
-		if(!drivePID->IsEnabled())
+		if(visionState<4)//states 0-3 are the ones that aren't part of aiming
 		{
 			mydrive->ArcadeDrive(stick);
 		}
+
+		holder->AutoHold();
 		mylauncher->Obey();
 		mydrive->Obey();
 	}
