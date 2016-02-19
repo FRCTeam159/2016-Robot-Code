@@ -42,7 +42,7 @@ void Loader::Obey(){
 	case WAITING:
 		ftime(&end_time);
 		if(deltaTime(&start_time, &end_time) < timeoutTime){
-			state=SETLOW;
+			SetLow();
 		}
 		break;
 	case SETHIGH:

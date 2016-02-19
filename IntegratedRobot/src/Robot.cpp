@@ -152,9 +152,9 @@ private:
 	{
 		visionState = visionStateMachine(visionState);
 		bool button3=stick->GetRawButton(TOGGLE_LIFTER);
-		if(button3&&pButton3)
+		if(button3&&!pButton3)
 		{
-			if(loader->GetState()==Loader::SETHIGH||loader->GetState()==Loader::WAITING)
+			if((loader->GetState()==Loader::SETHIGH)||(loader->GetState()==Loader::WAITING))
 			{
 				loader->SetLow();
 			}
@@ -167,6 +167,7 @@ private:
 		{
 			loader->Wait();
 		}
+		pButton3=button3;
 		bool button2=stick->GetRawButton(SWITCH_CAMERA);
 		if(button2 && !pButton2)
 		{
