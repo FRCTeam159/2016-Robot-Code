@@ -11,7 +11,8 @@
 #define CANTALON_ROLLERMOTOR
 #include <WPILib.h>
 #include <Sensors/AngleAccelerometer.h>
-
+#include <time.h>
+#include <sys/timeb.h>
 
 class Loader {
 private:
@@ -23,11 +24,9 @@ private:
 	int state;
 	bool atLimit;
 	double targetAngle;
-	enum {
-		SETLOWPOSITION,
-		WAITING,
-		GRABBALL,
-	};
+	int oldState;
+	double timeoutTime;
+
 
 
 #ifdef CANTALON_LIFTMOTOR
@@ -44,8 +43,15 @@ private:
 	AngleAccelerometer accel;
 	void GoToZeroLimitSwitch();
 	bool IsAtLimit();
-	void GrabbingBall();
+	void TurnRollersOn(bool);
 public:
+	struct timeb start_time;
+	struct timeb end_time;
+	enum {
+		SETLOW,
+		WAITING,
+		SETHIGH,
+	};
 	Loader(int motor1, int motor2, I2C::Port p);
 	bool AtGrabAngle();
 	bool AtZeroAngle();
@@ -60,9 +66,16 @@ public:
 	void TeleopPeriodic();
 	void AutonomousInit();
 	void AutonomousPeriodic();
-	void SetLowPosition();
-	void GrabBall();
-	void Waiting();
+	void SetLow();
+	void SetHigh();
+	void Wait();
+	void SetTimeoutTime(double t){
+		timeoutTime = t;
+	}
+	int deltaTime(struct timeb* first, struct timeb* after);
+	int GetState(){
+		return state;
+	}
 };
 
 #endif /* SRC_LOADER_H_ */

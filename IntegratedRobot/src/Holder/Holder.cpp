@@ -129,7 +129,7 @@ bool Holder::CheckPushed(){
 }
 
 bool Holder::IsLoaded(){
-	return IRsensor.Get();
+	return !IRsensor.Get();
 }
 
 void Holder::Test(){
