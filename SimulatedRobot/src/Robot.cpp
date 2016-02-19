@@ -5,11 +5,24 @@ DriveTrain* Robot::drivetrain = NULL;
 
 OI* Robot::oi = NULL;
 
-void Robot::RobotInit() {
-	drivetrain = new DriveTrain();
-	drivetrain->SetDeadband(0.25,0.25);
 
+enum motorIDs {
+	DRIVE_LEFT = 1,
+	DRIVE_RIGHT =2,
+	HOLDER_GATE =3,
+	HOLDER_PUSH=4,
+	SHOOTER_ANGLE=5,
+	SHOOTER_LEFT=6,
+	SHOOTER_RIGHT=7,
+};
+
+void Robot::RobotInit() {
 	oi = new OI();
+	drivetrain = new DriveTrain();
+	holder=new BallHolder(HOLDER_GATE,HOLDER_PUSH);
+	shooter=new Shooter(SHOOTER_ANGLE,SHOOTER_LEFT,SHOOTER_RIGHT);
+
+	drivetrain->SetDeadband(0.25,0.25);
 
 	lw = LiveWindow::GetInstance();
 
@@ -17,6 +30,11 @@ void Robot::RobotInit() {
     SmartDashboard::PutData(drivetrain);
 }
 
+Robot::~Robot(){
+	delete drivetrain;
+	delete holder;
+
+}
 void Robot::AutonomousInit() {
 	std::cout << "Starting Auto" << std::endl;
 }

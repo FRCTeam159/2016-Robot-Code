@@ -10,12 +10,7 @@
  */
 class DriveTrain : public Subsystem {
 private:
-#ifdef FOUR_MOTORS
-	SpeedController *front_left_motor,  *back_left_motor,
-					*front_right_motor, *back_right_motor;
-#else
 	SpeedController *left_motor,  *right_motor;
-#endif
 	RobotDrive* drive;
 	Encoder *left_encoder, *right_encoder;
 	//AnalogInput* rangefinder;
@@ -23,7 +18,7 @@ private:
 	double x_deadband,y_deadband;
 
 public:
-	DriveTrain();
+	DriveTrain(int,int);
 
 	/**
 	 * When no other command is running let the operator drive around

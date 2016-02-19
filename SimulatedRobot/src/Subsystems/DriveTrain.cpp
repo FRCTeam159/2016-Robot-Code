@@ -1,23 +1,12 @@
 #include "DriveTrain.h"
 #include "Commands/TankDriveWithJoystick.h"
 #include <math.h>
-DriveTrain::DriveTrain() : Subsystem("DriveTrain") {
-#ifdef FOUR_MOTORS
-	front_left_motor = new Talon(1);
-	back_left_motor = new Talon(2);
-	front_right_motor = new Talon(3);
-	back_right_motor = new Talon(4);
-
-	drive = new RobotDrive(front_left_motor, back_left_motor,
-						   front_right_motor, back_right_motor);
-#else
-	left_motor = new Talon(1);
-	right_motor = new Talon(2);
+DriveTrain::DriveTrain(int m1, int m2) : Subsystem("DriveTrain") {
+	left_motor = new Talon(m1);
+	right_motor = new Talon(m2);
 	drive = new RobotDrive(left_motor, right_motor);
-
-#endif
-	left_encoder = new Encoder(1, 2);
-	right_encoder = new Encoder(3, 4);
+	left_encoder = new Encoder(m1, m1+1);
+	right_encoder = new Encoder(2*m2-1, 2*m2);
 
 	// Encoders may measure differently in the real world and in
 	// simulation. In this example the robot moves 0.042 barleycorns
