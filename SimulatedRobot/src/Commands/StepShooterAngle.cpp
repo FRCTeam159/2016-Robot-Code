@@ -8,8 +8,7 @@
 #include <Commands/StepShooterAngle.h>
 
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
-	// TODO Auto-generated constructor stub
-
+	Requires(Robot::shooter);
 }
 // Called just before this Command runs the first time
 void StepShooterAngle::Initialize() {}

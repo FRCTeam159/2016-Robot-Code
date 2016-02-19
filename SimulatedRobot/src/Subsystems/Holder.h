@@ -13,8 +13,13 @@
 class BallHolder: public Subsystem {
 	Victor gateMotor;
 	Victor pushMotor;
+	bool gateopen;
 public:
 	BallHolder(int m1, int m2);
+	bool GateIsOpen();
+	void OpenGate();
+	void CloseGate();
+	void PushBall(bool);
 };
 
 #endif /* SRC_SUBSYSTEMS_HOLDER_H_ */

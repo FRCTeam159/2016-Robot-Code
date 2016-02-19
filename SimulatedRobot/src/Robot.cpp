@@ -18,7 +18,7 @@ enum motorIDs {
 
 void Robot::RobotInit() {
 	oi = new OI();
-	drivetrain = new DriveTrain();
+	drivetrain = new DriveTrain(DRIVE_LEFT,DRIVE_RIGHT);
 	holder=new BallHolder(HOLDER_GATE,HOLDER_PUSH);
 	shooter=new Shooter(SHOOTER_ANGLE,SHOOTER_LEFT,SHOOTER_RIGHT);
 
@@ -33,7 +33,7 @@ void Robot::RobotInit() {
 Robot::~Robot(){
 	delete drivetrain;
 	delete holder;
-
+	delete shooter;
 }
 void Robot::AutonomousInit() {
 	std::cout << "Starting Auto" << std::endl;
