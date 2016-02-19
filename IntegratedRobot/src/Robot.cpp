@@ -68,6 +68,7 @@ private:
 		rightSlave = new SRXSlave(CAN_RIGHT_SLAVE,CAN_RIGHT_DRIVE);
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
 		drivePID= new PIDController(0,0,0, horizontal, mydrive);//TODO set constants for this and flywheels
+		drivePID->SetOutputRange(-1, 1);
 		flyWheelOne= new SRXSpeed(CAN_FLYWHEEL_L,0,0,0,1);//zeros are PID, 1 is maxticks
 		flyWheelTwo= new SRXSpeed(CAN_FLYWHEEL_R,0,0,0,1);
 		shooterAngleMotor = new CANTalon(CAN_SHOOT_ANGLE);
@@ -75,6 +76,7 @@ private:
 		shooterAngleMotor->SetControlMode(CANTalon::kPercentVbus);
 		shooterAngle = new AngleAccelerometer(I2C::Port::kMXP);
 		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
+		vertAnglePID->SetOutputRange(-1,1);
 		vertAnglePID->SetToleranceBuffer(5);
 		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, vertAnglePID);
 		lidar = new Lidar(I2C::kMXP, 0x62);

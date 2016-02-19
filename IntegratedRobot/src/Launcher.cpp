@@ -26,12 +26,14 @@ bool Launcher::SpeedGood(float tolerance)
 void Launcher::SetTargetSpeed(float speed)
 {
 	targetSpeed=speed;
+	left->SetTargetSpeed(targetSpeed);
+	right->SetTargetSpeed(targetSpeed);
 }
 
 void Launcher::Obey()
 {
-	left->SetTargetSpeed(targetSpeed);
-	right->SetTargetSpeed(targetSpeed);
+	left->Obey();
+	right->Obey();
 }
 
 void Launcher::SetAngle(float angle)
