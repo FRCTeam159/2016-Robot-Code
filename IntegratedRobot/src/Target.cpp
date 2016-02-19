@@ -134,6 +134,7 @@ Particle* Target::GetBestParticle()
 		std::cout<<"No Particles!";
 		Particle err;
 		err.finalScore=0;
+		err.CenterX=1234;
 		return(&err);
 	}
 
