@@ -42,6 +42,7 @@ private:
 	SRXSpeed *flyWheelOne, *flyWheelTwo;
 	Launcher *mylauncher;
 	PIDController *vertAnglePID, *drivePID;
+	Loader *loader;
 
 	int autoState;
 	bool pButton1=false, pButton2=false;
@@ -82,6 +83,7 @@ private:
 		lidar = new Lidar(I2C::kMXP, 0x62);
 		stick= new Joystick(0);
 		holder = new Holder(HOLDER_GATE,HOLDER_PUSHER,REVGATELIMIT,FWDGATELIMIT,IRSENSOR);
+		loader = new Loader(CAN_LIFTER, CAN_ROLLER, I2C::Port::kOnboard);
 		sendMe=imaqCreateImage(IMAQ_IMAGE_HSL, 0);
 
 	}
@@ -109,7 +111,7 @@ private:
 		}
 		mydrive->ConfigAuto(0,0,0);
 		holder->AutonomousInit();
-		//TODO drop loader arm
+		loader->SetLowPosition();
 		autoState=1;
 	}
 
@@ -124,6 +126,8 @@ private:
 		static int currentState=0;
 		AutoStateMachine(currentState);
 		mydrive->Obey();
+		loader->Obey();
+		holder->AutoHold();
 	}
 
 	void TeleopInit()
