@@ -16,6 +16,17 @@
 #define TICKS_PER_CM 500
 #define NO_TARGET 1234
 #define HORIZONTAL_TARGETING 1//0 is by angle, 1 is by pixel difference and drivePID
+#define AUT_DRIVE_P//TODO PID constants for the autonomous position control mode for the drive train
+#define AUT_DRIVE_I
+#define AUT_DRIVE_D
+
+#define TEL_DRIVE_P 1//TODO PID constants for the teleop arcade drive for the drive train
+#define TEL_DRIVE_I 0
+#define TEL_DRIVE_D 0
+
+#define CAM_DRIVE_P .05 //TODO PID constants for the external aiming pid for the drive train
+#define CAM_DRIVE_I 0
+#define CAM_DRIVE_D 0
 class Robot: public IterativeRobot
 {
 private:
@@ -68,7 +79,7 @@ private:
 		leftSlave = new SRXSlave(CAN_LEFT_SLAVE,CAN_LEFT_DRIVE);
 		rightSlave = new SRXSlave(CAN_RIGHT_SLAVE,CAN_RIGHT_DRIVE);
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
-		drivePID= new PIDController(0.05,0,0, horizontal, mydrive);//TODO set constants for this and flywheels
+		drivePID= new PIDController(CAM_DRIVE_P,CAM_DRIVE_I ,CAM_DRIVE_D, horizontal, mydrive);
 		drivePID->SetOutputRange(-1, 1);
 		flyWheelOne= new SRXSpeed(CAN_FLYWHEEL_L,0,0,0,1);//zeros are PID, 1 is maxticks
 		flyWheelTwo= new SRXSpeed(CAN_FLYWHEEL_R,0,0,0,1);
@@ -111,7 +122,7 @@ private:
 		}
 		mydrive->ConfigAuto(0,0,0);
 		holder->AutonomousInit();
-		loader->SetLowPosition();
+		loader->SetLow();
 		autoState=1;
 	}
 
@@ -141,7 +152,21 @@ private:
 	{
 		visionState = visionStateMachine(visionState);
 		bool button3=stick->GetRawButton(TOGGLE_LIFTER);
-		//TODO make a request for loader based on holder state and current loader state
+		if(button3&&pButton3)
+		{
+			if(loader->GetState()==Loader::SETHIGH||loader->GetState()==Loader::WAITING)
+			{
+				loader->SetLow();
+			}
+			else
+			{
+				loader->SetHigh();
+			}
+		}
+		if(loader->GetState()==Loader::SETHIGH&&holder->IsLoaded())
+		{
+			loader->Wait();
+		}
 		bool button2=stick->GetRawButton(SWITCH_CAMERA);
 		if(button2 && !pButton2)
 		{
@@ -179,7 +204,7 @@ private:
 		{
 			mydrive->ArcadeDrive(stick);
 		}
-
+		loader->Obey();
 		holder->AutoHold();
 		mylauncher->Obey();
 		mydrive->Obey();
@@ -239,17 +264,24 @@ private:
 		//states 4-8 acquire and process an image, then wait for dashboard confirmation
 		if(state==StartCalibrations)
 		{
-			firstCalibration=true;
+			range = lidar->GetDistance();
+			if(!range==1234)
+			{
+				firstCalibration=true;
+				vertAnglePID->Enable();
+				vertAnglePID->SetSetpoint(20);
 #if HORIZONTAL_TARGETING ==1
-			mydrive->ConfigForPID();
+				mydrive->ConfigForPID();
 #endif
 #if HORIZONTAL_TARGETING ==0
-			mydrive->ConfigAuto(0,0,0);
+				mydrive->ConfigAuto(0,0,0);
 #endif
-			range = lidar->GetDistance();
-			vertAnglePID->Enable();
-			vertAnglePID->SetSetpoint(20);
-			state= SetInitialAngle;
+				state= SetInitialAngle;
+			}
+			else
+			{
+				state=StartCalibrations;
+			}
 		}
 		if(state==SetInitialAngle)
 		{
@@ -377,7 +409,7 @@ private:
 			state=GetForwardImage;
 			drivePID->Disable();
 			mylauncher->SetTargetSpeed(0);
-			mydrive->ConfigTeleop(0,0,0);//TODO
+			mydrive->ConfigTeleop(TEL_DRIVE_P,TEL_DRIVE_I,TEL_DRIVE_D);
 			vertAnglePID->Disable();
 		}
 		return(state);
