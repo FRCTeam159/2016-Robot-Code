@@ -1,5 +1,7 @@
 #include "WPILib.h"
 #include "Loader/Loader.h"
+#include "Holder/Holder.h"
+#include "Holder/Holder.cpp"
 #include "Assignments.h"
 #include <Sensors/AngleAccelerometer.h>
 #define LOW_ANGLE 0
@@ -12,16 +14,26 @@ private:
 	LiveWindow *lw = LiveWindow::GetInstance();
 	SendableChooser *chooser;
 	Loader *loader;
+	Holder *holder;
 	Joystick *joystick;
+	int state;
+	bool pButton;
+	bool pButton2;
 
 	void RobotInit()
 	{
 		chooser = new SendableChooser();
 		SmartDashboard::PutData("Auto Modes", chooser);
-		loader = new Loader(1,2,I2C::kOnboard);
+		loader = new Loader(3,4,I2C::kOnboard);
 		joystick = new Joystick(0);
+		holder = new Holder(5,8,1,2,0);
+		state = ARMUP;
 	}
 
+	enum {
+		ARMDOWN,
+		ARMUP
+	};
 
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select between different autonomous modes
@@ -49,19 +61,39 @@ private:
 
 	void TeleopPeriodic()
 	{
-		bool button3 = joystick->GetRawButton(3);
+		/*bool button3 = joystick->GetRawButton(3);
 		bool button4 = joystick->GetRawButton(4);
 		bool button2 = joystick->GetRawButton(2);
-			if(button3){
+		if(button3){
+			loader->SetLowPosition();
+		}
+		if(button4){
+			loader->GrabBall();
+		}
+		if(button2){
+			loader->Waiting();
+		}*/
+		bool button = joystick->GetRawButton(2);
+		if((button != pButton) && (button == 1)){
+			printf("buttonstate:%d\n", button);
+			switch(state){
+			case ARMDOWN:
 				loader->SetLowPosition();
-			}
-			if(button4){
+				printf("ARMDOWN\n");
+				state=ARMUP;
+				break;
+			case ARMUP:
 				loader->GrabBall();
+				printf("ARMUP\n");
+				state=ARMDOWN;
+				/*			if(){
+					loader->SetLowPosition();
+			}*/
+				break;
 			}
-			if(button2){
-				loader->Waiting();
-			}
+		}
 		loader->Obey();
+		pButton = button;
 	}
 
 

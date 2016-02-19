@@ -7,8 +7,8 @@
 
 #include <Loader/Loader.h>
 #include <WPILib.h>
-#define SETZEROSPEED -0.3
-#define ROLLERMOTORSPEED 0.6
+#define SETZEROSPEED -0.1
+#define ROLLERMOTORSPEED 1
 #define ANGLE 30
 #define MINIMUM_ANGLE_ERROR 1
 
@@ -21,7 +21,7 @@ Loader::Loader(int a, int b, I2C::Port p):liftMotor(a), rollerMotor(b), accel(p)
 	liftMotor.ConfigRevLimitSwitchNormallyOpen(true);
 	liftMotor.SetControlMode(CANTalon::kPercentVbus);
 	liftMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
-	sAngCtrl= new PIDController(1,0,0, &accel, &liftMotor);
+	sAngCtrl= new PIDController(0.5,0,0, &accel, &liftMotor);
 	targetAngle = ANGLE;
 	state = WAITING;
 	atLimit = false;
