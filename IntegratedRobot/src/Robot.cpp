@@ -76,6 +76,7 @@ private:
 		horizontal = new Target(forwardCamera);
 		leftDrive= new CANTalon(CAN_LEFT_DRIVE);
 		rightDrive = new CANTalon(CAN_RIGHT_DRIVE);
+		rightDrive->SetInverted(true);
 		leftSlave = new SRXSlave(CAN_LEFT_SLAVE,CAN_LEFT_DRIVE);
 		rightSlave = new SRXSlave(CAN_RIGHT_SLAVE,CAN_RIGHT_DRIVE);
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
@@ -86,6 +87,7 @@ private:
 		shooterAngleMotor = new CANTalon(CAN_SHOOT_ANGLE);
 		shooterAngleMotor->ConfigRevLimitSwitchNormallyOpen(false);
 		shooterAngleMotor->SetControlMode(CANTalon::kPercentVbus);
+		shooterAngleMotor->SetInverted(true);
 		shooterAngle = new AngleAccelerometer(I2C::Port::kMXP);
 		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
 		vertAnglePID->SetOutputRange(-1,1);
@@ -143,7 +145,7 @@ private:
 
 	void TeleopInit()
 	{
-		mydrive->ConfigTeleop(0,0,0);
+		mydrive->ConfigTeleop(TEL_DRIVE_P, TEL_DRIVE_I, TEL_DRIVE_D);
 		visionState = 0;
 		holder->TeleopInit();
 	}
