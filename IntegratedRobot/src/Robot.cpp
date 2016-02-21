@@ -338,11 +338,11 @@ private:
 #if HORIZONTAL_TARGETING == 1
 			if(best->CenterX!=1234)//1234 is error
 			{
-				if(!drivePID->IsEnabled())
+				if(!drivePID->IsEnabled()) //if drive PID controller is not enabled
 				{
-					drivePID->Enable();
+					drivePID->Enable(); //enable drive PID controller
 				}
-				drivePID->SetSetpoint(targetOffset);
+				drivePID->SetSetpoint(targetOffset); //set PID controller target
 			}
 			else
 			{
@@ -393,7 +393,7 @@ private:
 		}
 		if(state==ShootBall)
 		{
-			holder->PushBall();
+			holder->PushBall(); //pushes ball with pusher motor
 			state=CheckBall;
 		}
 		if(state==CheckBall)
@@ -412,7 +412,7 @@ private:
 			state=GetForwardImage;
 			drivePID->Disable();
 			mylauncher->SetTargetSpeed(0);
-			mydrive->ConfigTeleop(TEL_DRIVE_P,TEL_DRIVE_I,TEL_DRIVE_D);
+			mydrive->ConfigTeleop(TEL_DRIVE_P,TEL_DRIVE_I,TEL_DRIVE_D); //configuring back to init config
 			vertAnglePID->Disable();
 		}
 		return(state);
@@ -433,7 +433,7 @@ private:
 		#endif
 					range = lidar->GetDistance();
 					vertAnglePID->Enable();
-					vertAnglePID->SetSetpoint(20);
+					vertAnglePID->SetSetpoint(20); //set PID controller target
 					state= SetInitialAngle;
 				}
 				if(state==SetInitialAngle)
@@ -481,15 +481,15 @@ private:
 		#if HORIZONTAL_TARGETING == 1
 					if(best->CenterX!=1234)//1234 is error
 					{
-						if(!drivePID->IsEnabled())
+						if(!drivePID->IsEnabled()) //if PID controller is not enabled
 						{
-							drivePID->Enable();
+							drivePID->Enable(); //enable PID controller
 						}
-						drivePID->SetSetpoint(targetOffset);
+						drivePID->SetSetpoint(targetOffset); //set PID controller target to targetOffset
 					}
 					else
 					{
-						drivePID->Disable();
+						drivePID->Disable(); //disable PID controller
 					}
 		#endif
 					state=WaitForCalibrations;
@@ -518,7 +518,7 @@ private:
 		}
 		if(state==ShootBall)
 		{
-			holder->PushBall();
+			holder->PushBall(); //push ball into shooter with roller motors
 			state=CheckBall;
 		}
 		if(state==CheckBall)
