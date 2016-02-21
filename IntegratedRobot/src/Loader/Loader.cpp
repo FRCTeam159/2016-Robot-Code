@@ -34,7 +34,7 @@ Loader::~Loader() {
 	delete sAngCtrl;
 }
 
-void Loader::Obey(){
+void Loader::StateMachine(){
 	switch(state){
 	case SETLOW:
 		//GoToZeroLimitSwitch();

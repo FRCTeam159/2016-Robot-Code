@@ -122,9 +122,9 @@ private:
 		} else {
 			//Default Auto goes here
 		}
-		mydrive->ConfigAuto(0,0,0);
-		holder->AutonomousInit();
-		loader->SetLow();
+		mydrive->ConfigAuto(0,0,0); //configuring the left and right motors for autonomous and takes an input of PID
+		holder->AutonomousInit(); //configuring holder for autonomous, finds zero if it has not yet been found
+		loader->SetLow(); //make sure the loader is in the low position
 		autoState=1;
 	}
 
@@ -138,36 +138,36 @@ private:
 		}
 		static int currentState=0;
 		AutoStateMachine(currentState);
-		mydrive->Obey();
-		loader->Obey();
-		holder->AutoHold();
+		mydrive->Obey(); //tank drive slaving, sets the targets of non slave wheels and sets slave wheel to targets of the master wheels
+		loader->StateMachine(); //loader state machine, only has Waiting state.
+		holder->AutoHold(); //holder state machine
 	}
 
 	void TeleopInit()
 	{
-		mydrive->ConfigTeleop(TEL_DRIVE_P, TEL_DRIVE_I, TEL_DRIVE_D);
+		mydrive->ConfigTeleop(TEL_DRIVE_P, TEL_DRIVE_I, TEL_DRIVE_D); //configuring for teleop with input for PID
 		visionState = 0;
-		holder->TeleopInit();
+		holder->TeleopInit(); //configuring for teleop
 	}
 
 	void TeleopPeriodic()
 	{
 		visionState = visionStateMachine(visionState);
 		bool button3=stick->GetRawButton(TOGGLE_LIFTER);
-		if(button3&&!pButton3)
+		if(button3&&!pButton3) //toggles the lifter
 		{
 			if((loader->GetState()==Loader::SETHIGH)||(loader->GetState()==Loader::WAITING))
 			{
-				loader->SetLow();
+				loader->SetLow(); //sets low position for roller
 			}
 			else
 			{
-				loader->SetHigh();
+				loader->SetHigh(); //sets high position for roller
 			}
 		}
 		if(loader->GetState()==Loader::SETHIGH&&holder->IsLoaded())
 		{
-			loader->Wait();
+			loader->Wait(); //resets to low position after a delay
 		}
 		pButton3=button3;
 		bool button2=stick->GetRawButton(SWITCH_CAMERA);
@@ -198,19 +198,19 @@ private:
 		}
 		pButton1 = button1;
 
-		if(!vertAnglePID->IsEnabled())
+		if(!vertAnglePID->IsEnabled()) //pid controller is not enabled
 		{//TODO make sure the correct limit switches are plugged into this motor
 			shooterAngleMotor->Set(-.2);//it should stop automatically when it hits the limit switch
 		}
 
 		if(visionState<4)//states 0-3 are the ones that aren't part of aiming
 		{
-			mydrive->ArcadeDrive(stick);
+			mydrive->ArcadeDrive(stick); //starts arcade drive with the joystick
 		}
-		loader->Obey();
-		holder->AutoHold();
-		mylauncher->Obey();
-		mydrive->Obey();
+		loader->StateMachine(); //loader state machine
+		holder->AutoHold(); //holder state machine
+		mylauncher->Obey(); //setting motors
+		mydrive->Obey(); //more motor slave stuff
 	}
 
 	void TestPeriodic()
@@ -239,7 +239,7 @@ private:
 	int visionStateMachine(int state)
 	{
 		static int range;
-		static float horizError;
+		static float horizError; //used in horizontal targeting
 		static bool firstCalibration;
 		static Particle *best=NULL;
 		//states 0 and 1 get and send images from the forward camera
@@ -267,12 +267,12 @@ private:
 		//states 4-8 acquire and process an image, then wait for dashboard confirmation
 		if(state==StartCalibrations)
 		{
-			range = lidar->GetDistance();
+			range = lidar->GetDistance(); //getting distance
 			if(!range==1234)
 			{
 				firstCalibration=true;
-				vertAnglePID->Enable();
-				vertAnglePID->SetSetpoint(20);
+				vertAnglePID->Enable(); //enabling PID controller
+				vertAnglePID->SetSetpoint(20); //setting the PID controller target
 #if HORIZONTAL_TARGETING ==1
 				mydrive->ConfigForPID();
 #endif

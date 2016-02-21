@@ -60,7 +60,7 @@ public:
 	void LowerLifter();
 	void RaiseLifter();
 	bool AngleGood(float);
-	void Obey();
+	void StateMachine();
 	virtual ~Loader();
 	void TeleopInit();
 	void TeleopPeriodic();
