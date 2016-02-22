@@ -11,21 +11,21 @@
 #include "WPILib.h"
 #include "Commands/Command.h"
 
-#include "Subsystems/DriveTrain.h"
-#include "Subsystems/Holder.h"
-#include "Subsystems/Shooter.h"
+#include <Subsystems/DriveTrain.h>
+#include <Subsystems/Shooter.h>
+#include <Subsystems/BallHolder.h>
+
 #include "OI.h"
 
 class Robot: public IterativeRobot {
 public:
-	static DriveTrain* drivetrain;
-	static BallHolder* holder;
-	static Shooter* shooter;
-	static OI* oi;
+	static std::shared_ptr<DriveTrain> drivetrain;
+	static std::shared_ptr<BallHolder> holder;
+	static std::shared_ptr<Shooter> shooter;
+	static std::unique_ptr<OI> oi;
 
 private:
-	LiveWindow *lw;
-	~Robot();
+	LiveWindow *lw = LiveWindow::GetInstance();
 	void RobotInit();
 	void AutonomousInit();
 	void AutonomousPeriodic();

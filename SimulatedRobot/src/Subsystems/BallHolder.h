@@ -5,14 +5,14 @@
  *      Author: alpiner
  */
 
-#ifndef SRC_SUBSYSTEMS_HOLDER_H_
-#define SRC_SUBSYSTEMS_HOLDER_H_
+#ifndef SRC_SUBSYSTEMS_BALLHOLDER_H_
+#define SRC_SUBSYSTEMS_BALLHOLDER_H_
 #include "WPILib.h"
-#include <Commands/Subsystem.h>
+#include "Subsystems/GPMotor.h"
 
 class BallHolder: public Subsystem {
-	Victor gateMotor;
-	Victor pushMotor;
+	GPMotor gateMotor;
+	GPMotor pushMotor;
 	bool gateopen;
 public:
 	BallHolder(int m1, int m2);
@@ -22,4 +22,4 @@ public:
 	void PushBall(bool);
 };
 
-#endif /* SRC_SUBSYSTEMS_HOLDER_H_ */
+#endif /* SRC_SUBSYSTEMS_BALLHOLDER_H_ */

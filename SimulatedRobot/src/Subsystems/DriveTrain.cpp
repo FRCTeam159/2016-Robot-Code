@@ -1,26 +1,27 @@
 #include "DriveTrain.h"
 #include "Commands/TankDriveWithJoystick.h"
-#include <math.h>
-DriveTrain::DriveTrain(int m1, int m2) : Subsystem("DriveTrain") {
-	left_motor = new Talon(m1);
-	right_motor = new Talon(m2);
-	drive = new RobotDrive(left_motor, right_motor);
-	left_encoder = new Encoder(m1, m1+1);
-	right_encoder = new Encoder(2*m2-1, 2*m2);
 
+
+#include <math.h>
+DriveTrain::DriveTrain(int m1, int m2) : Subsystem("DriveTrain"),
+	left_motor(m1),right_motor(m2)
+{
+	std::cout<<"New DriveTrain("<<m1<<","<<m2<<")"<<std::endl;
 	// Encoders may measure differently in the real world and in
 	// simulation. In this example the robot moves 0.042 barleycorns
 	// per tick in the real world, but the simulated encoders
 	// simulate 360 tick encoders. This if statement allows for the
 	// real robot to handle this difference in devices.
-	#ifdef REAL
-		left_encoder->SetDistancePerPulse(0.042);
-		right_encoder->SetDistancePerPulse(0.042);
-	#else
-		// Circumference in ft = 4in/12(in/ft)*PI
-		left_encoder->SetDistancePerPulse((double) (7.5/12.0*M_PI) / 360.0);
-		right_encoder->SetDistancePerPulse((double) (7.5/12.0*M_PI) / 360.0);
-	#endif
+#ifdef REAL
+	double dpp=0.042;
+#else
+	// Circumference in ft = 7.5in/12(in/ft)*PI
+	double dpp=(double) (7.5/12.0*M_PI) / 360.0;
+#endif
+	drive = new RobotDrive(&left_motor, &right_motor);
+	left_motor.SetDistancePerPulse(dpp);
+	right_motor.SetDistancePerPulse(dpp);
+
 	//drive->SetInvertedMotor(RobotDrive::kFrontRightMotor, false);	// invert the left side motors
 
 	//rangefinder = new AnalogInput(6);
@@ -31,10 +32,10 @@ DriveTrain::DriveTrain(int m1, int m2) : Subsystem("DriveTrain") {
 	// TODO: LiveWindow::GetInstance()->AddActuator("Drive Train", "Back Left Motor", (Talon) back_left_motor);
 	// TODO: LiveWindow::GetInstance()->AddActuator("Drive Train", "Front Right Motor", (Talon) front_right_motor);
 	// TODO: LiveWindow::GetInstance()->AddActuator("Drive Train", "Back Right Motor", (Talon) back_right_motor);
-	LiveWindow::GetInstance()->AddSensor("Drive Train", "Left Encoder", left_encoder);
-	LiveWindow::GetInstance()->AddSensor("Drive Train", "Right Encoder", right_encoder);
-	//LiveWindow::GetInstance()->AddSensor("Drive Train", "Rangefinder", rangefinder);
-	//LiveWindow::GetInstance()->AddSensor("Drive Train", "Gyro", gyro);
+	// LiveWindow::GetInstance()->AddSensor("Drive Train", "Left Encoder", left_encoder);
+	// LiveWindow::GetInstance()->AddSensor("Drive Train", "Right Encoder", right_encoder);
+	// LiveWindow::GetInstance()->AddSensor("Drive Train", "Rangefinder", rangefinder);
+	// LiveWindow::GetInstance()->AddSensor("Drive Train", "Gyro", gyro);
 }
 
 /**
@@ -49,10 +50,10 @@ void DriveTrain::InitDefaultCommand() {
  * The log method puts interesting information to the SmartDashboard.
  */
 void DriveTrain::Log() {
-	SmartDashboard::PutNumber("Left Distance", left_encoder->GetDistance());
-	SmartDashboard::PutNumber("Right Distance", right_encoder->GetDistance());
-	SmartDashboard::PutNumber("Left Speed", left_encoder->GetRate());
-	SmartDashboard::PutNumber("Right Speed", right_encoder->GetRate());
+	SmartDashboard::PutNumber("Left Distance", left_motor.GetDistance());
+	SmartDashboard::PutNumber("Right Distance", right_motor.GetDistance());
+	SmartDashboard::PutNumber("Left Speed", left_motor.GetVelocity());
+	SmartDashboard::PutNumber("Right Speed", right_motor.GetVelocity());
 	//SmartDashboard::PutNumber("Gyro", gyro->GetAngle());
 }
 
@@ -66,6 +67,7 @@ void DriveTrain::Drive(Joystick* joy) {
 	double right=-joy->GetRawAxis(4);
 	left=Deadband(left,x_deadband);
 	right=Deadband(right,y_deadband);
+	//std::cout<<"left:"<<left<<" right:"<<right<<std::endl;
 	Drive(left, right);
 }
 
@@ -82,12 +84,12 @@ double DriveTrain::GetHeading() {
 
 void DriveTrain::Reset() {
 	//gyro->Reset();
-	left_encoder->Reset();
-	right_encoder->Reset();
+	right_motor.Reset();
+	left_motor.Reset();
 }
 
 double DriveTrain::GetDistance() {
-	return (left_encoder->GetDistance() + right_encoder->GetDistance())/2;
+	return (left_motor.GetDistance() + right_motor.GetDistance())/2;
 }
 
 double DriveTrain::GetDistanceToObstacle() {

@@ -2,6 +2,7 @@
 #define DriveTrain_H
 
 #include "WPILib.h"
+#include "Subsystems/GPMotor.h"
 
 /**
  * The DriveTrain subsystem incorporates the sensors and actuators attached to
@@ -9,10 +10,12 @@
  * and a gyro.
  */
 class DriveTrain : public Subsystem {
+	GPMotor left_motor;
+	GPMotor right_motor;
 private:
-	SpeedController *left_motor,  *right_motor;
+
 	RobotDrive* drive;
-	Encoder *left_encoder, *right_encoder;
+	//Encoder *left_encoder, *right_encoder;
 	//AnalogInput* rangefinder;
 	//AnalogGyro* gyro;
 	double x_deadband,y_deadband;

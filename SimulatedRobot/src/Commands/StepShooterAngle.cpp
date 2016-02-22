@@ -6,9 +6,10 @@
  */
 
 #include <Commands/StepShooterAngle.h>
+#include "Robot.h"
 
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
-	Requires(Robot::shooter);
+	Requires(Robot::shooter.get());
 }
 // Called just before this Command runs the first time
 void StepShooterAngle::Initialize() {}

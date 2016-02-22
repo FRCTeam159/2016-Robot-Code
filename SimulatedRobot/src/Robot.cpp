@@ -1,11 +1,6 @@
 
 #include "Robot.h"
 
-DriveTrain* Robot::drivetrain = NULL;
-
-OI* Robot::oi = NULL;
-
-
 enum motorIDs {
 	DRIVE_LEFT = 1,
 	DRIVE_RIGHT =2,
@@ -16,25 +11,24 @@ enum motorIDs {
 	SHOOTER_RIGHT=7,
 };
 
+std::shared_ptr<DriveTrain> Robot::drivetrain;
+std::shared_ptr<BallHolder> Robot::holder;
+std::shared_ptr<Shooter> Robot::shooter;
+std::unique_ptr<OI> Robot::oi;
+
 void Robot::RobotInit() {
-	oi = new OI();
-	drivetrain = new DriveTrain(DRIVE_LEFT,DRIVE_RIGHT);
-	holder=new BallHolder(HOLDER_GATE,HOLDER_PUSH);
-	shooter=new Shooter(SHOOTER_ANGLE,SHOOTER_LEFT,SHOOTER_RIGHT);
+	drivetrain.reset(new DriveTrain(DRIVE_LEFT,DRIVE_RIGHT));
+	holder.reset(new BallHolder(HOLDER_GATE,HOLDER_PUSH));
+	shooter.reset(new Shooter(SHOOTER_ANGLE,SHOOTER_LEFT,SHOOTER_RIGHT));
+	oi.reset(new OI());
 
 	drivetrain->SetDeadband(0.25,0.25);
 
-	lw = LiveWindow::GetInstance();
-
-    // Show what command your subsystem is running on the SmartDashboard
-    SmartDashboard::PutData(drivetrain);
+	SmartDashboard::PutData(drivetrain.get());
+	SmartDashboard::PutData(holder.get());
+	SmartDashboard::PutData(shooter.get());
 }
 
-Robot::~Robot(){
-	delete drivetrain;
-	delete holder;
-	delete shooter;
-}
 void Robot::AutonomousInit() {
 	std::cout << "Starting Auto" << std::endl;
 }

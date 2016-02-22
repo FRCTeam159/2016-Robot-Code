@@ -6,9 +6,10 @@
  */
 
 #include <Commands/ShootBall.h>
+#include "Robot.h"
 
 ShootBall::ShootBall() : Command("ShootBall") {
-	Requires(Robot::shooter);
+	Requires(Robot::shooter.get());
 }
 // Called just before this Command runs the first time
 void ShootBall::Initialize() {}

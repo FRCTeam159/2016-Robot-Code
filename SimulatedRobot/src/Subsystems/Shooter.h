@@ -9,14 +9,16 @@
 #define SRC_SUBSYSTEMS_SHOOTER_H_
 
 #include "WPILib.h"
-#include <Commands/Subsystem.h>
+#include "Subsystems/GPMotor.h"
 
 class Shooter: public Subsystem {
-	Victor angleMotor;
-	Victor leftMotor;
-	Victor rightMotor;
+	GPMotor angleMotor;
+	GPMotor leftMotor;
+	GPMotor rightMotor;
 public:
 	Shooter(int,int,int);
+	void Shoot();
+	void SetAngle(double a);
 };
 
 #endif /* SRC_SUBSYSTEMS_SHOOTER_H_ */
