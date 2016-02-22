@@ -9,11 +9,11 @@ export SWMODEL=$SWMODELS/2016-Robot_Exported
 export GAZEBO_MODEL_PATH=$SWMODEL:$WPILIB/simulation/models:/usr/share/gazebo-6.5/models
 gazebo $SWMODEL/2016-Robot-test.world &
 
-sleep 8 
+sleep 4 
 # start java driver station
 sim_ds &
 
-sleep 1
+sleep 2
 
 # start simulation client
 linux_simulate/FRCUserProgram

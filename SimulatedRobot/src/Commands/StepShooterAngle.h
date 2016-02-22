@@ -11,6 +11,7 @@
 #include <Commands/Command.h>
 
 class StepShooterAngle: public Command {
+	double direction;
 public:
 	StepShooterAngle(double a);
 	void Initialize();

@@ -3,12 +3,15 @@
 
 #include "WPILib.h"
 
+#define PI 3.141516
+#define RPD(x) (x)*2*PI/360
+#define DPR(x) (x)*180.0/PI
+
 #define CANTALON 1
 #define TALON    2
 #define VICTOR   3
 
 #ifndef MOTORTYPE
-#define ENCODER
 #ifdef SIMULATION
     #define MOTORTYPE TALON
 #else
@@ -41,14 +44,14 @@ protected:
 	bool inverted;
 
 #if MOTORTYPE != CANTALON
-#ifdef ENCODER
 	PIDController *pid;
 	Encoder *encoder;
-#endif
 #endif
 
 public:
 	GPMotor(int id);
+	GPMotor(int id, bool enc);
+
 	~GPMotor();
 
 	virtual double ReturnPIDInput();

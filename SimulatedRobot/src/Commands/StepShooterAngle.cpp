@@ -10,9 +10,17 @@
 
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
 	Requires(Robot::shooter.get());
+	direction=a;
 }
 // Called just before this Command runs the first time
-void StepShooterAngle::Initialize() {}
+void StepShooterAngle::Initialize() {
+	double current=Robot::shooter->GetTargetAngle();
+	double target=current+direction;
+	//Robot::elevator->Disable();
+	Robot::shooter->SetTargetAngle(target);
+	std::cout << "Changing Shooter Angle - current:"<< current <<" new:"<<target<<std::endl;
+	//Robot::elevator->Enable();
+}
 
 // Called repeatedly when this Command is scheduled to run
 void StepShooterAngle::Execute() {

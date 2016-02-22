@@ -1,6 +1,11 @@
 
 #include "Robot.h"
 
+std::shared_ptr<DriveTrain> Robot::drivetrain;
+std::shared_ptr<BallHolder> Robot::holder;
+std::shared_ptr<Shooter> Robot::shooter;
+std::unique_ptr<OI> Robot::oi;
+
 enum motorIDs {
 	DRIVE_LEFT = 1,
 	DRIVE_RIGHT =2,
@@ -10,11 +15,6 @@ enum motorIDs {
 	SHOOTER_LEFT=6,
 	SHOOTER_RIGHT=7,
 };
-
-std::shared_ptr<DriveTrain> Robot::drivetrain;
-std::shared_ptr<BallHolder> Robot::holder;
-std::shared_ptr<Shooter> Robot::shooter;
-std::unique_ptr<OI> Robot::oi;
 
 void Robot::RobotInit() {
 	drivetrain.reset(new DriveTrain(DRIVE_LEFT,DRIVE_RIGHT));
@@ -42,10 +42,14 @@ void Robot::TeleopInit() {
 	// teleop starts running. If you want the autonomous to
 	// continue until interrupted by another command, remove
 	// this line or comment it out.
+	//autonomousCommand.Cancel();
 	std::cout << "Starting Teleop" << std::endl;
 }
 
 void Robot::TeleopPeriodic() {
+	// Scheduler runs "default" commands for all subsystems
+	// e.g. void DriveTrain::InitDefaultCommand() {
+	//	    SetDefaultCommand(new TankDriveWithJoystick()); }
 	Scheduler::GetInstance()->Run();
 }
 

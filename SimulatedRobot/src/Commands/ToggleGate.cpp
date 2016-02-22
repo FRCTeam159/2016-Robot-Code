@@ -30,6 +30,7 @@ bool ToggleGate::IsFinished() {
 }
 // Called once after isFinished returns true
 void ToggleGate::End() {
+	//Robot::holder->CloseGate();
 }
 
 // Called when another command which requires one or more of the same

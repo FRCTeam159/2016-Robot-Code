@@ -7,23 +7,27 @@
 
 #include <Subsystems/GPMotor.h>
 
+GPMotor::GPMotor(int id) : GPMotor(id,true){
+}
+
 #if MOTORTYPE == CANTALON
-GPMotor::GPMotor(int id) : CANTalon(id){
+GPMotor::GPMotor(int id, int enc) : CANTalon(id){
 	control_mode=SPEED;
 	inverted=false;
 	syncGroup=0x08;
 }
 #else
 #if MOTORTYPE == VICTOR
-GPMotor::GPMotor(int id) : Victor(id){
+GPMotor::GPMotor(int id,bool enc) : Victor(id){
 #else
-GPMotor::GPMotor(int id) : Talon(id){
+GPMotor::GPMotor(int id,bool enc) : Talon(id){
 #endif
 	pid=0;
-#ifdef ENCODER
-	int ival=(id-1)*2+1; // 1,3,5,..
-	encoder=new Encoder(ival,ival+1); // {1,2} {3,4} {5,6} ..
-#endif
+	encoder=0;
+	if(enc){
+		int ival=(id-1)*2+1; // 1,3,5,..
+		encoder=new Encoder(ival,ival+1); // {1,2} {3,4} {5,6} ..
+	}
 	control_mode=SPEED;
 	inverted=false;
 	syncGroup=0x08;

@@ -2,7 +2,7 @@
 #include "Robot.h"
 
 TankDriveWithJoystick::TankDriveWithJoystick() : Command("TankDriveWithJoystick") {
-	Requires(Robot::drivetrain->get());
+	Requires(Robot::drivetrain.get());
 }
 
 // Called just before this Command runs the first time
@@ -20,7 +20,7 @@ bool TankDriveWithJoystick::IsFinished() {
 
 // Called once after isFinished returns true
 void TankDriveWithJoystick::End() {
-	Robot::drivetrain->Drive(0, 0);
+	Robot::drivetrain->Drive(0.0, 0.0);
 }
 
 // Called when another command which requires one or more of the same
