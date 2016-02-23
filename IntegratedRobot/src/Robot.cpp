@@ -47,7 +47,7 @@ private:
 	SRXSlave *leftSlave, *rightSlave;
 	TankDrive *mydrive;
 	CANTalon *shooterAngleMotor;
-	AngleAccelerometer *shooterAngle;
+	ShootAngleAccelerometer *shooterAngle;
 	Holder *holder;
 	Lidar *lidar;
 	SRXSpeed *flyWheelOne, *flyWheelTwo;
@@ -88,7 +88,7 @@ private:
 		shooterAngleMotor->ConfigRevLimitSwitchNormallyOpen(false);
 		shooterAngleMotor->SetControlMode(CANTalon::kPercentVbus);
 		shooterAngleMotor->SetInverted(true);
-		shooterAngle = new AngleAccelerometer(I2C::Port::kMXP);
+		shooterAngle = new ShootAngleAccelerometer(I2C::Port::kMXP);
 		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
 		vertAnglePID->SetOutputRange(-1,1);
 		vertAnglePID->SetToleranceBuffer(5);
@@ -423,77 +423,77 @@ private:
 		static float range;
 		static Particle *best;
 		if(state==StartCalibrations)
-				{
-					firstCalibration=true;
-		#if HORIZONTAL_TARGETING ==1
-					mydrive->ConfigForPID();
-		#endif
-		#if HORIZONTAL_TARGETING ==0
-					mydrive->ConfigAuto(0,0,0);
-		#endif
-					range = lidar->GetDistance();
-					vertAnglePID->Enable();
-					vertAnglePID->SetSetpoint(20); //set PID controller target
-					state= SetInitialAngle;
-				}
-				if(state==SetInitialAngle)
-				{
-					if(vertAnglePID->GetAvgError()<1)
-						state=GetRangeFromLIDAR;
-				}
-				if(state==GetRangeFromLIDAR)
-				{
-					int confirmrange = lidar->GetDistance();
-					float angle=shooterAngle->PIDGet();
-					confirmrange=confirmrange*cos(angle*3.14/180);
-					range=(range+confirmrange)/2;
-					mylauncher->Aim(range/100);
-					state=AcquireTargetImage;
-				}
-				if(state==AcquireTargetImage)
-				{
-					horizontal->AcquireImage();
-					state=ThresholdTargetImage;
-				}
-				if(state==ThresholdTargetImage)
-				{
-					horizontal->ThresholdImage();
-					state=CreateDebugImage;
-				}
-				if(state==CreateDebugImage)
-				{
+		{
+			firstCalibration=true;
+#if HORIZONTAL_TARGETING ==1
+			mydrive->ConfigForPID();
+#endif
+#if HORIZONTAL_TARGETING ==0
+			mydrive->ConfigAuto(0,0,0);
+#endif
+			range = lidar->GetDistance();
+			vertAnglePID->Enable();
+			vertAnglePID->SetSetpoint(20); //set PID controller target
+			state= SetInitialAngle;
+		}
+		if(state==SetInitialAngle)
+		{
+			if(vertAnglePID->GetAvgError()<1)
+				state=GetRangeFromLIDAR;
+		}
+		if(state==GetRangeFromLIDAR)
+		{
+			int confirmrange = lidar->GetDistance();
+			float angle=shooterAngle->PIDGet();
+			confirmrange=confirmrange*cos(angle*3.14/180);
+			range=(range+confirmrange)/2;
+			mylauncher->Aim(range/100);
+			state=AcquireTargetImage;
+		}
+		if(state==AcquireTargetImage)
+		{
+			horizontal->AcquireImage();
+			state=ThresholdTargetImage;
+		}
+		if(state==ThresholdTargetImage)
+		{
+			horizontal->ThresholdImage();
+			state=CreateDebugImage;
+		}
+		if(state==CreateDebugImage)
+		{
 
-					horizontal->CreateDebugImage();
-					state=ProcessTargetImage;
-				}
-				if(state==ProcessTargetImage)
+			horizontal->CreateDebugImage();
+			state=ProcessTargetImage;
+		}
+		if(state==ProcessTargetImage)
+		{
+			float targetOffset=horizontal->calculateTargetOffset(range);
+			best=horizontal->GetBestParticle();
+#if HORIZONTAL_TARGETING == 0
+			int currentOffset=(horizontal->GetBestParticle())->CenterX-160;
+			currentOffset=(currentOffset/320)*range;//convert pixels to centimeters
+			targetOffset=(targetOffset/320)*range;
+			horizError=atan(currentOffset/range)-atan(targetOffset/range);//get how many radians off we are
+			horizError=(11*2.54)*TICKS_PER_CM;//convert angle to ticks (this will need a little tuning)
+			mydrive->SetPosTargets(-1*horizError, horizError);//set drive targets
+#endif
+#if HORIZONTAL_TARGETING == 1
+			if(best->CenterX!=1234)//1234 is error
+			{
+				if(!drivePID->IsEnabled()) //if PID controller is not enabled
 				{
-					float targetOffset=horizontal->calculateTargetOffset(range);
-					best=horizontal->GetBestParticle();
-		#if HORIZONTAL_TARGETING == 0
-					int currentOffset=(horizontal->GetBestParticle())->CenterX-160;
-					currentOffset=(currentOffset/320)*range;//convert pixels to centimeters
-					targetOffset=(targetOffset/320)*range;
-					horizError=atan(currentOffset/range)-atan(targetOffset/range);//get how many radians off we are
-					horizError=(11*2.54)*TICKS_PER_CM;//convert angle to ticks (this will need a little tuning)
-					mydrive->SetPosTargets(-1*horizError, horizError);//set drive targets
-		#endif
-		#if HORIZONTAL_TARGETING == 1
-					if(best->CenterX!=1234)//1234 is error
-					{
-						if(!drivePID->IsEnabled()) //if PID controller is not enabled
-						{
-							drivePID->Enable(); //enable PID controller
-						}
-						drivePID->SetSetpoint(targetOffset); //set PID controller target to targetOffset
-					}
-					else
-					{
-						drivePID->Disable(); //disable PID controller
-					}
-		#endif
-					state=WaitForCalibrations;
+					drivePID->Enable(); //enable PID controller
 				}
+				drivePID->SetSetpoint(targetOffset); //set PID controller target to targetOffset
+			}
+			else
+			{
+				drivePID->Disable(); //disable PID controller
+			}
+#endif
+			state=WaitForCalibrations;
+		}
 		if(state==WaitForCalibrations)
 		{
 			bool good = mylauncher->AngleGood(2);//use this
@@ -506,11 +506,11 @@ private:
 					state=AcquireTargetImage;
 					firstCalibration=false;
 				}
-					else
+				else
 				{
 					state=ShootBall;
 				}
-				}
+			}
 			else
 			{
 				state=AcquireTargetImage;

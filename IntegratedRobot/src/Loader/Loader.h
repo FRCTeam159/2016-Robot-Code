@@ -10,7 +10,7 @@
 #define CANTALON_LIFTMOTOR
 #define CANTALON_ROLLERMOTOR
 #include <WPILib.h>
-#include <Sensors/AngleAccelerometer.h>
+#include <Sensors/IntakeAngleAccelerometer.h>
 #include <time.h>
 #include <sys/timeb.h>
 
@@ -40,7 +40,7 @@ private:
 #else
 	Victor rollerMotor;
 #endif
-	AngleAccelerometer accel;
+	IntakeAngleAccelerometer accel;
 	void GoToZeroLimitSwitch();
 	bool IsAtLimit();
 	void TurnRollersOn(bool);

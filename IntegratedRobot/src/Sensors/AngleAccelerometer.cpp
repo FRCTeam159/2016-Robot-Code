@@ -7,17 +7,17 @@
 
 #include <Sensors/AngleAccelerometer.h>
 #define PI 3.14159265
-AngleAccelerometer::AngleAccelerometer(I2C::Port p) {
-	accel = new ADXL345_I2C(p, Accelerometer::Range::kRange_4G);
+ShootAngleAccelerometer::ShootAngleAccelerometer(I2C::Port p) {
+	accel = new ADXL345_I2C(p, Accelerometer::Range::kRange_4G, 0x53);
 	m_pidSource = PIDSourceType::kDisplacement;
 }
 
-AngleAccelerometer::~AngleAccelerometer() {
+ShootAngleAccelerometer::~ShootAngleAccelerometer() {
 	// TODO Auto-generated destructor stub
 
 }
 
-double AngleAccelerometer::PIDGet()
+double ShootAngleAccelerometer::PIDGet()
 {
 	double dAngleX, dAngleY, dAngleZ;
 	double x,y,z;
@@ -48,7 +48,7 @@ double AngleAccelerometer::PIDGet()
 //	dAngleX, dAngleY, dAngleZ);
 	return(dAngleZ);
 }
-void AngleAccelerometer::SetPIDSourceType(PIDSourceType type)
+void ShootAngleAccelerometer::SetPIDSourceType(PIDSourceType type)
 {
 	m_pidSource=type;
 }

@@ -5,10 +5,10 @@
  *      Author: alpin
  */
 
-#ifndef SRC_ANGLEACCELEROMETER_H_
-#define SRC_ANGLEACCELEROMETER_H_
+#ifndef SRC_SHOOTANGLEACCELEROMETER_H_
+#define SRC_SHOOTANGLEACCELEROMETER_H_
 #include <WPILib.h>
-class AngleAccelerometer:public PIDSource {
+class ShootAngleAccelerometer:public PIDSource {
 private:
 	Accelerometer *accel;  // ADXL345 digital accelerometer
 	double analogAccelX;         // variable with smoothed acceleration value
@@ -24,8 +24,8 @@ private:
 public:
 	void SetPIDSourceType(PIDSourceType);
 	double PIDGet();
-	AngleAccelerometer(I2C::Port);
-	virtual ~AngleAccelerometer();
+	ShootAngleAccelerometer(I2C::Port);
+	virtual ~ShootAngleAccelerometer();
 };
 
 #endif /* SRC_ANGLEACCELEROMETER_H_ */
