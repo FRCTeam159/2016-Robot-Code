@@ -11,6 +11,11 @@
 #include <Commands/Command.h>
 
 class ShootBall: public Command {
+	enum {
+		FLYWHEELS_ON=1,
+		PUSHER_ON=2,
+	};
+	int state;
 public:
 	ShootBall();
 	void Initialize();

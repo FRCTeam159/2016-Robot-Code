@@ -43,6 +43,7 @@ void Robot::TeleopInit() {
 	// continue until interrupted by another command, remove
 	// this line or comment it out.
 	//autonomousCommand.Cancel();
+	//shooter->Init();
 	std::cout << "Starting Teleop" << std::endl;
 }
 

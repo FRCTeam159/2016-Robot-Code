@@ -10,29 +10,34 @@
 
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
 	Requires(Robot::shooter.get());
+	std::cout << "new StepShooterAngle"<< std::endl;
 	direction=a;
 }
 // Called just before this Command runs the first time
 void StepShooterAngle::Initialize() {
 	double current=Robot::shooter->GetTargetAngle();
 	double target=current+direction;
-	//Robot::elevator->Disable();
-	Robot::shooter->SetTargetAngle(target);
 	std::cout << "Changing Shooter Angle - current:"<< current <<" new:"<<target<<std::endl;
-	//Robot::elevator->Enable();
+	Robot::shooter->SetTargetAngle(target);
 }
 
 // Called repeatedly when this Command is scheduled to run
 void StepShooterAngle::Execute() {
-	//Robot::drivetrain->Drive(Robot::oi->GetJoystick());
+	double angle=Robot::shooter->GetAngle();
+	double error=Robot::shooter->GetTargetError();
+	double corr=Robot::shooter->GetTargetCorrection();
+	std::cout << "Shooter angle:"<< angle<<" error:"<<error<<" corr:"<<corr <<std::endl;
 }
 // Make this return true when this Command no longer needs to run execute()
 bool StepShooterAngle::IsFinished() {
-	return false;
+	bool ontarget=Robot::shooter->OnTarget();
+	if(ontarget)
+		std::cout << "Shooter On Target:"<<std::endl;
+
+	return false;//ontarget;
 }
 // Called once after isFinished returns true
 void StepShooterAngle::End() {
-	//Robot::drivetrain->Drive(0, 0);
 }
 // Called when another command which requires one or more of the same
 // subsystems is scheduled to run

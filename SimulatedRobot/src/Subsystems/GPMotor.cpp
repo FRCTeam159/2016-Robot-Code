@@ -36,14 +36,10 @@ GPMotor::GPMotor(int id,bool enc) : Talon(id){
 
 
 GPMotor::~GPMotor(){
-#if MOTORTYPE != CANTALON
-#ifdef ENCODER
 	if(encoder)
 		delete encoder;
-#endif
 	if(pid)
 		delete pid;
-#endif
 }
 
 void GPMotor::UsePIDOutput(double value){
@@ -77,7 +73,6 @@ double GPMotor::GetVelocity(){
 #if MOTORTYPE == CANTALON
 	return CANTalon::GetSpeed();
 #else
-
 	return encoder->GetRate();
 #endif
 
@@ -111,10 +106,20 @@ void GPMotor::ClearIaccum(){
 		pid->Enable();
 	}
 #endif
-
 }
 
 void GPMotor::Enable(){
+#if MOTORTYPE == CANTALON
+	CANTalon::Enable();
+#else
+	if(pid)
+		pid->Enable();
+	else
+		std::cout<<"ERROR Enable:PID=NULL"<<std::endl;
+#endif
+}
+
+void GPMotor::EnableControl(){
 #if MOTORTYPE == CANTALON
 	CANTalon::EnableControl();
 #else
@@ -123,7 +128,17 @@ void GPMotor::Enable(){
 	else
 		std::cout<<"ERROR Enable:PID=NULL"<<std::endl;
 #endif
+}
 
+bool GPMotor::IsEnabled(){
+#if MOTORTYPE == CANTALON
+	return CANTalon::IsEnabled();
+#else
+	if(pid)
+		return pid->IsEnabled();
+	else
+		return false;
+#endif
 }
 void GPMotor::Disable(){
 #if MOTORTYPE == CANTALON
@@ -153,7 +168,7 @@ void GPMotor::SetPID(double P, double I, double D){
 #endif
 }
 void GPMotor::SetMode(int m){
-	if((m & POSITION) && (m != SPEED) )
+	if((m != POSITION) && (m != SPEED) )
 		m=SPEED;
 #if MOTORTYPE == CANTALON
 	CANTalon::ControlMode mode = (m==POSITION)? CANTalon::ControlMode::kPosition: CANTalon::ControlMode::kSpeed;
@@ -161,7 +176,8 @@ void GPMotor::SetMode(int m){
 #else
 	if(pid)
 		pid->SetPIDSourceType((m==POSITION)? PIDSourceType::kDisplacement:PIDSourceType::kRate);
-//	encoder->SetPIDSourceParameter((m==POSITION)? PIDSource::kDistance:PIDSource::kRate);
+	if(encoder)
+		encoder->SetPIDSourceType((m==POSITION)? PIDSourceType::kDisplacement:PIDSourceType::kRate);
 #endif
 	control_mode=m;
 }
@@ -207,6 +223,28 @@ void GPMotor::SetPercentTolerance(double tol){
 #endif
 }
 
+double GPMotor::GetTargetCorrection(){
+#if MOTORTYPE == CANTALON
+	// TODO: implement equivalent function for a CANTalon
+#else
+	if(pid)
+		return pid->Get();
+	else
+		return 0;
+#endif
+}
+
+double GPMotor::GetTargetError(){
+#if MOTORTYPE == CANTALON
+	// TODO: implement equivalent function for a CANTalon
+#else
+	if(pid)
+		return pid->GetError();
+	else
+		return 0;
+#endif
+}
+
 bool GPMotor::OnTarget(){
 #if MOTORTYPE == CANTALON
 	// TODO: implement equivalent function for a CANTalon
@@ -222,19 +260,15 @@ void GPMotor::Reset(){
 #if MOTORTYPE == CANTALON
 	// TODO: implement equivalent function for a CANTalon
 #else
-#ifdef ENCODER
 	if(encoder)
 		encoder->Reset();
-#endif
 #endif
 }
 void GPMotor::SetDistancePerPulse(double target){
 #if MOTORTYPE == CANTALON
 	// TODO: implement equivalent function for a CANTalon
 #else
-#ifdef ENCODER
 	if(encoder)
 		encoder->SetDistancePerPulse(target);
-#endif
 #endif
 }

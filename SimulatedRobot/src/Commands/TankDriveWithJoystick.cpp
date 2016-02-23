@@ -3,6 +3,7 @@
 
 TankDriveWithJoystick::TankDriveWithJoystick() : Command("TankDriveWithJoystick") {
 	Requires(Robot::drivetrain.get());
+	std::cout << "new TankDriveWithJoystick"<< std::endl;
 }
 
 // Called just before this Command runs the first time

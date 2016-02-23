@@ -7,11 +7,11 @@
 
 #include <Subsystems/BallHolder.h>
 
-#define GATEMOTORSPEED 1
-#define PUSHMOTORSPEED 1
+#define GATEMOTORSPEED 0.3
+#define PUSHMOTORSPEED 0.8
 
 BallHolder::BallHolder(int m1, int m2) : Subsystem("Holder"),
-	gateMotor(m1,false),pushMotor(m2,false)
+	gateMotor(m1,true),pushMotor(m2,false)
 {
 	gateopen=true;
 	std::cout<<"New BallHolder("<<m1<<","<<m2<<")"<<std::endl;

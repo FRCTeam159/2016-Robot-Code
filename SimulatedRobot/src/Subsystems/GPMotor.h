@@ -62,9 +62,16 @@ public:
 	virtual double GetVelocity();
 	virtual void SetDistance(double value);
 	virtual double GetDistance();
+	virtual double GetTargetError();
+	virtual double GetTargetCorrection();
+
 	virtual void SetInverted(bool t);
 	virtual bool IsInverted()		 { return inverted;}
+	virtual bool IsEnabled();
+
 	virtual void Enable();
+	virtual void EnableControl();
+
 	virtual void Disable();
 	virtual void SetPID(int mode, double P, double I, double D);
 	virtual void SetPID(double P, double I, double D);

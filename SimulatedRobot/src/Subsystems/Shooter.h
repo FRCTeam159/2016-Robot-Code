@@ -20,10 +20,14 @@ class Shooter: public Subsystem {
 	double max;
 public:
 	Shooter(int,int,int);
-	void Shoot();
+	void Shoot(bool);
 	void SetTargetAngle(double a);
 	double GetTargetAngle();
 	double GetAngle();
+	double GetTargetError();
+	double GetTargetCorrection();
+
+	bool OnTarget();
 	void SetLimits(double a1, double a2);
 	void Init();
 };
