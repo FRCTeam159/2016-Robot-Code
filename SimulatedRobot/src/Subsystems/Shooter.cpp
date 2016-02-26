@@ -14,15 +14,6 @@ Shooter::Shooter(int m1, int m2, int m3) : Subsystem("Shooter"),
 {
 	std::cout<<"New Shooter("<<m1<<","<<m2<<","<<m3<<")"<<std::endl;
 	angle=0;
-	angleMotor.SetPID(GPMotor::POSITION, 3, 0, 0);
-	SetLimits(0,70);
-	angleMotor.SetDistancePerPulse(1); // 1 degree = 0.01745 radians
-	//angleMotor.SetPercentTolerance(1.0);
-	angleMotor.SetSetpoint(0);
-	//angleMotor.Set(1.0);
-	angleMotor.Reset();
-	angleMotor.Enable();
-
 
 	leftMotor.SetPID(GPMotor::SPEED, 0.4, 0, 0);
 	leftMotor.SetDistancePerPulse(RPD(1)); // 1 degree = 0.01745 radians
@@ -32,12 +23,23 @@ Shooter::Shooter(int m1, int m2, int m3) : Subsystem("Shooter"),
 
 // Initialize
 void Shooter::Init(){
-	angleMotor.SetSetpoint(0);
+	angleMotor.SetPID(GPMotor::POSITION, 1.5, 0.001, 4);
+	angleMotor.Reset();
+	angleMotor.SetDistancePerPulse(1.0); // 1 degree = 0.01745 radians
+	angleMotor.SetInputRange(0,70);      // 0..70 degrees
+	//angleMotor.SetToleranceBuffer(1);
+	angleMotor.SetTolerance(0.5); // accept 0.5 degrees max error
+
+	angleMotor.SetDistance(0);
 	angleMotor.Enable();
+
 	leftMotor.SetVelocity(0);
 	rightMotor.SetVelocity(0);
 }
 
+void Shooter::Disable(){
+	angleMotor.Reset();
+}
 // Shoot the ball
 void Shooter::Shoot(bool t){
 	double speed=t?FWSPEED:0;
@@ -46,14 +48,8 @@ void Shooter::Shoot(bool t){
 }
 // Set the shooter angle
 void Shooter::SetTargetAngle(double a){
-	//a=a>max?max:a;
-	//a=a<min?min:a;
 	angle=a;
-	angleMotor.Enable();
 	angleMotor.SetDistance(angle);
-	//std::cout << "Shooter angle enabled:"<< angleMotor.IsEnabled() <<std::endl;
-	//angleMotor.UsePIDOutput(angle);
-	//angleMotor.Set(angle);
 }
 
 bool Shooter::OnTarget(){
@@ -62,26 +58,3 @@ bool Shooter::OnTarget(){
 double Shooter::GetTargetAngle(){
 	return angle;
 }
-double Shooter::GetTargetError(){
-//	if(!angleMotor.IsEnabled())
-//	std::cout << "Shooter angle not enabled"<<std::endl;
-
-	return angleMotor.GetTargetError();
-}
-double Shooter::GetTargetCorrection(){
-	return angleMotor.GetTargetCorrection();
-}
-
-double Shooter::GetAngle(){
-	return angleMotor.GetDistance();
-}
-
-void Shooter::SetLimits(double a1, double a2){
-	min=a1;
-	max=a2;
-	angleMotor.SetOutputRange(-100,100);
-	angleMotor.SetInputRange(-100,100);
-
-
-}
-

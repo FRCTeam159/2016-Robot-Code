@@ -32,6 +32,9 @@ private:
 	void TeleopInit();
 	void TeleopPeriodic();
 	void TestPeriodic();
+	void DisabledInit();
+	void DisabledPeriodic();
+
 };
 
 

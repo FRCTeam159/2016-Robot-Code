@@ -19,6 +19,21 @@
 #endif
 #endif
 
+#ifdef SIMULATION
+
+class MyPIDController: public PIDController {
+	double tolerance;
+public:
+	MyPIDController(float p, float i, float d, PIDSource *source, PIDOutput *output, float);
+	void Calculate();
+	bool OnTarget();
+	void SetAbsoluteTolerance(double b);
+	double CalculateFeedForward();
+};
+#else
+#define MyPIDController PIDController
+#endif
+
 /**
  * The GPMotor subsystem extends either a CANTalon, Talon or Victor base class
  * - All base classes extend SpeeedController(->PIDOutput) interface
@@ -44,7 +59,7 @@ protected:
 	bool inverted;
 
 #if MOTORTYPE != CANTALON
-	PIDController *pid;
+	MyPIDController *pid;
 	Encoder *encoder;
 #endif
 
@@ -70,20 +85,20 @@ public:
 	virtual bool IsEnabled();
 
 	virtual void Enable();
-	virtual void EnableControl();
 
 	virtual void Disable();
 	virtual void SetPID(int mode, double P, double I, double D);
 	virtual void SetPID(double P, double I, double D);
-	virtual void SetSetpoint(double target);
 	virtual void SetInputRange(double min, double max);
 	virtual void SetOutputRange(double min, double max);
-	virtual void SetPercentTolerance(double d);
+	virtual void SetTolerance(double d);
 	virtual void Reset();
 	virtual void ClearIaccum();
 	virtual void SetMode(int m);
 	virtual int GetMode(){ return control_mode;}
 	virtual bool OnTarget();
 	virtual void SetDistancePerPulse(double target);
+	virtual void SetContinuous(bool b);
+	virtual void PIDWrite(float output);
 };
 #endif

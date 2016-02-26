@@ -37,13 +37,20 @@ void Robot::AutonomousPeriodic() {
 	Scheduler::GetInstance()->Run();
 }
 
+void Robot::DisabledInit(){
+	shooter->Disable();
+}
+void Robot::DisabledPeriodic(){
+	//shooter->Disable();
+}
+
 void Robot::TeleopInit() {
 	// This makes sure that the autonomous stops running when
 	// teleop starts running. If you want the autonomous to
 	// continue until interrupted by another command, remove
 	// this line or comment it out.
 	//autonomousCommand.Cancel();
-	//shooter->Init();
+	shooter->Init();
 	std::cout << "Starting Teleop" << std::endl;
 }
 

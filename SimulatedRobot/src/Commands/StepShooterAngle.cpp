@@ -23,10 +23,6 @@ void StepShooterAngle::Initialize() {
 
 // Called repeatedly when this Command is scheduled to run
 void StepShooterAngle::Execute() {
-	double angle=Robot::shooter->GetAngle();
-	double error=Robot::shooter->GetTargetError();
-	double corr=Robot::shooter->GetTargetCorrection();
-	std::cout << "Shooter angle:"<< angle<<" error:"<<error<<" corr:"<<corr <<std::endl;
 }
 // Make this return true when this Command no longer needs to run execute()
 bool StepShooterAngle::IsFinished() {
@@ -34,7 +30,7 @@ bool StepShooterAngle::IsFinished() {
 	if(ontarget)
 		std::cout << "Shooter On Target:"<<std::endl;
 
-	return false;//ontarget;
+	return ontarget;
 }
 // Called once after isFinished returns true
 void StepShooterAngle::End() {

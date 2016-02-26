@@ -4,8 +4,53 @@
  *  Created on: Jul 6, 2015
  *      Author: alpiner
  */
+#include "WPILib.h"
 
 #include <Subsystems/GPMotor.h>
+
+#ifdef SIMULATION
+
+#define SIMRATE 0.01
+MyPIDController::MyPIDController(float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output, float period)
+								: PIDController(Kp, Ki, Kd, 0.0f, source, output, period)
+{
+	tolerance=0.05;
+}
+void MyPIDController::Calculate()
+{
+	PIDController::Calculate();
+//#define DEBUG_PID
+#ifdef DEBUG_PID
+	if(IsEnabled()){
+		double s=GetSetpoint();
+		double e=GetError();
+		double c=Get();
+		bool b=OnTarget();
+		std::cout<<"PID Target:"<<s<<" err:"<<e<<" cor:"<<c<<" OnTarget:"<<b<<std::endl;
+	}
+#endif
+}
+// BUG in PIDController :
+// - Uses a buffer (m_buf) to average previous error values
+// - but m_buf never gets written to so "OnTarget" always returns false
+bool MyPIDController::OnTarget(){
+	//return PIDController::OnTarget();
+	if(!IsEnabled())
+		return false;
+	double e=GetError();
+	double delta=fabs(e);
+	return delta<=tolerance;
+}
+// need to set tolerance manually to allow custom OnTarget calculation
+void MyPIDController::SetAbsoluteTolerance(double d){
+	tolerance=d;
+}
+// BUG in PIDController :
+// - using the native version of this function causes NaN errors
+double MyPIDController::CalculateFeedForward(){
+	return 0;
+}
+#endif
 
 GPMotor::GPMotor(int id) : GPMotor(id,true){
 }
@@ -41,7 +86,23 @@ GPMotor::~GPMotor(){
 	if(pid)
 		delete pid;
 }
-
+//#define DEBUG_OUTPUT
+void GPMotor::PIDWrite(float output){
+	if (output !=output) {
+		std::cout<< GetChannel() << " (NaN)" << std::endl;
+		return;
+	}
+#ifdef DEBUG_OUTPUT
+	std::cout << GetChannel()<<" "<<output<<std::endl;
+#endif
+#if MOTORTYPE == CANTALON
+	CANTalon::PIDWrite(output);
+#elif MOTORTYPE == VICTOR
+	Victor::PIDWrite(output);
+#else
+	Talon::PIDWrite(output);
+#endif
+}
 void GPMotor::UsePIDOutput(double value){
 #if MOTORTYPE == CANTALON
 	CANTalon::Set(value,syncGroup);
@@ -119,17 +180,6 @@ void GPMotor::Enable(){
 #endif
 }
 
-void GPMotor::EnableControl(){
-#if MOTORTYPE == CANTALON
-	CANTalon::EnableControl();
-#else
-	if(pid)
-		pid->Enable();
-	else
-		std::cout<<"ERROR Enable:PID=NULL"<<std::endl;
-#endif
-}
-
 bool GPMotor::IsEnabled(){
 #if MOTORTYPE == CANTALON
 	return CANTalon::IsEnabled();
@@ -158,11 +208,19 @@ void GPMotor::SetInverted(bool t) {
 	inverted=t;
 }
 
+void GPMotor::SetContinuous(bool b){
+	if(pid)
+		pid->SetContinuous(b);
+}
 void GPMotor::SetPID(double P, double I, double D){
 #if MOTORTYPE != CANTALON
 	if(pid)
 		delete pid;
-	pid=new PIDController(P, I, D,this,this);
+#ifdef SIMULATION
+	pid=new MyPIDController(P, I, D,this,this,SIMRATE);
+#else
+	pid=new MyPIDController(P, I, D,this,this);
+#endif
 #else
 	CANTalon::SetPID(P,I,D);
 #endif
@@ -174,26 +232,11 @@ void GPMotor::SetMode(int m){
 	CANTalon::ControlMode mode = (m==POSITION)? CANTalon::ControlMode::kPosition: CANTalon::ControlMode::kSpeed;
 	CANTalon::SetControlMode(mode);
 #else
-	if(pid)
-		pid->SetPIDSourceType((m==POSITION)? PIDSourceType::kDisplacement:PIDSourceType::kRate);
+	SetPIDSourceType((m==POSITION)? PIDSourceType::kDisplacement:PIDSourceType::kRate);
 	if(encoder)
 		encoder->SetPIDSourceType((m==POSITION)? PIDSourceType::kDisplacement:PIDSourceType::kRate);
 #endif
 	control_mode=m;
-}
-
-void GPMotor::SetSetpoint(double value){
-#if MOTORTYPE == CANTALON
-	if(control_mode==SPEED)
-		CANTalon::Set(value);
-	else
-		CANTalon::SetPosition(value);
-#else
-	if(pid)
-		pid->SetSetpoint(value);
-	else
-		std::cout<<"ERROR SetSetpoint:PID=NULL"<<std::endl;
-#endif
 }
 
 void GPMotor::SetInputRange(double min, double max){
@@ -214,12 +257,12 @@ void GPMotor::SetOutputRange(double min, double max){
 #endif
 }
 
-void GPMotor::SetPercentTolerance(double tol){
+void GPMotor::SetTolerance(double tol){
 #if MOTORTYPE == CANTALON
 	// TODO: implement equivalent function for a CANTalon
 #else
 	if(pid)
-		pid->SetPercentTolerance(tol);
+		pid->SetAbsoluteTolerance(tol);
 #endif
 }
 
@@ -262,6 +305,10 @@ void GPMotor::Reset(){
 #else
 	if(encoder)
 		encoder->Reset();
+	if(pid)
+		pid->Reset();
+
+	//ClearIaccum();
 #endif
 }
 void GPMotor::SetDistancePerPulse(double target){
