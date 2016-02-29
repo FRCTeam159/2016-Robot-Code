@@ -15,12 +15,15 @@ class Shooter: public Subsystem {
 	GPMotor angleMotor;
 	GPMotor leftMotor;
 	GPMotor rightMotor;
-	double angle;
+	double angle,max_angle,min_angle;
 public:
 	Shooter(int,int,int);
 	void Shoot(bool);
 	void SetTargetAngle(double a);
 	double GetTargetAngle();
+	double GetMaxAngle() { return max_angle;}
+	double GetMinAngle() { return min_angle;}
+
 	bool OnTarget();
 	void Init();
 	void Disable();
