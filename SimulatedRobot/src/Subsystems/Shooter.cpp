@@ -24,7 +24,7 @@ Shooter::Shooter(int m1, int m2, int m3) : Subsystem("Shooter"),
 
 // Initialize
 void Shooter::Init(){
-	angleMotor.SetPID(GPMotor::POSITION, 1.5, 0.001, 4);
+	angleMotor.SetPID(GPMotor::POSITION, 0.5, 0.0, 1);
 	angleMotor.Reset(); // clear IAccum
 	angleMotor.SetDistancePerPulse(1.0); // 1 degree = 0.01745 radians
 	angleMotor.SetInputRange(min_angle,max_angle);      // 0..70 degrees

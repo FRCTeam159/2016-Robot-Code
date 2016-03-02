@@ -16,6 +16,7 @@ class BallHolder: public Subsystem {
 	bool gateopen;
 public:
 	BallHolder(int m1, int m2);
+	void Init();
 	bool GateIsOpen();
 	void OpenGate();
 	void CloseGate();

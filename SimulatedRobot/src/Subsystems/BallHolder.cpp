@@ -9,7 +9,7 @@
 
 #define GATEMOTORSPEED 0.3
 #define PUSHMOTORSPEED 1.0
-#define PUSHHOLDSPEED 0.2
+#define PUSHHOLDSPEED 0.10
 
 
 BallHolder::BallHolder(int m1, int m2) : Subsystem("Holder"),
@@ -23,6 +23,11 @@ bool BallHolder::GateIsOpen(){
 	return gateopen;
 }
 
+void BallHolder::Init(){
+	//pushMotor.SetPID(GPMotor::SPEED, 1.5, 0.001, 4);
+	pushMotor.Set(PUSHHOLDSPEED);
+
+}
 void BallHolder::OpenGate(){
 	gateopen=true;
 	pushMotor.Set(PUSHHOLDSPEED);

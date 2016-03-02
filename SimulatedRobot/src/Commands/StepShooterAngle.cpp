@@ -16,7 +16,12 @@ StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
 // Called just before this Command runs the first time
 void StepShooterAngle::Initialize() {
 	double current=Robot::shooter->GetTargetAngle();
+	double max=Robot::shooter->GetMaxAngle();
+	double min=Robot::shooter->GetMinAngle();
+
 	double target=current+direction;
+	target=target>=max?max:target;
+	target=target<=min?min:target;
 	std::cout << "Changing Shooter Angle - current:"<< current <<" new:"<<target<<std::endl;
 	Robot::shooter->SetTargetAngle(target);
 }
