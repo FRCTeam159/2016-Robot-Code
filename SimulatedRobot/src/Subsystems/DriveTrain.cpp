@@ -15,14 +15,17 @@ DriveTrain::DriveTrain(int m1, int m2) : Subsystem("DriveTrain"),
 #ifdef REAL
 	double dpp=0.042;
 #else
-	// Circumference in ft = 7.5in/12(in/ft)*PI
-	double dpp=(double) (7.5/12.0*M_PI) / 360.0;
+	// Circumference in ft (7.5" diameter wheels)= 7.5in/12(in/ft)*PI
+	// in simulation mode ticks are interpreted in "degrees" by default
+	double dpp=(double)M_PI*(7.5/12.0) / 360.0;
 #endif
 	drive = new RobotDrive(&left_motor, &right_motor);
 	left_motor.SetDistancePerPulse(dpp);
-	right_motor.SetDistancePerPulse(dpp);
-
-	//drive->SetInvertedMotor(RobotDrive::kFrontRightMotor, false);	// invert the left side motors
+	// right wheel encoder may need to be reversed but for some reason encoder->SetReverseDirection isn't
+	// supported in simulation mode (throws exception) and can only be set in the constructor
+	// (which is inconvenient when using "GPMotors", since that would require passing in an additional argument)
+	// An alternative solution is to just invert the "DistancePerPulse" value
+	right_motor.SetDistancePerPulse(-dpp);
 
 	//rangefinder = new AnalogInput(6);
 	//gyro = new AnalogGyro(1);
@@ -90,6 +93,7 @@ void DriveTrain::Reset() {
 
 double DriveTrain::GetDistance() {
 	return (left_motor.GetDistance() + right_motor.GetDistance())/2;
+	//return (right_motor.GetDistance());
 }
 
 double DriveTrain::GetDistanceToObstacle() {

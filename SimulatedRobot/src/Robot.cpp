@@ -30,6 +30,9 @@ void Robot::RobotInit() {
 }
 
 void Robot::AutonomousInit() {
+	shooter->Init();
+	holder->Init();
+	autonomousCommand.Start();
 	std::cout << "Starting Auto" << std::endl;
 }
 
@@ -49,10 +52,12 @@ void Robot::TeleopInit() {
 	// teleop starts running. If you want the autonomous to
 	// continue until interrupted by another command, remove
 	// this line or comment it out.
-	//autonomousCommand.Cancel();
+	autonomousCommand.Cancel();
 	shooter->Init();
 	holder->Init();
 	std::cout << "Starting Teleop" << std::endl;
+	holder->IsBallPresent();
+
 }
 
 void Robot::TeleopPeriodic() {

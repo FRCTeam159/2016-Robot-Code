@@ -10,7 +10,7 @@
 
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
 	Requires(Robot::shooter.get());
-	std::cout << "new StepShooterAngle"<< std::endl;
+	std::cout << "new StepShooterAngle("<<a<<")"<< std::endl;
 	direction=a;
 }
 // Called just before this Command runs the first time

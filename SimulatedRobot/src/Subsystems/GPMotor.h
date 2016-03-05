@@ -19,12 +19,13 @@
 #endif
 #endif
 
+
 #ifdef SIMULATION
 
 class MyPIDController: public PIDController {
 	double tolerance;
 public:
-	MyPIDController(float p, float i, float d, PIDSource *source, PIDOutput *output, float);
+	MyPIDController(float p, float i, float d, PIDSource *source, PIDOutput *output);
 	void Calculate();
 	bool OnTarget();
 	void SetAbsoluteTolerance(double b);

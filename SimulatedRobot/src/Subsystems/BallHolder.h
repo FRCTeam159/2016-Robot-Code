@@ -13,11 +13,17 @@
 class BallHolder: public Subsystem {
 	GPMotor gateMotor;
 	GPMotor pushMotor;
+	DigitalInput lowerLimit;
+	DigitalInput upperLimit;
+	AnalogInput ballSensor;
+
 	bool gateopen;
 public:
 	BallHolder(int m1, int m2);
 	void Init();
-	bool GateIsOpen();
+	bool IsGateOpen();
+	bool IsGateClosed();
+	bool IsBallPresent();
 	void OpenGate();
 	void CloseGate();
 	void PushBall(bool);

@@ -10,6 +10,7 @@
 
 #include "WPILib.h"
 #include "Commands/Command.h"
+#include "Commands/Autonomous.h"
 
 #include <Subsystems/DriveTrain.h>
 #include <Subsystems/Shooter.h>
@@ -26,6 +27,8 @@ public:
 
 private:
 	LiveWindow *lw = LiveWindow::GetInstance();
+	Autonomous autonomousCommand;
+
 	void RobotInit();
 	void AutonomousInit();
 	void AutonomousPeriodic();

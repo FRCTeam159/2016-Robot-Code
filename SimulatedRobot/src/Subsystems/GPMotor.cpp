@@ -11,8 +11,10 @@
 #ifdef SIMULATION
 
 #define SIMRATE 0.01
-MyPIDController::MyPIDController(float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output, float period)
-								: PIDController(Kp, Ki, Kd, 0.0f, source, output, period)
+
+
+MyPIDController::MyPIDController(float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output)
+								: PIDController(Kp, Ki, Kd, 0.0f, source, output,SIMRATE)
 {
 	tolerance=0.05;
 }
@@ -25,8 +27,9 @@ void MyPIDController::Calculate()
 		double s=GetSetpoint();
 		double e=GetError();
 		double c=Get();
-		bool b=OnTarget();
-		std::cout<<"PID Target:"<<s<<" err:"<<e<<" cor:"<<c<<" OnTarget:"<<b<<std::endl;
+		bool b=IsEnabled();
+		bool t=OnTarget();
+		std::cout<<"PID enabled:"<<b<<" Target:"<<s<<" err:"<<e<<" cor:"<<c<<" OnTarget:"<<t<<std::endl;
 	}
 #endif
 }
@@ -206,6 +209,8 @@ void GPMotor::SetPID(int mode, double P, double I, double D){
 }
 void GPMotor::SetInverted(bool t) {
 	inverted=t;
+	//if(encoder)
+	//	encoder->SetReverseDirection(t);
 }
 
 void GPMotor::SetContinuous(bool b){
@@ -216,11 +221,7 @@ void GPMotor::SetPID(double P, double I, double D){
 #if MOTORTYPE != CANTALON
 	if(pid)
 		delete pid;
-#ifdef SIMULATION
-	pid=new MyPIDController(P, I, D,this,this,SIMRATE);
-#else
 	pid=new MyPIDController(P, I, D,this,this);
-#endif
 #else
 	CANTalon::SetPID(P,I,D);
 #endif
