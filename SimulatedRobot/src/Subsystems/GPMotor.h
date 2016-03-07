@@ -24,15 +24,16 @@
 
 class MyPIDController: public PIDController {
 	double tolerance;
+	bool debug;
+	int id;
 public:
-	MyPIDController(float p, float i, float d, PIDSource *source, PIDOutput *output);
+	MyPIDController(int i, float P, float I, float D, PIDSource *source, PIDOutput *output);
 	void Calculate();
 	bool OnTarget();
 	void SetAbsoluteTolerance(double b);
 	double CalculateFeedForward();
+	void SetDebug(int t) { debug=t;}
 };
-#else
-#define MyPIDController PIDController
 #endif
 
 /**
@@ -52,15 +53,21 @@ class GPMotor: public Talon, public PIDSource
 #endif
 {
 public:
-	enum { POSITION,SPEED};
+	enum { POSITION,SPEED,VOLTAGE};
 	uint8_t syncGroup;
 
 protected:
 	int control_mode;
 	bool inverted;
+	int debug;
+	int id;
 
 #if MOTORTYPE != CANTALON
+#ifdef SIMULATION
 	MyPIDController *pid;
+#else
+	PIDController *pid;
+#endif
 	Encoder *encoder;
 #endif
 
@@ -90,6 +97,7 @@ public:
 	virtual void Disable();
 	virtual void SetPID(int mode, double P, double I, double D);
 	virtual void SetPID(double P, double I, double D);
+	virtual void ClearPID();
 	virtual void SetInputRange(double min, double max);
 	virtual void SetOutputRange(double min, double max);
 	virtual void SetTolerance(double d);
@@ -101,5 +109,6 @@ public:
 	virtual void SetDistancePerPulse(double target);
 	virtual void SetContinuous(bool b);
 	virtual void PIDWrite(float output);
+	virtual void SetDebug(int b);
 };
 #endif

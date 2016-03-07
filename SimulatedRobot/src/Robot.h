@@ -24,7 +24,6 @@ public:
 	static std::shared_ptr<BallHolder> holder;
 	static std::shared_ptr<Shooter> shooter;
 	static std::unique_ptr<OI> oi;
-
 private:
 	LiveWindow *lw = LiveWindow::GetInstance();
 	Autonomous autonomousCommand;

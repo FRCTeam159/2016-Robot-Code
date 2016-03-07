@@ -10,28 +10,25 @@
 
 #ifdef SIMULATION
 
-#define SIMRATE 0.01
+#define SIMRATE 0.02
 
-
-MyPIDController::MyPIDController(float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output)
+MyPIDController::MyPIDController(int i,float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output)
 								: PIDController(Kp, Ki, Kd, 0.0f, source, output,SIMRATE)
 {
 	tolerance=0.05;
+	debug=0;
+	id=i;
 }
 void MyPIDController::Calculate()
 {
 	PIDController::Calculate();
-//#define DEBUG_PID
-#ifdef DEBUG_PID
-	if(IsEnabled()){
+	if((debug && IsEnabled()) || debug>1){
 		double s=GetSetpoint();
 		double e=GetError();
 		double c=Get();
-		bool b=IsEnabled();
 		bool t=OnTarget();
-		std::cout<<"PID enabled:"<<b<<" Target:"<<s<<" err:"<<e<<" cor:"<<c<<" OnTarget:"<<t<<std::endl;
+		std::cout<<"PID["<<id<<"] Target:"<<s<<" err:"<<e<<" cor:"<<c<<" OnTarget:"<<t<<std::endl;
 	}
-#endif
 }
 // BUG in PIDController :
 // - Uses a buffer (m_buf) to average previous error values
@@ -55,7 +52,7 @@ double MyPIDController::CalculateFeedForward(){
 }
 #endif
 
-GPMotor::GPMotor(int id) : GPMotor(id,true){
+GPMotor::GPMotor(int i) : GPMotor(i,true){
 }
 
 #if MOTORTYPE == CANTALON
@@ -66,17 +63,18 @@ GPMotor::GPMotor(int id, int enc) : CANTalon(id){
 }
 #else
 #if MOTORTYPE == VICTOR
-GPMotor::GPMotor(int id,bool enc) : Victor(id){
+GPMotor::GPMotor(int i,bool enc) : Victor(i){
 #else
-GPMotor::GPMotor(int id,bool enc) : Talon(id){
+GPMotor::GPMotor(int i,bool enc) : Talon(i){
 #endif
 	pid=0;
 	encoder=0;
+	id=i;
 	if(enc){
 		int ival=(id-1)*2+1; // 1,3,5,..
 		encoder=new Encoder(ival,ival+1); // {1,2} {3,4} {5,6} ..
 	}
-	control_mode=SPEED;
+	control_mode=VOLTAGE;
 	inverted=false;
 	syncGroup=0x08;
 }
@@ -103,6 +101,9 @@ void GPMotor::PIDWrite(float output){
 #elif MOTORTYPE == VICTOR
 	Victor::PIDWrite(output);
 #else
+	//if(debug)
+	//	std::cout<< "GPMotor::PIDWrite:"<<output << std::endl;
+
 	Talon::PIDWrite(output);
 #endif
 }
@@ -116,10 +117,15 @@ void GPMotor::UsePIDOutput(double value){
 #endif
 }
 double GPMotor::ReturnPIDInput(){
-	if(control_mode==SPEED)
-		return GetVelocity();
-	else
+	switch(control_mode){
+	case POSITION:
 		return GetDistance();
+	case SPEED:
+		return GetVelocity();
+	default:
+	case VOLTAGE:
+		return Get();
+	}
 }
 double GPMotor::PIDGet(){
 	return ReturnPIDInput();
@@ -178,8 +184,8 @@ void GPMotor::Enable(){
 #else
 	if(pid)
 		pid->Enable();
-	else
-		std::cout<<"ERROR Enable:PID=NULL"<<std::endl;
+	//else
+	//	std::cout<<"ERROR Enable:PID=NULL"<<std::endl;
 #endif
 }
 
@@ -221,23 +227,41 @@ void GPMotor::SetPID(double P, double I, double D){
 #if MOTORTYPE != CANTALON
 	if(pid)
 		delete pid;
-	pid=new MyPIDController(P, I, D,this,this);
+#ifdef SIMULATION
+	pid=new MyPIDController(id,P, I, D,this,this);
+#else
+	pid=new PIDController(P, I, D,this,this);
+#endif
 #else
 	CANTalon::SetPID(P,I,D);
 #endif
 }
+
+void GPMotor::ClearPID(){
+	if(pid)
+		delete pid;
+	pid=0;
+}
 void GPMotor::SetMode(int m){
-	if((m != POSITION) && (m != SPEED) )
-		m=SPEED;
+	if((m != POSITION) && (m != SPEED) && (m != VOLTAGE)){
+		std::cout<<"ERROR unknown mode:"<<m<<std::endl;
+		return;
+	}
+	control_mode=m;
 #if MOTORTYPE == CANTALON
 	CANTalon::ControlMode mode = (m==POSITION)? CANTalon::ControlMode::kPosition: CANTalon::ControlMode::kSpeed;
 	CANTalon::SetControlMode(mode);
 #else
-	SetPIDSourceType((m==POSITION)? PIDSourceType::kDisplacement:PIDSourceType::kRate);
-	if(encoder)
-		encoder->SetPIDSourceType((m==POSITION)? PIDSourceType::kDisplacement:PIDSourceType::kRate);
+	if(control_mode==VOLTAGE){
+		ClearPID();
+	}
+	else{
+		PIDSourceType pidMode=(control_mode==POSITION)? PIDSourceType::kDisplacement:PIDSourceType::kRate;
+		SetPIDSourceType(pidMode);
+		if(encoder)
+			encoder->SetPIDSourceType(pidMode);
+	}
 #endif
-	control_mode=m;
 }
 
 void GPMotor::SetInputRange(double min, double max){
@@ -318,5 +342,13 @@ void GPMotor::SetDistancePerPulse(double target){
 #else
 	if(encoder)
 		encoder->SetDistancePerPulse(target);
+#endif
+}
+
+void GPMotor::SetDebug(int b){
+	debug=b;
+#ifdef SIMULATION
+	if(pid)
+		pid->SetDebug(b);
 #endif
 }

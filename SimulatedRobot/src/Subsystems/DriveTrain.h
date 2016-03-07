@@ -13,61 +13,41 @@ class DriveTrain : public Subsystem {
 	GPMotor left_motor;
 	GPMotor right_motor;
 private:
-
-	RobotDrive* drive;
-	//Encoder *left_encoder, *right_encoder;
-	//AnalogInput* rangefinder;
 	//AnalogGyro* gyro;
 	double x_deadband,y_deadband;
-
+	double dpp;
+	bool inverted;
+	bool squared_inputs;
+	void Limit(double &num);
+	void SquareInputs(double &left, double &right);
 public:
-	DriveTrain(int,int);
+	DriveTrain();
 
-	/**
-	 * When no other command is running let the operator drive around
-	 * using the PS3 joystick.
-	 */
 	void InitDefaultCommand();
-
-	/**
-	 * The log method puts interesting information to the SmartDashboard.
-	 */
+	void SetSquaredInputs(double d){ squared_inputs=d;}
 	void Log();
-
-	/**
-	 * Tank style driving for the DriveTrain.
-	 * @param left Speed in range [-1,1]
-	 * @param right Speed in range [-1,1]
-	 */
-	void Drive(double left, double right);
-
-	/**
-	 * @param joy The ps3 style joystick to use to drive tank style.
-	 */
-	void Drive(Joystick* joy);
-
-	/**
-	 * @return The robots heading in degrees.
-	 */
-	double GetHeading();
-
-	/**
-	 * Reset the robots sensors to the zero states.
-	 */
 	void Reset();
 
-	/**
-	 * @return The distance driven (average of left and right encoders).
-	 */
-	double GetDistance();
+	void Drive(Joystick* joy);
+	double GetHeading();
 
-	/**
-	 * @return The distance to the obstacle detected by the rangefinder.
-	 */
-	double GetDistanceToObstacle();
+	void TeleopInit();
+	void AutonomousInit();
+	void DisabledInit();
+
+	double GetDistance();
+	double GetLeftDistance();
+	double GetRightDistance();
+
 	virtual double Deadband(double x, double ignore);
 	virtual void SetDeadband(double x, double y);
-
+	virtual void SetDistancePerPulse(double diam,double ticks, bool b);
+	virtual double GetDistancePerPulse();
+	virtual bool IsInverted() { return inverted;}
+	virtual void SetPID(int mode, double P, double I, double D);
+	virtual void SetDistance(double d);
+	virtual void SetSpeed(double d);
+	virtual bool OnTarget();
 };
 
 #endif

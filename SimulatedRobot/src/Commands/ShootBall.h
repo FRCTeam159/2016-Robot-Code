@@ -11,11 +11,12 @@
 #include <Commands/Command.h>
 
 class ShootBall: public Command {
-	enum {
-		FLYWHEELS_ON=1,
-		PUSHER_ON=2,
-	};
 	int state;
+	double timeout_time;
+	void OpenGate();
+	void TurnFlywheelsOn();
+	void PushBall();
+	void ResetShooter();
 public:
 	ShootBall();
 	void Initialize();
@@ -23,7 +24,6 @@ public:
 	bool IsFinished();
 	void End();
 	void Interrupted();
-
 };
 
 #endif /* SRC_COMMANDS_SHOOTBALL_H_ */

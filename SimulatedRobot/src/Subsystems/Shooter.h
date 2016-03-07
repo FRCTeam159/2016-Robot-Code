@@ -16,8 +16,11 @@ class Shooter: public Subsystem {
 	GPMotor leftMotor;
 	GPMotor rightMotor;
 	double angle,max_angle,min_angle;
+	void Init();
+	void Disable();
+
 public:
-	Shooter(int,int,int);
+	Shooter();
 	void Shoot(bool);
 	void SetTargetAngle(double a);
 	double GetTargetAngle();
@@ -25,8 +28,10 @@ public:
 	double GetMinAngle() { return min_angle;}
 
 	bool OnTarget();
-	void Init();
-	void Disable();
+	void AutonomousInit();
+	void TeleopInit();
+	void DisabledInit();
+
 };
 
 #endif /* SRC_SUBSYSTEMS_SHOOTER_H_ */

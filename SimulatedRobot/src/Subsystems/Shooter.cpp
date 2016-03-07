@@ -4,15 +4,15 @@
  *  Created on: Feb 19, 2016
  *      Author: alpiner
  */
-
+#include "Assignments.h"
 #include <Subsystems/Shooter.h>
 
 #define FWSPEED 800
 
-Shooter::Shooter(int m1, int m2, int m3) : Subsystem("Shooter"),
-	angleMotor(m1,true), leftMotor(m2,true),rightMotor(m3,true)
+Shooter::Shooter() : Subsystem("Shooter"),
+	angleMotor(SHOOTER_ANGLE,true), leftMotor(SHOOTER_LEFT,true),rightMotor(SHOOTER_RIGHT,true)
 {
-	std::cout<<"New Shooter("<<m1<<","<<m2<<","<<m3<<")"<<std::endl;
+	std::cout<<"New Shooter("<<SHOOTER_ANGLE<<","<<SHOOTER_LEFT<<","<<SHOOTER_RIGHT<<")"<<std::endl;
 	angle=0;
 	leftMotor.SetPID(GPMotor::SPEED, 0.5, 0.001, 1);
 	leftMotor.SetDistancePerPulse(RPD(1)); // 1 degree = 0.01745 radians
@@ -20,6 +20,17 @@ Shooter::Shooter(int m1, int m2, int m3) : Subsystem("Shooter"),
 	rightMotor.SetDistancePerPulse(RPD(1));
 	max_angle=70; // max elevation (degrees)
 	min_angle=0;
+}
+
+void Shooter::AutonomousInit(){
+	Init();
+}
+void Shooter::TeleopInit(){
+	Init();
+}
+void Shooter::DisabledInit(){
+	Disable();
+	angleMotor.SetDebug(0);
 }
 
 // Initialize

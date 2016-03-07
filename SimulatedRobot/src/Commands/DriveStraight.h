@@ -13,9 +13,14 @@
 #ifdef SIMULATION
 #define PIDController MyPIDController
 #endif
-class DriveStraight: public Command {
-	PIDController* pid;
+class DriveStraight: public Command  {
+
+//class DriveStraight: public Command, public PIDSource, public PIDOutput  {
+//	PIDController* pid;
 	double distance;
+	double left_distance;
+	double right_distance;
+
 
 public:
 	DriveStraight(double distance);
@@ -24,18 +29,21 @@ public:
 	void Execute();
 	void End();
 	void Interrupted() { End();}
+
+	//double PIDGet();
+	//void PIDWrite(float d);
 };
 
-class DriveStraightPIDSource: public PIDSource {
-public:
-	virtual ~DriveStraightPIDSource();
-	double PIDGet();
-};
-
-class DriveStraightPIDOutput: public PIDOutput {
-public:
-	virtual ~DriveStraightPIDOutput();
-	void PIDWrite(float d);
-};
+//class DriveStraightPIDSource: public PIDSource {
+//public:
+//	virtual ~DriveStraightPIDSource();
+//	double PIDGet();
+//};
+//
+//class DriveStraightPIDOutput: public PIDOutput {
+//public:
+//	virtual ~DriveStraightPIDOutput();
+//	void PIDWrite(float d);
+//};
 
 #endif /* SRC_COMMANDS_DRIVESTRAIGHT_H_ */

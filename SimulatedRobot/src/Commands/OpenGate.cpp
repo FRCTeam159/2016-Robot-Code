@@ -14,13 +14,16 @@ OpenGate::OpenGate() : Command("OpenGate")  {
 
 // Called just before this Command runs the first time
 void OpenGate::Initialize() {
+	SetTimeout(1.0);
 	Robot::holder->OpenGate();
 	std::cout << "OpenGate started .."<<std::endl;
 }
 bool OpenGate::IsFinished() {
-	bool done=Robot::holder->IsGateOpen();
-	//std::cout << "OpenGate complete"<< std::endl;
-	return done;
+	if(IsTimedOut() || Robot::holder->IsGateOpen()){
+		return true;
+		//std::cout << "OpenGate complete"<< std::endl;
+	}
+	return false;
 }
 void OpenGate::End() {
 	std::cout << "OpenGate End"<<std::endl;

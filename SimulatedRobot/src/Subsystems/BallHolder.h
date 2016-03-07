@@ -18,15 +18,21 @@ class BallHolder: public Subsystem {
 	AnalogInput ballSensor;
 
 	bool gateopen;
-public:
-	BallHolder(int m1, int m2);
 	void Init();
+
+public:
+	BallHolder();
 	bool IsGateOpen();
 	bool IsGateClosed();
 	bool IsBallPresent();
 	void OpenGate();
 	void CloseGate();
 	void PushBall(bool);
+
+	void AutonomousInit();
+	void TeleopInit();
+	void DisabledInit();
+
 };
 
 #endif /* SRC_SUBSYSTEMS_BALLHOLDER_H_ */

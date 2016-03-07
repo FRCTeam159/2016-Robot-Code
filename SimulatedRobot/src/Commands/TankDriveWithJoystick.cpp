@@ -7,7 +7,9 @@ TankDriveWithJoystick::TankDriveWithJoystick() : Command("TankDriveWithJoystick"
 }
 
 // Called just before this Command runs the first time
-void TankDriveWithJoystick::Initialize() {}
+void TankDriveWithJoystick::Initialize() {
+
+}
 
 // Called repeatedly when this Command is scheduled to run
 void TankDriveWithJoystick::Execute() {
@@ -21,7 +23,9 @@ bool TankDriveWithJoystick::IsFinished() {
 
 // Called once after isFinished returns true
 void TankDriveWithJoystick::End() {
-	Robot::drivetrain->Drive(0.0, 0.0);
+	//Robot::drivetrain->Drive(0.0, 0.0);
+	Robot::drivetrain->Reset();
+
 }
 
 // Called when another command which requires one or more of the same
