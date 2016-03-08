@@ -4,7 +4,6 @@
  *  Created on: Jul 6, 2015
  *      Author: alpiner
  */
-#include "WPILib.h"
 
 #include <Subsystems/GPMotor.h>
 
@@ -13,7 +12,7 @@
 #define SIMRATE 0.02
 
 MyPIDController::MyPIDController(int i,float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output)
-								: PIDController(Kp, Ki, Kd, 0.0f, source, output,SIMRATE)
+								: MYPIDController(Kp, Ki, Kd, source, output)
 {
 	tolerance=0.05;
 	debug=0;
@@ -21,7 +20,7 @@ MyPIDController::MyPIDController(int i,float Kp, float Ki, float Kd,PIDSource *s
 }
 void MyPIDController::Calculate()
 {
-	PIDController::Calculate();
+	MYPIDController::Calculate();
 	if((debug && IsEnabled()) || debug>1){
 		double s=GetSetpoint();
 		double e=GetError();
@@ -219,10 +218,6 @@ void GPMotor::SetInverted(bool t) {
 	//	encoder->SetReverseDirection(t);
 }
 
-void GPMotor::SetContinuous(bool b){
-	if(pid)
-		pid->SetContinuous(b);
-}
 void GPMotor::SetPID(double P, double I, double D){
 #if MOTORTYPE != CANTALON
 	if(pid)

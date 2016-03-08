@@ -122,13 +122,16 @@ void DriveTrain::SetPID(int mode, double P, double I, double D){
 }
 void DriveTrain::SetDistance(double d){
 	std::cout << "DriveTrain::SetDistance:"<<d<<std::endl;
-	right_motor.SetPID(GPMotor::POSITION,0.2,0.001,1);
-	left_motor.SetPID(GPMotor::POSITION,0.2,0.001,1);
-	left_motor.SetDebug(2);
-	right_motor.SetDebug(2);
+	right_motor.SetPID(GPMotor::POSITION,-0.2,0.0,0);
+	left_motor.SetPID(GPMotor::POSITION,0.2,0,0);
+	//left_motor.SetDebug(1);
+	//right_motor.SetDebug(1);
+
 
 	left_motor.SetDistance(d);
 	right_motor.SetDistance(d);
+	left_motor.SetTolerance(0.5);
+	right_motor.SetTolerance(0.5);
 	left_motor.Enable();
 	right_motor.Enable();
 
@@ -140,9 +143,19 @@ void DriveTrain::SetSpeed(double d){
 void DriveTrain::Reset() {
 	right_motor.Reset();
 	left_motor.Reset();
+}
+void DriveTrain::Enable() {
 	right_motor.Enable();
 	left_motor.Enable();
 }
+void DriveTrain::Disable() {
+	right_motor.Disable();
+	left_motor.Disable();
+	//left_motor.ClearPID();
+	//right_motor.ClearPID();
+
+}
+
 double DriveTrain::GetHeading() {
 	return 0;//gyro->GetAngle();
 }
@@ -153,16 +166,15 @@ void DriveTrain::TeleopInit() {
 	left_motor.SetMode(GPMotor::VOLTAGE);
 	right_motor.SetMode(GPMotor::VOLTAGE);
 	Reset();
+	Enable();
 }
 
 void DriveTrain::AutonomousInit() {
 	std::cout << "DriveTrain::AutonomousInit"<<std::endl;
-	//left_motor.SetPID(GPMotor::POSITION,0.2,0.001,1);
-	//right_motor.SetPID(GPMotor::POSITION,0.2,0.001,1);
-
+//	left_motor.SetPID(GPMotor::POSITION,0.2,0.001,1);
 //	right_motor.SetPID(GPMotor::POSITION,0.2,0.001,1);
-//	left_motor.SetDebug(2);
-//	right_motor.SetDebug(2);
+//	left_motor.SetDebug(1);
+//	right_motor.SetDebug(1);
 	Reset();
 }
 
@@ -170,7 +182,11 @@ void DriveTrain::DisabledInit() {
 	std::cout << "DriveTrain::DisabledInit"<<std::endl;
 	left_motor.SetDebug(0);
 	right_motor.SetDebug(0);
-	Reset();
+	Disable();
+	right_motor.Reset();
+	left_motor.Reset();
+	//left_motor.ClearPID();
+	//right_motor.ClearPID();
 }
 
 bool DriveTrain::OnTarget(){

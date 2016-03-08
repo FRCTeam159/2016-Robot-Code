@@ -2,6 +2,7 @@
 #define GP_MOTOR_H
 
 #include "WPILib.h"
+#include <Subsystems/MYPIDController.h>
 
 #define PI 3.141516
 #define RPD(x) (x)*2*PI/360
@@ -22,7 +23,7 @@
 
 #ifdef SIMULATION
 
-class MyPIDController: public PIDController {
+class MyPIDController: public MYPIDController {
 	double tolerance;
 	bool debug;
 	int id;
@@ -107,7 +108,6 @@ public:
 	virtual int GetMode(){ return control_mode;}
 	virtual bool OnTarget();
 	virtual void SetDistancePerPulse(double target);
-	virtual void SetContinuous(bool b);
 	virtual void PIDWrite(float output);
 	virtual void SetDebug(int b);
 };

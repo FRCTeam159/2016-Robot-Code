@@ -27,6 +27,8 @@ public:
 	void SetSquaredInputs(double d){ squared_inputs=d;}
 	void Log();
 	void Reset();
+	void Enable();
+	void Disable();
 
 	void Drive(Joystick* joy);
 	double GetHeading();
