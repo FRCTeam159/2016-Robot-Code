@@ -30,7 +30,7 @@ MyNotifier::MyNotifier(TimerEventHandler handler)
 	m_expirationTime = 0;
 	m_period = 0;
 	m_queued = false;
-	std::cout<<"MyNotifier::MyNotifier"<<std::endl;
+	//std::cout<<"MyNotifier::MyNotifier"<<std::endl;
 
 	{
 		std::lock_guard<std::recursive_mutex> sync(queueMutex);
@@ -50,16 +50,16 @@ MyNotifier::~MyNotifier()
 {
 	{
 		std::lock_guard<std::recursive_mutex> sync(queueMutex);
-		std::cout<<"MyNotifier::~MyNotifier"<<std::endl;
+		//std::cout<<"MyNotifier::~MyNotifier"<<std::endl;
 
 		DeleteFromQueue();
 
 		// Delete the static variables when the last one is going away
 		if (refcount.fetch_sub(1) == 1)
 		{
-			std::cout<<"MyNotifier::~MyNotifier m_task.join() "<<std::endl;
+			//std::cout<<"MyNotifier::~MyNotifier m_task.join() "<<std::endl;
 
-      m_stopped = true;
+			m_stopped = true;
 			m_task.join();
 		}
 	}
@@ -78,7 +78,6 @@ MyNotifier::~MyNotifier()
  */
 void MyNotifier::UpdateAlarm()
 {
-	std::cout<<"MyNotifier::UpdateAlarm"<<std::endl;
 }
 
 /**
@@ -101,6 +100,7 @@ void MyNotifier::ProcessQueue(uint32_t mask, void *params)
 				break;
 			}
 			current = timerQueue.front();
+			//if (current->m_expirationTime > currentTime)
 			if (!current->m_periodic && current->m_expirationTime > currentTime)
 			{
 				break;		// no more timer events to process
@@ -175,8 +175,6 @@ void MyNotifier::InsertInQueue(bool reschedule)
 			/* Since the first element changed, update alarm, unless we already
 			 * plan to
 			 */
-			std::cout<<"MyNotifier::InsertInQueue Error"<<std::endl;
-
 			UpdateAlarm();
 		}
 
@@ -200,16 +198,11 @@ void MyNotifier::DeleteFromQueue()
 		if (timerQueue.front() == this)
 		{
 			// remove the first item in the list - update the alarm
-			std::cout<<"MyNotifier::DeleteFromQueue front "<<std::endl;
-
 			timerQueue.pop_front();
-
 			UpdateAlarm();
 		}
 		else
 		{
-			std::cout<<"MyNotifier::DeleteFromQueue this "<<std::endl;
-
 			timerQueue.remove(this);
 		}
 	}
@@ -241,7 +234,7 @@ void MyNotifier::StartPeriodic(double period)
 	m_periodic = true;
 	m_period = period;
 	DeleteFromQueue();
-	InsertInQueue(true);
+	InsertInQueue(false); // note: false ensures that first time called will be > current time
 }
 
 /**
@@ -280,7 +273,7 @@ void MyNotifier::Run() {
         }
         else
         {
-            Wait(0.01);
+            Wait(0.05);
         }
     }
 }

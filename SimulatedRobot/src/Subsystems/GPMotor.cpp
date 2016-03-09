@@ -9,30 +9,42 @@
 
 #ifdef SIMULATION
 
-#define SIMRATE 0.02
+//#define SIMRATE 0.02
 
-MyPIDController::MyPIDController(int i,float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output)
-								: MYPIDController(Kp, Ki, Kd, source, output)
+#define SYNC_MUTEX std::lock_guard<std::recursive_mutex> sync(debugMutex)
+#define LOCK_MUTEX std::lock_guard<std::recursive_mutex> lock(debugMutex)
+
+std::recursive_mutex GPPIDController::debugMutex;
+
+GPPIDController::GPPIDController(int i,float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output, float rate)
+								: BASE_CONTROLLER(Kp, Ki, Kd, source, output,rate)
 {
 	tolerance=0.05;
 	debug=0;
 	id=i;
 }
-void MyPIDController::Calculate()
+void GPPIDController::Calculate()
 {
-	MYPIDController::Calculate();
-	if((debug && IsEnabled()) || debug>1){
+	BASE_CONTROLLER::Calculate();
+	{
+		//SYNC_MUTEX;
+	//static int count=1;
+
+	if(((debug && IsEnabled()) || debug>1)){
 		double s=GetSetpoint();
 		double e=GetError();
 		double c=Get();
 		bool t=OnTarget();
-		std::cout<<"PID["<<id<<"] Target:"<<s<<" err:"<<e<<" cor:"<<c<<" OnTarget:"<<t<<std::endl;
+		bool b=IsEnabled();
+		std::cout<<"PID["<<id<<"] Enabled:"<<b<<" Target:"<<s<<" err:"<<e<<" cor:"<<c<<" OnTarget:"<<t<<std::endl;
+	}
+	//count++;
 	}
 }
 // BUG in PIDController :
 // - Uses a buffer (m_buf) to average previous error values
 // - but m_buf never gets written to so "OnTarget" always returns false
-bool MyPIDController::OnTarget(){
+bool GPPIDController::OnTarget(){
 	//return PIDController::OnTarget();
 	if(!IsEnabled())
 		return false;
@@ -41,12 +53,12 @@ bool MyPIDController::OnTarget(){
 	return delta<=tolerance;
 }
 // need to set tolerance manually to allow custom OnTarget calculation
-void MyPIDController::SetAbsoluteTolerance(double d){
+void GPPIDController::SetAbsoluteTolerance(double d){
 	tolerance=d;
 }
 // BUG in PIDController :
 // - using the native version of this function causes NaN errors
-double MyPIDController::CalculateFeedForward(){
+double GPPIDController::CalculateFeedForward(){
 	return 0;
 }
 #endif
@@ -223,7 +235,7 @@ void GPMotor::SetPID(double P, double I, double D){
 	if(pid)
 		delete pid;
 #ifdef SIMULATION
-	pid=new MyPIDController(id,P, I, D,this,this);
+	pid=new GPPIDController(id,P, I, D,this,this,SIMPIDRATE);
 #else
 	pid=new PIDController(P, I, D,this,this);
 #endif

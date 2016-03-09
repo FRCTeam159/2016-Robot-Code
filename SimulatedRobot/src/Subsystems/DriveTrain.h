@@ -18,6 +18,7 @@ private:
 	double dpp;
 	bool inverted;
 	bool squared_inputs;
+	bool disabled;
 	void Limit(double &num);
 	void SquareInputs(double &left, double &right);
 public:
@@ -50,6 +51,7 @@ public:
 	virtual void SetDistance(double d);
 	virtual void SetSpeed(double d);
 	virtual bool OnTarget();
+	virtual bool IsDisabled();
 };
 
 #endif

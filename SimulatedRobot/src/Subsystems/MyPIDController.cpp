@@ -1,13 +1,12 @@
 /*
- * MYPIDController.cpp
+ * MyPIDController.cpp
  *
  *  Created on: Mar 7, 2016
  *      Author: dean
  */
 
-#include <Subsystems/MYPIDController.h>
+#include <Subsystems/MyPIDController.h>
 
-#define SIMPIDRATE 0.05
 #define USE_MUTEX
 
 #ifdef USE_MUTEX
@@ -17,18 +16,18 @@
 #define SYNC_MUTEX
 #define LOCK_MUTEX
 #endif
-MYPIDController::MYPIDController(float Kp, float Ki, float Kd, PIDSource *source, PIDOutput *output)
+MyPIDController::MyPIDController(float Kp, float Ki, float Kd, PIDSource *source, PIDOutput *output, float rate)
 {
-	Initialize(Kp, Ki, Kd,source, output);
+	Initialize(Kp, Ki, Kd,source, output,rate);
 }
 
-MYPIDController::~MYPIDController() {
+MyPIDController::~MyPIDController() {
 	// TODO Auto-generated destructor stub
 }
 
 
-void MYPIDController::Initialize(float Kp, float Ki, float Kd,
-								PIDSource *source, PIDOutput *output)
+void MyPIDController::Initialize(float Kp, float Ki, float Kd,
+								PIDSource *source, PIDOutput *output,float rate)
 {
 
 	m_P = Kp;
@@ -52,16 +51,16 @@ void MYPIDController::Initialize(float Kp, float Ki, float Kd,
 
 	m_pidInput = source;
 	m_pidOutput = output;
-	m_period = SIMPIDRATE;
+	m_period = rate;
 
-	m_controlLoop = std::make_unique<MyNotifier>(&MYPIDController::Calculate, this);
+	m_controlLoop = std::make_unique<MyNotifier>(&MyPIDController::Calculate, this);
 	m_controlLoop->StartPeriodic(m_period);
 
 	static int32_t instances = 0;
 	instances++;
 }
 
-void MYPIDController::Calculate()
+void MyPIDController::Calculate()
 {
 	bool enabled;
 	PIDSource *pidInput;
@@ -139,7 +138,7 @@ void MYPIDController::Calculate()
  * @param i Integral coefficient
  * @param d Differential coefficient
  */
-void MYPIDController::SetPID(double p, double i, double d)
+void MyPIDController::SetPID(double p, double i, double d)
 {
 	{
 		LOCK_MUTEX;
@@ -153,7 +152,7 @@ void MYPIDController::SetPID(double p, double i, double d)
  * Get the Proportional coefficient
  * @return proportional coefficient
  */
-double MYPIDController::GetP() const
+double MyPIDController::GetP() const
 {
 	LOCK_MUTEX;
 	return m_P;
@@ -163,7 +162,7 @@ double MYPIDController::GetP() const
  * Get the Integral coefficient
  * @return integral coefficient
  */
-double MYPIDController::GetI() const
+double MyPIDController::GetI() const
 {
 	LOCK_MUTEX;
 	return m_I;
@@ -173,7 +172,7 @@ double MYPIDController::GetI() const
  * Get the Differential coefficient
  * @return differential coefficient
  */
-double MYPIDController::GetD() const
+double MyPIDController::GetD() const
 {
 	LOCK_MUTEX;
 	return m_D;
@@ -183,7 +182,7 @@ double MYPIDController::GetD() const
  * This is always centered on zero and constrained the the max and min outs
  * @return the latest calculated output
  */
-float MYPIDController::Get() const
+float MyPIDController::Get() const
 {
 	LOCK_MUTEX;
 	return m_result;
@@ -195,7 +194,7 @@ float MYPIDController::Get() const
  * @param minimumInput the minimum value expected from the input
  * @param maximumInput the maximum value expected from the output
  */
-void MYPIDController::SetInputRange(float minimumInput, float maximumInput)
+void MyPIDController::SetInputRange(float minimumInput, float maximumInput)
 {
 	{
 		LOCK_MUTEX;
@@ -212,7 +211,7 @@ void MYPIDController::SetInputRange(float minimumInput, float maximumInput)
  * @param minimumOutput the minimum value to write to the output
  * @param maximumOutput the maximum value to write to the output
  */
-void MYPIDController::SetOutputRange(float minimumOutput, float maximumOutput)
+void MyPIDController::SetOutputRange(float minimumOutput, float maximumOutput)
 {
 	LOCK_MUTEX;
 	m_minimumOutput = minimumOutput;
@@ -223,7 +222,7 @@ void MYPIDController::SetOutputRange(float minimumOutput, float maximumOutput)
  * Set the setpoint for the MYPIDController
  * @param setpoint the desired setpoint
  */
-void MYPIDController::SetSetpoint(float setpoint)
+void MyPIDController::SetSetpoint(float setpoint)
 {
 	{
 		LOCK_MUTEX;
@@ -247,7 +246,7 @@ void MYPIDController::SetSetpoint(float setpoint)
  * Returns the current setpoint of the MYPIDController
  * @return the current setpoint
  */
-double MYPIDController::GetSetpoint() const
+double MyPIDController::GetSetpoint() const
 {
 	LOCK_MUTEX;
 	return m_setpoint;
@@ -258,7 +257,7 @@ double MYPIDController::GetSetpoint() const
  * Retruns the current difference of the input from the setpoint
  * @return the current error
  */
-float MYPIDController::GetError() const
+float MyPIDController::GetError() const
 {
 	double pidInput;
 	{
@@ -271,7 +270,7 @@ float MYPIDController::GetError() const
 /**
  * Sets what type of input the PID controller will use
  */
-void MYPIDController::SetPIDSourceType(PIDSourceType pidSource) {
+void MyPIDController::SetPIDSourceType(PIDSourceType pidSource) {
   m_pidInput->SetPIDSourceType(pidSource);
 }
 
@@ -279,7 +278,7 @@ void MYPIDController::SetPIDSourceType(PIDSourceType pidSource) {
  * Returns the type of input the PID controller is using
  * @return the PID controller input type
  */
-PIDSourceType MYPIDController::GetPIDSourceType() const {
+PIDSourceType MyPIDController::GetPIDSourceType() const {
   return m_pidInput->GetPIDSourceType();
 }
 
@@ -289,7 +288,7 @@ PIDSourceType MYPIDController::GetPIDSourceType() const {
  * OnTarget.
  * @param percentage error which is tolerable
  */
-void MYPIDController::SetTolerance(float tol)
+void MyPIDController::SetTolerance(float tol)
 {
 	LOCK_MUTEX;
 	m_tolerance = tol;
@@ -302,7 +301,7 @@ void MYPIDController::SetTolerance(float tol)
  * Currently this just reports on target as the actual value passes through the setpoint.
  * Ideally it should be based on being within the tolerance for some period of time.
  */
-bool MYPIDController::OnTarget() const
+bool MyPIDController::OnTarget() const
 {
 	SYNC_MUTEX;
 	double error = GetError();
@@ -312,7 +311,7 @@ bool MYPIDController::OnTarget() const
 /**
  * Begin running the MYPIDController
  */
-void MYPIDController::Enable()
+void MyPIDController::Enable()
 {
 	{
 		LOCK_MUTEX;
@@ -326,7 +325,7 @@ void MYPIDController::Enable()
 /**
  * Stop running the MYPIDController, this sets the output to zero before stopping.
  */
-void MYPIDController::Disable()
+void MyPIDController::Disable()
 {
 	{
 		LOCK_MUTEX;
@@ -338,7 +337,7 @@ void MYPIDController::Disable()
 /**
  * Return true if MYPIDController is enabled.
  */
-bool MYPIDController::IsEnabled() const
+bool MyPIDController::IsEnabled() const
 {
 	LOCK_MUTEX;
 	return m_enabled;
@@ -347,7 +346,7 @@ bool MYPIDController::IsEnabled() const
 /**
  * Reset the previous error,, the integral term, and disable the controller.
  */
-void MYPIDController::Reset()
+void MyPIDController::Reset()
 {
 	Disable();
 

@@ -35,14 +35,16 @@ void Shooter::DisabledInit(){
 
 // Initialize
 void Shooter::Init(){
-	angleMotor.SetPID(GPMotor::POSITION, 0.5, 0.0, 1);
+	angleMotor.SetPID(GPMotor::POSITION, 0.1, 0.004, 0.2);
 	angleMotor.Reset(); // clear IAccum
 	angleMotor.SetDistancePerPulse(1.0); // 1 degree = 0.01745 radians
 	angleMotor.SetInputRange(min_angle,max_angle);      // 0..70 degrees
-	angleMotor.SetTolerance(0.5); // accept 0.5 degrees max error
+	angleMotor.SetTolerance(1); // accept 1 degrees max error
 
 	angleMotor.SetDistance(0);
-	angleMotor.Enable();
+	//angleMotor.Enable();
+	//angleMotor.SetDebug(1);
+
 
 	leftMotor.SetVelocity(0);
 	rightMotor.SetVelocity(0);
@@ -63,6 +65,7 @@ void Shooter::SetTargetAngle(double a){
 	a=a<min_angle?min_angle:a;
 	angle=a;
 	angleMotor.SetDistance(angle);
+	angleMotor.Enable();
 }
 
 bool Shooter::OnTarget(){

@@ -1,8 +1,11 @@
 #ifndef GP_MOTOR_H
 #define GP_MOTOR_H
 
+#include <Subsystems/MyPIDController.h>
 #include "WPILib.h"
-#include <Subsystems/MYPIDController.h>
+
+//#define BASE_CONTROLLER PIDController
+#define BASE_CONTROLLER MyPIDController
 
 #define PI 3.141516
 #define RPD(x) (x)*2*PI/360
@@ -23,17 +26,24 @@
 
 #ifdef SIMULATION
 
-class MyPIDController: public MYPIDController {
+#define SIMPIDRATE 0.025
+
+
+class GPPIDController: public BASE_CONTROLLER {
 	double tolerance;
 	bool debug;
 	int id;
+
+	static std::recursive_mutex debugMutex;
+
 public:
-	MyPIDController(int i, float P, float I, float D, PIDSource *source, PIDOutput *output);
+	GPPIDController(int i, float P, float I, float D, PIDSource *source, PIDOutput *output, float rate);
 	void Calculate();
 	bool OnTarget();
 	void SetAbsoluteTolerance(double b);
 	double CalculateFeedForward();
 	void SetDebug(int t) { debug=t;}
+
 };
 #endif
 
@@ -65,7 +75,7 @@ protected:
 
 #if MOTORTYPE != CANTALON
 #ifdef SIMULATION
-	MyPIDController *pid;
+	GPPIDController *pid;
 #else
 	PIDController *pid;
 #endif

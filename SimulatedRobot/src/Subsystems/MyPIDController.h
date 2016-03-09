@@ -12,7 +12,7 @@
 #include <Subsystems/MyNotifier.h>
 
 
-class MYPIDController: public PIDInterface {
+class MyPIDController: public PIDInterface {
 	PIDSource *m_pidInput;
 	PIDOutput *m_pidOutput;
 
@@ -39,12 +39,12 @@ class MYPIDController: public PIDInterface {
 	std::unique_ptr<MyNotifier> m_controlLoop;
 
 	void Initialize(float p, float i, float d,PIDSource *source,
-			PIDOutput *output);
+			PIDOutput *output, float rate);
 
 public:
-	MYPIDController(float p, float i, float d, PIDSource *source,PIDOutput *output);
+	MyPIDController(float p, float i, float d, PIDSource *source,PIDOutput *output, float rate);
 
-	virtual ~MYPIDController();
+	virtual ~MyPIDController();
 	virtual void Calculate();
 
 	virtual float Get() const;

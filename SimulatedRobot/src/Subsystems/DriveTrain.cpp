@@ -12,6 +12,7 @@ DriveTrain::DriveTrain() : Subsystem("DriveTrain"),
 	std::cout<<"New DriveTrain("<<DRIVE_LEFT<<","<<DRIVE_RIGHT<<")"<<std::endl;
 	SetDistancePerPulse(WHEEL_DIAMETER,WHEEL_TICKS,INVERT_RIGHT_SIDE);
 	SetDeadband(DEADBAND,DEADBAND);
+	disabled=true;
 
 	// Let's show everything on the LiveWindow
 	// TODO: LiveWindow::GetInstance()->AddActuator("Drive Train", "Front_Left Motor", (Talon) front_left_motor);
@@ -37,7 +38,8 @@ void DriveTrain::SetDistancePerPulse(double d, double t, bool b){
 	inverted =b;
 	dpp=(double)M_PI*(d/12.0) / t;
 	left_motor.SetDistancePerPulse(dpp);
-	right_motor.SetDistancePerPulse(b?-dpp:dpp);
+	//right_motor.SetDistancePerPulse(b?-dpp:dpp);
+	right_motor.SetDistancePerPulse(dpp);
 	squared_inputs=false;
 }
 // ===========================================================================================================
@@ -120,18 +122,21 @@ void DriveTrain::SetPID(int mode, double P, double I, double D){
 	left_motor.SetPID(mode,P,I,D);
 	right_motor.SetPID(mode,P,I,D);
 }
+#define P 0.15
+#define I 0.03
+#define D 0.01
 void DriveTrain::SetDistance(double d){
 	std::cout << "DriveTrain::SetDistance:"<<d<<std::endl;
-	right_motor.SetPID(GPMotor::POSITION,-0.2,0.0,0);
-	left_motor.SetPID(GPMotor::POSITION,0.2,0,0);
+	right_motor.SetPID(GPMotor::POSITION,P,I, D);
+	left_motor.SetPID(GPMotor::POSITION,P,I, D);
 	//left_motor.SetDebug(1);
 	//right_motor.SetDebug(1);
 
 
 	left_motor.SetDistance(d);
 	right_motor.SetDistance(d);
-	left_motor.SetTolerance(0.5);
-	right_motor.SetTolerance(0.5);
+	left_motor.SetTolerance(0.1);
+	right_motor.SetTolerance(0.1);
 	left_motor.Enable();
 	right_motor.Enable();
 
@@ -147,13 +152,17 @@ void DriveTrain::Reset() {
 void DriveTrain::Enable() {
 	right_motor.Enable();
 	left_motor.Enable();
+	disabled=false;
 }
 void DriveTrain::Disable() {
-	right_motor.Disable();
-	left_motor.Disable();
 	//left_motor.ClearPID();
 	//right_motor.ClearPID();
-
+	right_motor.Disable();
+	left_motor.Disable();
+	disabled=true;
+}
+bool DriveTrain::IsDisabled(){
+	return disabled;
 }
 
 double DriveTrain::GetHeading() {
