@@ -12,7 +12,7 @@
 
 class ShootBall: public Command {
 	int state;
-	double timeout_time;
+	double elapsed_time;
 	void OpenGate();
 	void TurnFlywheelsOn();
 	void PushBall();

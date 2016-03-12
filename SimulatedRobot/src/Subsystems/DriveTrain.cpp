@@ -6,6 +6,12 @@
 
 #include "Commands/TankDriveWithJoystick.h"
 
+#define MP 0.4
+#define MI 0.0001
+#define MD 3
+//#define MI 0.0
+//#define MD 0.0
+
 DriveTrain::DriveTrain() : Subsystem("DriveTrain"),
 	left_motor(DRIVE_LEFT),right_motor(DRIVE_RIGHT)
 {
@@ -13,6 +19,10 @@ DriveTrain::DriveTrain() : Subsystem("DriveTrain"),
 	SetDistancePerPulse(WHEEL_DIAMETER,WHEEL_TICKS,INVERT_RIGHT_SIDE);
 	SetDeadband(DEADBAND,DEADBAND);
 	disabled=true;
+	pid_disabled=true;
+	SetInverted(false); // invert motor direction on right side
+	//left_motor.SetDebug(1);
+	//right_motor.SetDebug(1);
 
 	// Let's show everything on the LiveWindow
 	// TODO: LiveWindow::GetInstance()->AddActuator("Drive Train", "Front_Left Motor", (Talon) front_left_motor);
@@ -35,7 +45,6 @@ DriveTrain::DriveTrain() : Subsystem("DriveTrain"),
 //   An alternative solution is to just invert the "DistancePerPulse" value
 // ===========================================================================================================
 void DriveTrain::SetDistancePerPulse(double d, double t, bool b){
-	inverted =b;
 	dpp=(double)M_PI*(d/12.0) / t;
 	left_motor.SetDistancePerPulse(dpp);
 	//right_motor.SetDistancePerPulse(b?-dpp:dpp);
@@ -62,10 +71,10 @@ void DriveTrain::InitDefaultCommand() {
  * The log method puts interesting information to the SmartDashboard.
  */
 void DriveTrain::Log() {
-	SmartDashboard::PutNumber("Left Distance", left_motor.GetDistance());
-	SmartDashboard::PutNumber("Right Distance", right_motor.GetDistance());
-	SmartDashboard::PutNumber("Left Speed", left_motor.GetVelocity());
-	SmartDashboard::PutNumber("Right Speed", right_motor.GetVelocity());
+//	SmartDashboard::PutNumber("Left Distance", left_motor.GetDistance());
+//	SmartDashboard::PutNumber("Right Distance", right_motor.GetDistance());
+//	SmartDashboard::PutNumber("Left Speed", left_motor.GetVelocity());
+//	SmartDashboard::PutNumber("Right Speed", right_motor.GetVelocity());
 	//SmartDashboard::PutNumber("Gyro", gyro->GetAngle());
 }
 
@@ -119,28 +128,22 @@ void DriveTrain::SetDeadband(double x, double y) {
 }
 
 void DriveTrain::SetPID(int mode, double P, double I, double D){
-	left_motor.SetPID(mode,P,I,D);
 	right_motor.SetPID(mode,P,I,D);
+	left_motor.SetPID(mode,P,I,D);
 }
-#define P 0.15
-#define I 0.03
-#define D 0.01
-void DriveTrain::SetDistance(double d){
+void DriveTrain::DriveStraight(double d){
 	std::cout << "DriveTrain::SetDistance:"<<d<<std::endl;
-	right_motor.SetPID(GPMotor::POSITION,P,I, D);
-	left_motor.SetPID(GPMotor::POSITION,P,I, D);
-	//left_motor.SetDebug(1);
-	//right_motor.SetDebug(1);
-
-
-	left_motor.SetDistance(d);
-	right_motor.SetDistance(d);
 	left_motor.SetTolerance(0.1);
 	right_motor.SetTolerance(0.1);
-	left_motor.Enable();
-	right_motor.Enable();
+	SetDistance(d);
+	EnablePID();
 
 }
+void DriveTrain::SetDistance(double d){
+	left_motor.SetDistance(d);
+	right_motor.SetDistance(d);
+}
+
 void DriveTrain::SetSpeed(double d){
 	left_motor.SetVelocity(d);
 	right_motor.SetVelocity(d);
@@ -161,8 +164,18 @@ void DriveTrain::Disable() {
 	left_motor.Disable();
 	disabled=true;
 }
-bool DriveTrain::IsDisabled(){
-	return disabled;
+void DriveTrain::EndTravel() {
+	DisablePID();
+}
+void DriveTrain::DisablePID() {
+	right_motor.DisablePID();
+	left_motor.DisablePID();
+	pid_disabled=true;
+}
+void DriveTrain::EnablePID() {
+	right_motor.EnablePID();
+	left_motor.EnablePID();
+	pid_disabled=false;
 }
 
 double DriveTrain::GetHeading() {
@@ -180,10 +193,11 @@ void DriveTrain::TeleopInit() {
 
 void DriveTrain::AutonomousInit() {
 	std::cout << "DriveTrain::AutonomousInit"<<std::endl;
-//	left_motor.SetPID(GPMotor::POSITION,0.2,0.001,1);
-//	right_motor.SetPID(GPMotor::POSITION,0.2,0.001,1);
-//	left_motor.SetDebug(1);
-//	right_motor.SetDebug(1);
+	left_motor.Set(0.0);
+	right_motor.Set(0.0);
+	SetPID(GPMotor::POSITION,MP,MI, MD);
+	//right_motor.SetDebug(1);
+	//left_motor.SetDebug(1);
 	Reset();
 }
 

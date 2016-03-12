@@ -11,6 +11,8 @@
 #include "WPILib.h"
 #include <Subsystems/MyNotifier.h>
 
+//#define NOTIFIER Notifier
+#define NOTIFIER MyNotifier
 
 class MyPIDController: public PIDInterface {
 	PIDSource *m_pidInput;
@@ -34,15 +36,17 @@ class MyPIDController: public PIDInterface {
 	float m_result = 0;
 	float m_period;
 	bool m_started=false;
+
+	int m_id;
 	mutable std::recursive_mutex m_mutex;
 
-	std::unique_ptr<MyNotifier> m_controlLoop;
+	std::unique_ptr<NOTIFIER> m_controlLoop;
 
 	void Initialize(float p, float i, float d,PIDSource *source,
 			PIDOutput *output, float rate);
 
 public:
-	MyPIDController(float p, float i, float d, PIDSource *source,PIDOutput *output, float rate);
+	MyPIDController(int i,float P, float I, float D, PIDSource *source,PIDOutput *output, float rate);
 
 	virtual ~MyPIDController();
 	virtual void Calculate();

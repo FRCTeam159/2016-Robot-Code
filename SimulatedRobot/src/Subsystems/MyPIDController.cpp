@@ -16,8 +16,9 @@
 #define SYNC_MUTEX
 #define LOCK_MUTEX
 #endif
-MyPIDController::MyPIDController(float Kp, float Ki, float Kd, PIDSource *source, PIDOutput *output, float rate)
+MyPIDController::MyPIDController(int i,float Kp, float Ki, float Kd, PIDSource *source, PIDOutput *output, float rate)
 {
+	m_id=i;
 	Initialize(Kp, Ki, Kd,source, output,rate);
 }
 
@@ -53,13 +54,15 @@ void MyPIDController::Initialize(float Kp, float Ki, float Kd,
 	m_pidOutput = output;
 	m_period = rate;
 
-	m_controlLoop = std::make_unique<MyNotifier>(&MyPIDController::Calculate, this);
-	m_controlLoop->StartPeriodic(m_period);
-
 	static int32_t instances = 0;
 	instances++;
+
+	m_controlLoop = std::make_unique<NOTIFIER>(&MyPIDController::Calculate, this);
+	m_controlLoop->StartPeriodic(m_period,m_id);
+
 }
 
+static int ccnt=0;
 void MyPIDController::Calculate()
 {
 	bool enabled;
@@ -76,7 +79,7 @@ void MyPIDController::Calculate()
 	if (enabled)
 	{
 		float input = pidInput->PIDGet();
-		float result;
+		float result=input;
 		PIDOutput *pidOutput;
 
 		{
@@ -126,9 +129,12 @@ void MyPIDController::Calculate()
 
 			pidOutput = m_pidOutput;
 			result = m_result;
-		}
-
+//			std::cout<<m_controlLoop->id<<" ";
+//			if((ccnt%10)==0)
+//				std::cout<<std::endl;
+//			ccnt++;
 		pidOutput->PIDWrite(result);
+		}
 	}
 }
 /**
@@ -329,7 +335,7 @@ void MyPIDController::Disable()
 {
 	{
 		LOCK_MUTEX;
-		m_pidOutput->PIDWrite(0);
+		//m_pidOutput->PIDWrite(0);
 		m_enabled = false;
 	}
 }

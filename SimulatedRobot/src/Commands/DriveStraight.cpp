@@ -11,9 +11,6 @@
 static int count=1;
 DriveStraight::DriveStraight(double d) : Command("DriveStraight")  {
 	Requires(Robot::drivetrain.get());
-    //pid = new PIDController(4, 0, 0, new DriveStraightPIDSource(),
-    //		                         new DriveStraightPIDOutput());
-	//pid=0;
     distance=d;
 	std::cout << "new DriveStraight("<<distance<<")"<< std::endl;
 }
@@ -28,8 +25,7 @@ void DriveStraight::Initialize() {
 //    pid->SetAbsoluteTolerance(0.1);
 //    pid->SetSetpoint(distance);
 //    pid->Enable();
-	Robot::drivetrain->SetDistance(distance);
-	//std::cout << "DriveStraight Started : "<<pid->GetSetpoint()<<std::endl;
+	Robot::drivetrain->DriveStraight(distance);
 	std::cout << "DriveStraight Started"<<std::endl;
 
 }
@@ -54,10 +50,8 @@ void DriveStraight::End() {
 	double r=Robot::drivetrain->GetRightDistance();
 	double d=Robot::drivetrain->GetDistance();
 	std::cout << "DriveStraight End("<<l<<","<<r<<","<<d<<")"<<std::endl;
-
-
 	//pid->Disable();
-	//Robot::drivetrain->Drive(0, 0);
+	Robot::drivetrain->EndTravel();
 }
 
 //double DriveStraight::PIDGet(){

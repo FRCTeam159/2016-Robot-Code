@@ -9,6 +9,8 @@
 
 #ifdef SIMULATION
 
+#define SIMPIDRATE 0.01
+
 //#define SIMRATE 0.02
 
 #define SYNC_MUTEX std::lock_guard<std::recursive_mutex> sync(debugMutex)
@@ -17,7 +19,7 @@
 std::recursive_mutex GPPIDController::debugMutex;
 
 GPPIDController::GPPIDController(int i,float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output, float rate)
-								: BASE_CONTROLLER(Kp, Ki, Kd, source, output,rate)
+								: BASE_CONTROLLER(i,Kp, Ki, Kd, source, output,rate)
 {
 	tolerance=0.05;
 	debug=0;
@@ -27,7 +29,7 @@ void GPPIDController::Calculate()
 {
 	BASE_CONTROLLER::Calculate();
 	{
-		//SYNC_MUTEX;
+		SYNC_MUTEX;
 	//static int count=1;
 
 	if(((debug && IsEnabled()) || debug>1)){
@@ -41,9 +43,9 @@ void GPPIDController::Calculate()
 	//count++;
 	}
 }
-// BUG in PIDController :
+// BUG 1 in WPI PIDController :
 // - Uses a buffer (m_buf) to average previous error values
-// - but m_buf never gets written to so "OnTarget" always returns false
+//   but m_buf never gets written to so "OnTarget" always returns false
 bool GPPIDController::OnTarget(){
 	//return PIDController::OnTarget();
 	if(!IsEnabled())
@@ -90,7 +92,6 @@ GPMotor::GPMotor(int i,bool enc) : Talon(i){
 	syncGroup=0x08;
 }
 #endif
-
 
 GPMotor::~GPMotor(){
 	if(encoder)
@@ -146,6 +147,9 @@ void GPMotor::SetVelocity(double value){
 #if MOTORTYPE == CANTALON
 	CANTalon::Set(value);
 #else
+	if(pid)
+		pid->SetSetpoint(value);
+
 	Talon::Set(value);
 #endif
 }
@@ -184,8 +188,26 @@ void GPMotor::ClearIaccum(){
 #else
 	if(pid){
 		pid->Reset(); // clears accumulator but also disables
-		pid->Enable();
+		//pid->Enable();
 	}
+#endif
+}
+
+void GPMotor::EnablePID(){
+#if MOTORTYPE == CANTALON
+	// TODO: what is the equivalent function for a CANTalon ?
+#else
+	if(pid)
+		pid->Enable();
+#endif
+}
+
+void GPMotor::DisablePID(){
+#if MOTORTYPE == CANTALON
+	// TODO: what is the equivalent function for a CANTalon ?
+#else
+	if(pid)
+		pid->Disable();
 #endif
 }
 
@@ -193,8 +215,8 @@ void GPMotor::Enable(){
 #if MOTORTYPE == CANTALON
 	CANTalon::Enable();
 #else
-	if(pid)
-		pid->Enable();
+//	if(pid)
+//		pid->Enable();
 	//else
 	//	std::cout<<"ERROR Enable:PID=NULL"<<std::endl;
 #endif
@@ -215,8 +237,8 @@ void GPMotor::Disable(){
 	CANTalon::Disable();
 #else
 	Talon::Disable();
-	if(pid)
-		pid->Disable();
+//	if(pid)
+//		pid->Disable();
 #endif
 }
 
@@ -339,8 +361,7 @@ void GPMotor::Reset(){
 		encoder->Reset();
 	if(pid)
 		pid->Reset();
-
-	//ClearIaccum();
+	ClearIaccum();
 #endif
 }
 void GPMotor::SetDistancePerPulse(double target){

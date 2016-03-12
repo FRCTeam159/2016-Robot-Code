@@ -10,6 +10,8 @@
 #include "Utility.h"
 #include "WPIErrors.h"
 
+//#define DEBUG_NOTIFIER
+
 std::list<MyNotifier*> MyNotifier::timerQueue;
 std::recursive_mutex MyNotifier::queueMutex;
 std::atomic<int> MyNotifier::refcount{0};
@@ -28,15 +30,17 @@ MyNotifier::MyNotifier(TimerEventHandler handler)
 	m_handler = handler;
 	m_periodic = false;
 	m_expirationTime = 0;
-	m_period = 0;
+	m_period = 0.1;
+	id=0;
 	m_queued = false;
-	//std::cout<<"MyNotifier::MyNotifier"<<std::endl;
-
+#ifdef DEBUG_NOTIFIER
+	std::cout<<"MyNotifier::MyNotifier"<<std::endl;
+#endif
 	{
 		std::lock_guard<std::recursive_mutex> sync(queueMutex);
-		// do the first time intialization of static variables
+		// do the first time initialization of static variables
 		if (refcount.fetch_add(1) == 0) {
-			m_task = std::thread(Run);
+			m_task = std::thread(Run); // start the timer thread when the first notifier is created
 		}
 	}
 }
@@ -50,15 +54,14 @@ MyNotifier::~MyNotifier()
 {
 	{
 		std::lock_guard<std::recursive_mutex> sync(queueMutex);
-		//std::cout<<"MyNotifier::~MyNotifier"<<std::endl;
-
+#ifdef DEBUG_NOTIFIER
+		std::cout<<"MyNotifier::~MyNotifier("<<id<<")"<<std::endl;
+#endif
 		DeleteFromQueue();
 
 		// Delete the static variables when the last one is going away
 		if (refcount.fetch_sub(1) == 1)
 		{
-			//std::cout<<"MyNotifier::~MyNotifier m_task.join() "<<std::endl;
-
 			m_stopped = true;
 			m_task.join();
 		}
@@ -78,6 +81,7 @@ MyNotifier::~MyNotifier()
  */
 void MyNotifier::UpdateAlarm()
 {
+	// nothing to do in simulation
 }
 
 /**
@@ -85,6 +89,8 @@ void MyNotifier::UpdateAlarm()
  * We need to wake up and process the current top item in the timer queue as long
  * as its scheduled time is after the current time. Then the item is removed or
  * rescheduled (repetitive events) in the queue.
+ *
+ * note: This function is static (all others are called for each instance)
  */
 void MyNotifier::ProcessQueue(uint32_t mask, void *params)
 {
@@ -99,11 +105,10 @@ void MyNotifier::ProcessQueue(uint32_t mask, void *params)
 			{
 				break;
 			}
-			current = timerQueue.front();
-			//if (current->m_expirationTime > currentTime)
-			if (!current->m_periodic && current->m_expirationTime > currentTime)
+			current = timerQueue.front();  // front should be shortest time left in queue
+			if (current->m_expirationTime > currentTime)
 			{
-				break;		// no more timer events to process
+				break;		// wait for next timer event
 			}
 			// remove next entry before processing it
 			timerQueue.pop_front();
@@ -113,6 +118,7 @@ void MyNotifier::ProcessQueue(uint32_t mask, void *params)
 			{
 				// if periodic, requeue the event
 				// compute when to put into queue
+
 				current->InsertInQueue(true);
 			}
 			else
@@ -123,10 +129,13 @@ void MyNotifier::ProcessQueue(uint32_t mask, void *params)
 			// Take handler mutex while holding queue semaphore to make sure
 			//  the handler will execute to completion in case we are being deleted.
 			current->m_handlerMutex.lock();
+#ifdef DEBUG_NOTIFIER
+			std::cout<<currentTime<< " MyNotifier::ProcessQueue("<<current->id<<") Processing"<<std::endl;
+#endif
+			current->m_handler();	// call the event handler (PIDController.Calculate)
+			current->m_handlerMutex.unlock();
 		}
 
-		current->m_handler();	// call the event handler
-		current->m_handlerMutex.unlock();
 	}
 	// reschedule the first item in the queue
 	std::lock_guard<std::recursive_mutex> sync(queueMutex);
@@ -142,15 +151,22 @@ void MyNotifier::ProcessQueue(uint32_t mask, void *params)
  * If true, update the time by adding the period (no drift) when rescheduled periodic from ProcessQueue.
  * This ensures that the public methods only update the queue after finishing inserting.
  */
+//#define OFFSET_INSERT_TIMES
 void MyNotifier::InsertInQueue(bool reschedule)
 {
+	double ct=GetClock();
 	if (reschedule)
 	{
 		m_expirationTime += m_period;
 	}
 	else
 	{
-		m_expirationTime = GetClock() + m_period;
+#ifdef OFFSET_INSERT_TIMES // skew insertion times for new periodics
+		static int pcnt=1;
+		m_expirationTime = ct +(1.2*m_period*pcnt++);
+#else
+		m_expirationTime = ct;
+#endif
 	}
 
 	// Attempt to insert new entry into queue
@@ -160,26 +176,38 @@ void MyNotifier::InsertInQueue(bool reschedule)
 		{
 			timerQueue.insert(i, this);
 			m_queued = true;
+			// BUG 1: wpi version doesn't break here so keeps inserting in front of all elements
+			// with expiration times > current element
+			break;
 		}
 	}
 
-	/* If the new entry wasn't queued, either the queue was empty or the first
-	 * element was greater than the new entry.
+	/* If the new entry wasn't queued, either the queue was empty or all
+	 * elements are LESS than the new entry (new element is longer than all elements in the queue)
 	 */
 	if (!m_queued)
 	{
-		timerQueue.push_front(this);
-
+		// BUG 2: wpi version uses "push_front" which is wrong since it adds the longest time to the front
+		timerQueue.push_back(this);
+#ifdef DEBUG_NOTIFIER
 		if (!reschedule)
 		{
 			/* Since the first element changed, update alarm, unless we already
 			 * plan to
 			 */
+			std::cout<<ct<<" MyNotifier::InsertInQueue("<<id<<") First:"<<m_expirationTime<<std::endl;
 			UpdateAlarm();
 		}
+		else
+			std::cout<<ct<<" MyNotifier::InsertInQueue("<<id<<") Inserting to front:"<<m_expirationTime<<std::endl;
+#endif
 
 		m_queued = true;
 	}
+#ifdef DEBUG_NOTIFIER
+	if(reschedule)
+		std::cout<<ct<<" MyNotifier::InsertInQueue("<<id<<") Next:"<<m_expirationTime<<std::endl;
+#endif
 }
 
 /**
@@ -228,11 +256,14 @@ void MyNotifier::StartSingle(double delay)
  * occurs, the event will be immediately requeued for the same time interval.
  * @param period Period in seconds to call the handler starting one period after the call to this method.
  */
-void MyNotifier::StartPeriodic(double period)
+void MyNotifier::StartPeriodic(double period, int i)
 {
 	std::lock_guard<std::recursive_mutex> sync(queueMutex);
 	m_periodic = true;
 	m_period = period;
+	id=i;
+	//m_queued=false;
+
 	DeleteFromQueue();
 	InsertInQueue(false); // note: false ensures that first time called will be > current time
 }
@@ -251,6 +282,9 @@ void MyNotifier::Stop()
 		DeleteFromQueue();
 	}
 	// Wait for a currently executing handler to complete before returning from Stop()
+#ifdef DEBUG_NOTIFIER
+	std::cout<<"MyNotifier::Stop("<<id<<")"<<std::endl;
+#endif
 	std::lock_guard<std::mutex> sync(m_handlerMutex);
 }
 

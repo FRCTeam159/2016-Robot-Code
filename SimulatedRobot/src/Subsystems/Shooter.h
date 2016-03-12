@@ -16,18 +16,26 @@ class Shooter: public Subsystem {
 	GPMotor leftMotor;
 	GPMotor rightMotor;
 	double angle,max_angle,min_angle;
+	double flywheel_target;
+	double flywheel_speed;
 	void Init();
-	void Disable();
 
 public:
 	Shooter();
-	void Shoot(bool);
 	void SetTargetAngle(double a);
+	void SetTargetSpeed(double a);
 	double GetTargetAngle();
 	double GetMaxAngle() { return max_angle;}
 	double GetMinAngle() { return min_angle;}
+	void Disable();
+	void DisableFlywheels();
+	void EnableFlywheels();
 
-	bool OnTarget();
+	bool IsAtAngle();
+	bool IsAtSpeed();
+	double GetTargetSpeed();
+	double GetSpeed();
+
 	void AutonomousInit();
 	void TeleopInit();
 	void DisabledInit();

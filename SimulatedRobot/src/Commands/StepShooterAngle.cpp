@@ -31,7 +31,7 @@ void StepShooterAngle::Execute() {
 }
 // Make this return true when this Command no longer needs to run execute()
 bool StepShooterAngle::IsFinished() {
-	bool ontarget=Robot::shooter->OnTarget();
+	bool ontarget=Robot::shooter->IsAtAngle();
 	if(ontarget)
 		std::cout << "Shooter On Target:"<<std::endl;
 
@@ -39,6 +39,7 @@ bool StepShooterAngle::IsFinished() {
 }
 // Called once after isFinished returns true
 void StepShooterAngle::End() {
+	//Robot::shooter->DisablePID();
 }
 // Called when another command which requires one or more of the same
 // subsystems is scheduled to run

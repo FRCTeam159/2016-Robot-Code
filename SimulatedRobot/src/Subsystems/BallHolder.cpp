@@ -7,9 +7,9 @@
 #include "Assignments.h"
 #include <Subsystems/BallHolder.h>
 
-#define GATEMOTORSPEED 0.4
+#define GATEMOTORSPEED 0.5
 #define PUSHMOTORSPEED 1.0
-#define PUSHHOLDSPEED 0.10
+#define PUSHHOLDSPEED 0.05
 #define BALLDETECTVALUE 0.5
 
 BallHolder::BallHolder() : Subsystem("Holder"),

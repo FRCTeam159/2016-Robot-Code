@@ -23,11 +23,7 @@
 #endif
 #endif
 
-
 #ifdef SIMULATION
-
-#define SIMPIDRATE 0.025
-
 
 class GPPIDController: public BASE_CONTROLLER {
 	double tolerance;
@@ -104,6 +100,8 @@ public:
 	virtual bool IsEnabled();
 
 	virtual void Enable();
+	virtual void EnablePID();
+	virtual void DisablePID();
 
 	virtual void Disable();
 	virtual void SetPID(int mode, double P, double I, double D);
