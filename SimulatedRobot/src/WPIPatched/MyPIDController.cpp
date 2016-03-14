@@ -5,7 +5,7 @@
  *      Author: dean
  */
 
-#include <Subsystems/MyPIDController.h>
+#include <WPIPatched/MyPIDController.h>
 
 #define USE_MUTEX
 
@@ -16,9 +16,8 @@
 #define SYNC_MUTEX
 #define LOCK_MUTEX
 #endif
-MyPIDController::MyPIDController(int i,float Kp, float Ki, float Kd, PIDSource *source, PIDOutput *output, float rate)
+MyPIDController::MyPIDController(float Kp, float Ki, float Kd, PIDSource *source, PIDOutput *output, float rate)
 {
-	m_id=i;
 	Initialize(Kp, Ki, Kd,source, output,rate);
 }
 
@@ -58,11 +57,10 @@ void MyPIDController::Initialize(float Kp, float Ki, float Kd,
 	instances++;
 
 	m_controlLoop = std::make_unique<NOTIFIER>(&MyPIDController::Calculate, this);
-	m_controlLoop->StartPeriodic(m_period,m_id);
+	m_controlLoop->StartPeriodic(m_period);
 
 }
 
-static int ccnt=0;
 void MyPIDController::Calculate()
 {
 	bool enabled;
@@ -129,11 +127,7 @@ void MyPIDController::Calculate()
 
 			pidOutput = m_pidOutput;
 			result = m_result;
-//			std::cout<<m_controlLoop->id<<" ";
-//			if((ccnt%10)==0)
-//				std::cout<<std::endl;
-//			ccnt++;
-		pidOutput->PIDWrite(result);
+			pidOutput->PIDWrite(result);
 		}
 	}
 }
@@ -299,6 +293,14 @@ void MyPIDController::SetTolerance(float tol)
 	LOCK_MUTEX;
 	m_tolerance = tol;
 }
+void MyPIDController::SetAbsoluteTolerance(float tol)
+{
+	LOCK_MUTEX;
+	m_tolerance = tol;
+}
+void MyPIDController::SetToleranceBuffer(unsigned bufLength){
+
+}
 
 /*
  * Return true if the error is within the percentage of the total input range,
@@ -312,6 +314,9 @@ bool MyPIDController::OnTarget() const
 	SYNC_MUTEX;
 	double error = GetError();
 	return fabs(error) < m_tolerance;
+}
+double MyPIDController::CalculateFeedForward(){
+	return 0;
 }
 
 /**
@@ -335,7 +340,7 @@ void MyPIDController::Disable()
 {
 	{
 		LOCK_MUTEX;
-		//m_pidOutput->PIDWrite(0);
+		m_pidOutput->PIDWrite(0);
 		m_enabled = false;
 	}
 }

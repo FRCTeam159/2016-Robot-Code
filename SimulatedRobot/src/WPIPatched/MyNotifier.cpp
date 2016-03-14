@@ -256,12 +256,13 @@ void MyNotifier::StartSingle(double delay)
  * occurs, the event will be immediately requeued for the same time interval.
  * @param period Period in seconds to call the handler starting one period after the call to this method.
  */
-void MyNotifier::StartPeriodic(double period, int i)
+static int ccnt=1;
+void MyNotifier::StartPeriodic(double period)
 {
 	std::lock_guard<std::recursive_mutex> sync(queueMutex);
 	m_periodic = true;
 	m_period = period;
-	id=i;
+	id=ccnt++;
 	//m_queued=false;
 
 	DeleteFromQueue();

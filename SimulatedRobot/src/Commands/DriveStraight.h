@@ -10,40 +10,49 @@
 #include "Subsystems/GPMotor.h"
 #include <Commands/Command.h>
 
-#ifdef SIMULATION
-#define PIDController MyPIDController
-#endif
-class DriveStraight: public Command  {
-
-//class DriveStraight: public Command, public PIDSource, public PIDOutput  {
-//	PIDController* pid;
+class DriveStraight: public Command
+{
+protected:
 	double distance;
-	double left_distance;
-	double right_distance;
-
-
+	double heading;
+	bool at_position;
+	bool at_heading;
 public:
-	DriveStraight(double distance);
+	DriveStraight(double d, double h);
 	void Initialize();
 	bool IsFinished();
 	void Execute();
 	void End();
 	void Interrupted() { End();}
 
-	//double PIDGet();
-	//void PIDWrite(float d);
-};
+	class AngleControl: public PIDSource, public PIDOutput{
+	private:
+		PIDController pid;
+		double target;
+	public:
+		AngleControl(double P, double I, double D);
+		double PIDGet();
+		void PIDWrite(float d);
+		bool AtTarget();
+		void Initialize(double d);
+		void End();
 
-//class DriveStraightPIDSource: public PIDSource {
-//public:
-//	virtual ~DriveStraightPIDSource();
-//	double PIDGet();
-//};
-//
-//class DriveStraightPIDOutput: public PIDOutput {
-//public:
-//	virtual ~DriveStraightPIDOutput();
-//	void PIDWrite(float d);
-//};
+	};
+	class DistanceControl: public PIDSource, public PIDOutput{
+	private:
+		PIDController pid;
+		double target;
+
+	public:
+		DistanceControl(double P, double I, double D);
+		double PIDGet();
+		void PIDWrite(float d);
+		bool AtTarget();
+		void Initialize(double d);
+		void End();
+	};
+	AngleControl Acntrl;
+	DistanceControl Dcntrl;
+};
 
 #endif /* SRC_COMMANDS_DRIVESTRAIGHT_H_ */

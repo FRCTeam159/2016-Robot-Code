@@ -24,9 +24,10 @@ public:
 	static std::shared_ptr<BallHolder> holder;
 	static std::shared_ptr<Shooter> shooter;
 	static std::unique_ptr<OI> oi;
+	static std::unique_ptr<Autonomous> autonomous;
+
 private:
 	LiveWindow *lw = LiveWindow::GetInstance();
-	Autonomous autonomousCommand;
 
 	void RobotInit();
 	void AutonomousInit();

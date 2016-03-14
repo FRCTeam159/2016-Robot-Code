@@ -9,10 +9,10 @@
 #define SRC_SUBSYSTEMS_MYPIDCONTROLLER_H_
 
 #include "WPILib.h"
-#include <Subsystems/MyNotifier.h>
+#include <WPIPatched/MyNotifier.h>
 
-//#define NOTIFIER Notifier
-#define NOTIFIER MyNotifier
+#define NOTIFIER Notifier
+//#define NOTIFIER MyNotifier
 
 class MyPIDController: public PIDInterface {
 	PIDSource *m_pidInput;
@@ -46,7 +46,7 @@ class MyPIDController: public PIDInterface {
 			PIDOutput *output, float rate);
 
 public:
-	MyPIDController(int i,float P, float I, float D, PIDSource *source,PIDOutput *output, float rate);
+	MyPIDController(float P, float I, float D, PIDSource *source,PIDOutput *output, float rate);
 
 	virtual ~MyPIDController();
 	virtual void Calculate();
@@ -67,7 +67,11 @@ public:
 	virtual void SetPIDSourceType(PIDSourceType pidSource);
 	virtual PIDSourceType GetPIDSourceType() const;
 
-	virtual void SetTolerance(float percent);
+	virtual void SetTolerance(float tol);
+	virtual void SetAbsoluteTolerance(float tol);
+	virtual void SetToleranceBuffer(unsigned bufLength);
+	virtual double CalculateFeedForward();
+
 	virtual bool OnTarget() const;
 
 	virtual void Enable() override;

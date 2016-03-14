@@ -13,13 +13,15 @@ class DriveTrain : public Subsystem {
 	GPMotor left_motor;
 	GPMotor right_motor;
 private:
-	//AnalogGyro* gyro;
+	AnalogGyro gyro;
 	double x_deadband,y_deadband;
 	double dpp;
 	bool inverted;
 	bool squared_inputs;
 	bool disabled;
 	bool pid_disabled;
+	double target_distance;
+	double target_angle;
 
 	void DisablePID();
 	void EnablePID();
@@ -48,15 +50,17 @@ public:
 	double GetDistance();
 	double GetLeftDistance();
 	double GetRightDistance();
+	double GetLeftSpeed();
+	double GetRightSpeed();
 
 	virtual double Deadband(double x, double ignore);
 	virtual void SetDeadband(double x, double y);
 	virtual void SetDistancePerPulse(double diam,double ticks, bool b);
 	virtual double GetDistancePerPulse();
 	virtual void SetPID(int mode, double P, double I, double D);
-	virtual void DriveStraight(double d);
-	virtual void SetSpeed(double d);
-	virtual bool OnTarget();
+	virtual void Turn(double d);
+
+	virtual void Drive(double d);
 	virtual void SetInverted(bool b) { inverted=b;}
 
 	virtual bool IsDisabled() { return disabled;}

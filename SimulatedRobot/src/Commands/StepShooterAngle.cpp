@@ -9,7 +9,7 @@
 #include "Robot.h"
 
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
-	Requires(Robot::shooter.get());
+	//Requires((Subsystem*)Robot::shooter.get());
 	std::cout << "new StepShooterAngle("<<a<<")"<< std::endl;
 	direction=a;
 }

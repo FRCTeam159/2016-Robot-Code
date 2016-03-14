@@ -18,20 +18,15 @@
 #define FVMIN -1000
 #define AMIN 0
 #define AMAX 70
+#define MAX_SPEED_ERROR 10
+#define MAX_ANGLE_ERROR 1
 
 Shooter::Shooter() : Subsystem("Shooter"),
-	angleMotor(SHOOTER_ANGLE,true), leftMotor(SHOOTER_LEFT,true),rightMotor(SHOOTER_RIGHT,true)
+	angleMotor(SHOOTER_ANGLE,true), leftMotor(SHOOTER_LEFT),rightMotor(SHOOTER_RIGHT),angleGyro(SHOOTER_PITCH)
 {
 	std::cout<<"New Shooter("<<SHOOTER_ANGLE<<","<<SHOOTER_LEFT<<","<<SHOOTER_RIGHT<<")"<<std::endl;
 	max_angle=AMAX; // max elevation (degrees)
 	min_angle=AMIN;
-
-	angle=0;
-	angleMotor.SetPID(GPMotor::POSITION, AP, AI, AD);
-	angleMotor.Reset(); // clear IAccum
-	angleMotor.SetDistancePerPulse(1.0); // 1 degree = 0.01745 radians
-	angleMotor.SetInputRange(min_angle,max_angle);      // 0..70 degrees
-	angleMotor.SetTolerance(1); // accept 1 degrees max error
 
 	angleMotor.SetDistance(0);
 	leftMotor.SetInputRange(FVMIN,FVMAX);
@@ -39,10 +34,23 @@ Shooter::Shooter() : Subsystem("Shooter"),
 
 	leftMotor.SetPID(GPMotor::SPEED, FP, FI, FD);
 	leftMotor.SetDistancePerPulse(RPD(1)); // 1 degree = 0.01745 radians
+	leftMotor.SetTolerance(MAX_SPEED_ERROR);
+
 	rightMotor.SetPID(GPMotor::SPEED,  FP, FI, FD);
 	rightMotor.SetDistancePerPulse(RPD(1));
+	rightMotor.SetTolerance(MAX_SPEED_ERROR);
 
 	flywheel_target=FWSPEED;
+	flywheel_speed=0;
+
+	angle=0;
+	angleMotor.SetPID(GPMotor::POSITION, AP, AI, AD);
+	angleMotor.Reset(); // clear IAccum
+	angleMotor.SetDistancePerPulse(1.0); // 1 degree = 0.01745 radians
+	angleMotor.SetInputRange(min_angle,max_angle);      // 0..70 degrees
+	angleMotor.SetTolerance(MAX_ANGLE_ERROR);
+	angleMotor.SetToleranceBuffer(2);
+
 }
 
 void Shooter::AutonomousInit(){
@@ -90,6 +98,7 @@ void Shooter::SetTargetAngle(double a){
 	angle=a;
 	angleMotor.SetDistance(angle);
 	angleMotor.EnablePID();
+	//angleMotor.SetDebug(1);
 }
 
 // Set the shooter angle
@@ -99,6 +108,8 @@ void Shooter::SetTargetSpeed(double a){
 
 bool Shooter::IsAtAngle(){
 	bool ontarget= angleMotor.OnTarget();
+	//if(ontarget)
+	//	angleMotor.DisablePID();
 	return ontarget;
 }
 double Shooter::GetTargetAngle(){

@@ -25,7 +25,7 @@ class MyNotifier : public ErrorBase {
   MyNotifier& operator=(const MyNotifier&) = delete;
 
   void StartSingle(double delay);
-  void StartPeriodic(double period, int i);
+  void StartPeriodic(double period);
   void Stop();
   int id;
 

@@ -1,11 +1,13 @@
 #ifndef GP_MOTOR_H
 #define GP_MOTOR_H
 
-#include <Subsystems/MyPIDController.h>
+#include <WPIPatched/MyPIDController.h>
 #include "WPILib.h"
 
-//#define BASE_CONTROLLER PIDController
-#define BASE_CONTROLLER MyPIDController
+#define SIMRATE 0.01
+
+#define BASE_CONTROLLER PIDController
+//#define BASE_CONTROLLER MyPIDController
 
 #define PI 3.141516
 #define RPD(x) (x)*2*PI/360
@@ -37,6 +39,7 @@ public:
 	void Calculate();
 	bool OnTarget();
 	void SetAbsoluteTolerance(double b);
+	void SetToleranceBuffer(unsigned bufLength);
 	double CalculateFeedForward();
 	void SetDebug(int t) { debug=t;}
 
@@ -110,6 +113,7 @@ public:
 	virtual void SetInputRange(double min, double max);
 	virtual void SetOutputRange(double min, double max);
 	virtual void SetTolerance(double d);
+	virtual void SetToleranceBuffer(unsigned bufLength);
 	virtual void Reset();
 	virtual void ClearIaccum();
 	virtual void SetMode(int m);

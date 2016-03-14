@@ -6,29 +6,22 @@
 
 #include "Commands/TankDriveWithJoystick.h"
 
-#define MP 0.4
-#define MI 0.0001
-#define MD 3
+#define MP 0.5
+#define MI 0.00
+#define MD 0.5
 //#define MI 0.0
 //#define MD 0.0
-
+#define MAX_POS_ERROR 0.1 // tolerance for set position
 DriveTrain::DriveTrain() : Subsystem("DriveTrain"),
-	left_motor(DRIVE_LEFT),right_motor(DRIVE_RIGHT)
+	left_motor(DRIVE_LEFT),right_motor(DRIVE_RIGHT),gyro(DRIVE_ANGLE)
 {
 	std::cout<<"New DriveTrain("<<DRIVE_LEFT<<","<<DRIVE_RIGHT<<")"<<std::endl;
 	SetDistancePerPulse(WHEEL_DIAMETER,WHEEL_TICKS,INVERT_RIGHT_SIDE);
 	SetDeadband(DEADBAND,DEADBAND);
 	disabled=true;
 	pid_disabled=true;
+	target_distance=0;
 	SetInverted(false); // invert motor direction on right side
-	//left_motor.SetDebug(1);
-	//right_motor.SetDebug(1);
-
-	// Let's show everything on the LiveWindow
-	// TODO: LiveWindow::GetInstance()->AddActuator("Drive Train", "Front_Left Motor", (Talon) front_left_motor);
-	// TODO: LiveWindow::GetInstance()->AddActuator("Drive Train", "Back Left Motor", (Talon) back_left_motor);
-	// TODO: LiveWindow::GetInstance()->AddActuator("Drive Train", "Front Right Motor", (Talon) front_right_motor);
-	// TODO: LiveWindow::GetInstance()->AddActuator("Drive Train", "Back Right Motor", (Talon) back_right_motor);
 }
 
 // ===========================================================================================================
@@ -130,27 +123,34 @@ void DriveTrain::SetDeadband(double x, double y) {
 void DriveTrain::SetPID(int mode, double P, double I, double D){
 	right_motor.SetPID(mode,P,I,D);
 	left_motor.SetPID(mode,P,I,D);
-}
-void DriveTrain::DriveStraight(double d){
-	std::cout << "DriveTrain::SetDistance:"<<d<<std::endl;
-	left_motor.SetTolerance(0.1);
-	right_motor.SetTolerance(0.1);
-	SetDistance(d);
-	EnablePID();
-
+	left_motor.SetTolerance(MAX_POS_ERROR);
+	right_motor.SetTolerance(MAX_POS_ERROR);
 }
 void DriveTrain::SetDistance(double d){
+	target_distance=d;
 	left_motor.SetDistance(d);
 	right_motor.SetDistance(d);
 }
 
-void DriveTrain::SetSpeed(double d){
-	left_motor.SetVelocity(d);
-	right_motor.SetVelocity(d);
+void DriveTrain::Turn(double d){
+	left_motor.Set(d);
+	if(inverted)
+		right_motor.Set(d);
+	else
+		right_motor.Set(-d);
+}
+
+void DriveTrain::Drive(double d){
+	left_motor.Set(d);
+	if(inverted)
+		right_motor.Set(-d);
+	else
+		right_motor.Set(d);
 }
 void DriveTrain::Reset() {
 	right_motor.Reset();
 	left_motor.Reset();
+	gyro.Reset();
 }
 void DriveTrain::Enable() {
 	right_motor.Enable();
@@ -158,14 +158,12 @@ void DriveTrain::Enable() {
 	disabled=false;
 }
 void DriveTrain::Disable() {
-	//left_motor.ClearPID();
-	//right_motor.ClearPID();
 	right_motor.Disable();
 	left_motor.Disable();
 	disabled=true;
 }
 void DriveTrain::EndTravel() {
-	DisablePID();
+	Drive(0.0);
 }
 void DriveTrain::DisablePID() {
 	right_motor.DisablePID();
@@ -179,12 +177,11 @@ void DriveTrain::EnablePID() {
 }
 
 double DriveTrain::GetHeading() {
-	return 0;//gyro->GetAngle();
+	return gyro.GetAngle();
 }
 
 void DriveTrain::TeleopInit() {
 	std::cout << "DriveTrain::TeleopInit"<<std::endl;
-	//gyro->Reset();
 	left_motor.SetMode(GPMotor::VOLTAGE);
 	right_motor.SetMode(GPMotor::VOLTAGE);
 	Reset();
@@ -195,7 +192,7 @@ void DriveTrain::AutonomousInit() {
 	std::cout << "DriveTrain::AutonomousInit"<<std::endl;
 	left_motor.Set(0.0);
 	right_motor.Set(0.0);
-	SetPID(GPMotor::POSITION,MP,MI, MD);
+	//SetPID(GPMotor::POSITION,MP,MI, MD);
 	//right_motor.SetDebug(1);
 	//left_motor.SetDebug(1);
 	Reset();
@@ -208,18 +205,18 @@ void DriveTrain::DisabledInit() {
 	Disable();
 	right_motor.Reset();
 	left_motor.Reset();
-	//left_motor.ClearPID();
-	//right_motor.ClearPID();
-}
-
-bool DriveTrain::OnTarget(){
-	bool b1=left_motor.OnTarget();
-	bool b2=right_motor.OnTarget();
-	return b1 && b2;
+	Drive(0.0);
 }
 
 double DriveTrain::GetDistance() {
 	return (left_motor.GetDistance() + right_motor.GetDistance())/2;
+}
+
+double DriveTrain::GetLeftSpeed(){
+	return left_motor.GetVelocity();
+}
+double DriveTrain::GetRightSpeed(){
+	return right_motor.GetVelocity();
 }
 
 double DriveTrain::GetLeftDistance(){

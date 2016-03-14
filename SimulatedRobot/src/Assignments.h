@@ -24,7 +24,10 @@ enum dioIDs {  // limit switch ids
 };
 
 enum AnalogIDs {  // limit switch ids
-	BALL_SENSOR  = 2,
+	SHOOTER_PITCH  = 1, // gyro in simulation
+	BALL_SENSOR    = 2, // sonar in simulation
+	DRIVE_ANGLE    = 3, // gyro in simulation
+
 };
 
 #define WHEEL_DIAMETER 7.5

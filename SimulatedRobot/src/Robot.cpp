@@ -6,7 +6,7 @@ std::shared_ptr<DriveTrain> Robot::drivetrain;
 std::shared_ptr<BallHolder> Robot::holder;
 std::shared_ptr<Shooter> Robot::shooter;
 std::unique_ptr<OI> Robot::oi;
-
+std::unique_ptr<Autonomous> Robot::autonomous;
 
 void Robot::RobotInit() {
 	std::cout << "Robot::RobotInit" << std::endl;
@@ -14,6 +14,7 @@ void Robot::RobotInit() {
 	holder.reset(new BallHolder());
 	shooter.reset(new Shooter());
 	oi.reset(new OI());
+	autonomous.reset(new Autonomous());
 
 	SmartDashboard::PutData(drivetrain.get());
 	SmartDashboard::PutData(holder.get());
@@ -26,8 +27,7 @@ void Robot::AutonomousInit() {
 	shooter->AutonomousInit();
 	holder->AutonomousInit();
 
-	//autonomousCommand.Cancel();
-	autonomousCommand.Start();
+	autonomous->Start();
 }
 
 void Robot::AutonomousPeriodic() {
@@ -36,12 +36,12 @@ void Robot::AutonomousPeriodic() {
 
 void Robot::DisabledInit(){
 	std::cout << "Robot::DisabledInit" << std::endl;
+	autonomous->Cancel();
 	drivetrain->DisabledInit();
 	shooter->DisabledInit();
 	holder->DisabledInit();
 }
 void Robot::DisabledPeriodic(){
-	//shooter->Disable();
 }
 
 void Robot::TeleopInit() {
@@ -50,7 +50,7 @@ void Robot::TeleopInit() {
 	// teleop starts running. If you want the autonomous to
 	// continue until interrupted by another command, remove
 	// this line or comment it out.
-	autonomousCommand.Cancel();
+	autonomous->Cancel();
 	shooter->TeleopInit();
 	holder->TeleopInit();
 	drivetrain->TeleopInit();

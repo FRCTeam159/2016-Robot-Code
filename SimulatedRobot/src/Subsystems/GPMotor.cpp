@@ -19,7 +19,7 @@
 std::recursive_mutex GPPIDController::debugMutex;
 
 GPPIDController::GPPIDController(int i,float Kp, float Ki, float Kd,PIDSource *source, PIDOutput *output, float rate)
-								: BASE_CONTROLLER(i,Kp, Ki, Kd, source, output,rate)
+								: BASE_CONTROLLER(Kp, Ki, Kd, source, output,rate)
 {
 	tolerance=0.05;
 	debug=0;
@@ -29,7 +29,7 @@ void GPPIDController::Calculate()
 {
 	BASE_CONTROLLER::Calculate();
 	{
-		SYNC_MUTEX;
+	//	SYNC_MUTEX;
 	//static int count=1;
 
 	if(((debug && IsEnabled()) || debug>1)){
@@ -47,21 +47,26 @@ void GPPIDController::Calculate()
 // - Uses a buffer (m_buf) to average previous error values
 //   but m_buf never gets written to so "OnTarget" always returns false
 bool GPPIDController::OnTarget(){
-	//return PIDController::OnTarget();
-	if(!IsEnabled())
-		return false;
-	double e=GetError();
-	double delta=fabs(e);
-	return delta<=tolerance;
+	return BASE_CONTROLLER::OnTarget();
+//	if(!IsEnabled())
+//		return false;
+//	double e=GetError();
+//	double delta=fabs(e);
+//	return delta<=tolerance;
+}
+void GPPIDController::SetToleranceBuffer(unsigned bufLength){
+	BASE_CONTROLLER::SetToleranceBuffer(bufLength);
 }
 // need to set tolerance manually to allow custom OnTarget calculation
 void GPPIDController::SetAbsoluteTolerance(double d){
+	BASE_CONTROLLER::SetAbsoluteTolerance(d);
 	tolerance=d;
 }
 // BUG in PIDController :
 // - using the native version of this function causes NaN errors
 double GPPIDController::CalculateFeedForward(){
-	return 0;
+	return BASE_CONTROLLER::CalculateFeedForward();
+	//return 0;
 }
 #endif
 
@@ -248,8 +253,9 @@ void GPMotor::SetPID(int mode, double P, double I, double D){
 }
 void GPMotor::SetInverted(bool t) {
 	inverted=t;
-	//if(encoder)
-	//	encoder->SetReverseDirection(t);
+	// This causes purposefully thrown exception in simulation
+	// if(encoder)
+	//	 encoder->SetReverseDirection(t);
 }
 
 void GPMotor::SetPID(double P, double I, double D){
@@ -317,6 +323,14 @@ void GPMotor::SetTolerance(double tol){
 #else
 	if(pid)
 		pid->SetAbsoluteTolerance(tol);
+#endif
+}
+void GPMotor::SetToleranceBuffer(unsigned bufLength){
+#if MOTORTYPE == CANTALON
+	// TODO: implement equivalent function for a CANTalon
+#else
+	if(pid)
+		pid->SetAbsoluteTolerance(bufLength);
 #endif
 }
 

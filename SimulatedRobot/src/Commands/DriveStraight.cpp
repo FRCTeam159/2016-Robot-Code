@@ -8,88 +8,137 @@
 #include <Commands/DriveStraight.h>
 #include "Robot.h"
 
-static int count=1;
-DriveStraight::DriveStraight(double d) : Command("DriveStraight")  {
+#define FEET_PER_METER 3.28084
+#define MAX_HEADING_ERROR 1 // degrees
+#define MAX_POSITION_ERROR 0.1 // meters
+
+#define AP 0.3
+#define AI 0.001
+#define AD 0.01
+
+#define DP 0.7
+#define DI 0.001
+#define DD 0.3
+
+//#define DEBUG_COMMAND
+
+#define DRIVE_TIMEOUT 1
+
+DriveStraight::DriveStraight(double d, double h) : Command("DriveStraight"),
+	Acntrl(AP,AI,AD),Dcntrl(DP,DI,DD)
+{
 	Requires(Robot::drivetrain.get());
-    distance=d;
-	std::cout << "new DriveStraight("<<distance<<")"<< std::endl;
+    distance=d*FEET_PER_METER;
+    heading=h;
+    at_position=at_heading=false;
+	std::cout << "new DriveStraight("<<distance<<","<<heading<<")"<< std::endl;
 }
-
 // Called just before this Command runs the first time
-// note: if pid is created in constructor it doesn't work (at least in simulation)
 void DriveStraight::Initialize() {
-//    Robot::drivetrain->Init();
-//    if(pid)
-//    	delete pid;
-//    pid = new PIDController(0.3, 0.001, 2, this,this);
-//    pid->SetAbsoluteTolerance(0.1);
-//    pid->SetSetpoint(distance);
-//    pid->Enable();
-	Robot::drivetrain->DriveStraight(distance);
-	std::cout << "DriveStraight Started"<<std::endl;
-
+	SetTimeout(DRIVE_TIMEOUT*distance+1);
+	Acntrl.Initialize(heading);
+	Dcntrl.Initialize(distance);
+	//Robot::drivetrain->DriveStraight(distance*FEET_PER_METER);
+	std::cout << "DriveStraight Started .."<<std::endl;
 }
 void DriveStraight::Execute() {
 //	double l=Robot::drivetrain->GetLeftDistance();
 //	double r=Robot::drivetrain->GetRightDistance();
-//	double d=Robot::drivetrain->GetDistance();
-//	std::cout << "DriveStraight "<<l<<","<<r<<","<<d<<")"<<std::endl;
-	//std::cout<<"Target:"<<pid->GetSetpoint()<<" err:"<<pid->GetError()<<" cor:"<<pid->Get()<<std::endl;
+//	double h=Robot::drivetrain->GetHeading();
+//	std::cout << "DriveStraight "<<l<<","<<r<<","<<h<<")"<<std::endl;
 }
 
 bool DriveStraight::IsFinished() {
-	//return pid->OnTarget();
-	return Robot::drivetrain->OnTarget();
-
+	if(IsTimedOut()){
+		std::cout << "DriveStraight Error:  Timeout expired"<<std::endl;
+		return true;
+	}
+	at_heading=Acntrl.AtTarget();
+	at_position=Dcntrl.AtTarget();
+	return(at_position && at_heading);
 }
 
 void DriveStraight::End() {
-	//std::cout << "DriveStraight End"<<std::endl;
-	// Stop PID and the wheels
 	double l=Robot::drivetrain->GetLeftDistance();
 	double r=Robot::drivetrain->GetRightDistance();
-	double d=Robot::drivetrain->GetDistance();
-	std::cout << "DriveStraight End("<<l<<","<<r<<","<<d<<")"<<std::endl;
-	//pid->Disable();
+	double h=Robot::drivetrain->GetHeading();
+	std::cout << TimeSinceInitialized()<< "  DriveStraight End("<<l<<","<<r<<","<<h<<")"<<std::endl;
+	Acntrl.End();
+	Dcntrl.End();
 	Robot::drivetrain->EndTravel();
 }
+// =============== Inner Class AngleControl =============================
+DriveStraight::AngleControl::AngleControl(double P, double I, double D):
+	pid(P,I,D,this,this,SIMRATE)
+{
+	target=0;
+}
 
-//double DriveStraight::PIDGet(){
-//	double d=Robot::drivetrain->GetDistance();
-//	return d;
-//}
-//void DriveStraight::PIDWrite(float c) {
-//	//std::cout << "DriveStraight PIDWrite:"<<d<<std::endl;
-//	double d=Robot::drivetrain->GetDistance();
-//	double l=Robot::drivetrain->GetLeftDistance();
-//	double r=Robot::drivetrain->GetRightDistance();
-//	double diff=(l-r);
-//	double f=1;
-//	double c1=c;
-//	double c2=c;
-//	if(count>2){
-//	c1-=f*diff;
-//	c2+=f*diff;
-//	}
-//
-//	if((count%10)==0){
-//	   std::cout << "DriveStraight PIDWrite:"<<c<<","<<l<<","<<r<<","<<d<<","<<diff<<")"<<std::endl;
-//	}
-//
-//    Robot::drivetrain->Drive(c1, c2);
-//    count++;
-//}
+double DriveStraight::AngleControl::PIDGet()
+{
+	double d=Robot::drivetrain->GetHeading();
+#ifdef DEBUG_COMMAND
+	std::cout << "AngleControl PIDGet("<<d<<")"<<std::endl;
+#endif
+	return d;
+}
+void DriveStraight::AngleControl::PIDWrite(float d)
+{
+#ifdef DEBUG_COMMAND
+	std::cout << "AngleControl PIDWrite("<<d<<")"<<std::endl;
+#endif
+	Robot::drivetrain->Turn(-d);
+}
+void DriveStraight::AngleControl::Initialize(double d)
+{
+	target=d;
+	pid.Reset();
+	pid.SetAbsoluteTolerance(MAX_HEADING_ERROR);
+	pid.SetSetpoint(target);
+	pid.Enable();
+}
+bool DriveStraight::AngleControl::AtTarget(){
+	return pid.OnTarget();
+}
+void DriveStraight::AngleControl::End(){
+	pid.Disable();
+}
 
-//DriveStraightPIDSource::~DriveStraightPIDSource() {}
-//double DriveStraightPIDSource::PIDGet() {
-//	double d=Robot::drivetrain->GetDistance();
-//	//std::cout << "DriveStraight PIDGet:"<<d<<std::endl;
-//    return d;
-//}
-//
-//DriveStraightPIDOutput::~DriveStraightPIDOutput() {}
-//void DriveStraightPIDOutput::PIDWrite(float d) {
-//	//std::cout << "DriveStraight PIDWrite:"<<d<<std::endl;
-//
-//    Robot::drivetrain->Drive(d, d);
-//}
+// =============== Inner Class DistanceControl =============================
+DriveStraight::DistanceControl::DistanceControl(double P, double I, double D):
+	pid(P,I,D,this,this,SIMRATE)
+{
+	target=0;
+}
+
+double DriveStraight::DistanceControl::PIDGet()
+{
+	double d=Robot::drivetrain->GetDistance();
+#ifdef DEBUG_COMMAND
+	std::cout << "DistanceControl PIDGet("<<d<<")"<<std::endl;
+#endif
+	return d;
+}
+void DriveStraight::DistanceControl::PIDWrite(float d)
+{
+#ifdef DEBUG_COMMAND
+	std::cout << "DistanceControl PIDWrite("<<d<<")"<<std::endl;
+#endif
+	Robot::drivetrain->Drive(d);
+}
+void DriveStraight::DistanceControl::Initialize(double d)
+{
+	target=d;
+	pid.Reset();
+	pid.SetAbsoluteTolerance(MAX_POSITION_ERROR);
+	pid.SetSetpoint(target);
+	pid.Enable();
+}
+bool DriveStraight::DistanceControl::AtTarget(){
+	double d=Robot::drivetrain->GetDistance();
+	return (d>=target)?true:false;
+	//return pid.OnTarget();
+}
+void DriveStraight::DistanceControl::End(){
+	pid.Disable();
+}

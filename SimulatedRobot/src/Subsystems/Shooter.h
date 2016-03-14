@@ -15,6 +15,7 @@ class Shooter: public Subsystem {
 	GPMotor angleMotor;
 	GPMotor leftMotor;
 	GPMotor rightMotor;
+	AnalogGyro angleGyro;
 	double angle,max_angle,min_angle;
 	double flywheel_target;
 	double flywheel_speed;
