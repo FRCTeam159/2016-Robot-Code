@@ -24,7 +24,7 @@ OI::OI() {
     // Connect the buttons to commands
 
     d_right->WhenPressed(new StepShooterAngle(10));
-    d_left->WhenPressed(new StepShooterAngle(-50));
+    d_left->WhenPressed(new StepShooterAngle(-10));
 
     d_down->ToggleWhenPressed(new ToggleGate());
     d_up->WhenPressed(new ShootBall());

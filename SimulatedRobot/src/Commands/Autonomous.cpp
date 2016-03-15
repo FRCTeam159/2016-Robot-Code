@@ -12,8 +12,10 @@
 #include <Commands/ShootBall.h>
 #include <Commands/Turn.h>
 #include <Commands/FullStop.h>
+#include "Robot.h"
 
 Autonomous::Autonomous() : CommandGroup("Autonomous") {
+	Requires(Robot::drivetrain.get());
 	AddSequential(new CloseGate()); // pinch the ball
 	AddSequential(new DriveStraight(6,0)); // go forward
 	AddSequential(new Turn(-43)); // turn
@@ -22,3 +24,14 @@ Autonomous::Autonomous() : CommandGroup("Autonomous") {
 	AddSequential(new FullStop()); // end autonomous
 }
 
+void Autonomous::Interrupted() {
+	std::cout << "Autonomous::Interruped"<<std::endl;
+	_End();
+}
+
+void  Autonomous::Cancel(){
+	std::cout << "Autonomous::Cancel"<<std::endl;
+	_End();
+	CommandGroup::Cancel();
+	Robot::drivetrain->EndTravel();
+}

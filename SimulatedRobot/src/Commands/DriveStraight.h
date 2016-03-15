@@ -23,7 +23,7 @@ public:
 	bool IsFinished();
 	void Execute();
 	void End();
-	void Interrupted() { End();}
+	void Interrupted();
 
 	class AngleControl: public PIDSource, public PIDOutput{
 	private:

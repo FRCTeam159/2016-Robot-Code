@@ -22,6 +22,7 @@ DriveTrain::DriveTrain() : Subsystem("DriveTrain"),
 	pid_disabled=true;
 	target_distance=0;
 	SetInverted(false); // invert motor direction on right side
+	gyro.Reset();
 }
 
 // ===========================================================================================================
@@ -150,7 +151,6 @@ void DriveTrain::Drive(double d){
 void DriveTrain::Reset() {
 	right_motor.Reset();
 	left_motor.Reset();
-	gyro.Reset();
 }
 void DriveTrain::Enable() {
 	right_motor.Enable();
@@ -196,6 +196,7 @@ void DriveTrain::AutonomousInit() {
 	//right_motor.SetDebug(1);
 	//left_motor.SetDebug(1);
 	Reset();
+	gyro.Reset();
 }
 
 void DriveTrain::DisabledInit() {

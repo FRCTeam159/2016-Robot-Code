@@ -13,6 +13,8 @@
 class Autonomous: public CommandGroup {
 public:
 	Autonomous();
+	void Interrupted();
+	void Cancel();
 };
 
 #endif /* SRC_COMMANDS_AUTONOMOUS_H_ */

@@ -67,6 +67,11 @@ void DriveStraight::End() {
 	Dcntrl.End();
 	Robot::drivetrain->EndTravel();
 }
+void DriveStraight::Interrupted() {
+	std::cout << "DriveStraight::Interruped"<<std::endl;
+	End();
+}
+
 // =============== Inner Class AngleControl =============================
 DriveStraight::AngleControl::AngleControl(double P, double I, double D):
 	pid(P,I,D,this,this,SIMRATE)
@@ -129,6 +134,7 @@ void DriveStraight::DistanceControl::PIDWrite(float d)
 void DriveStraight::DistanceControl::Initialize(double d)
 {
 	target=d;
+	Robot::drivetrain->Reset();
 	pid.Reset();
 	pid.SetAbsoluteTolerance(MAX_POSITION_ERROR);
 	pid.SetSetpoint(target);
