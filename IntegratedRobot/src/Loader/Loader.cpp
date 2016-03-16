@@ -7,11 +7,12 @@
 
 #include <Loader/Loader.h>
 #include <WPILib.h>
-#define SETZEROSPEED -0.4
+#define SETZEROSPEED -0.6
 #define ROLLERMOTORSPEED 1
-#define ANGLE 30
+#define MED_ANGLE 30
+#define HIGH_ANGLE 45
 #define MINIMUM_ANGLE_ERROR 1
-#define MINIMUM_TIMEOUT 1000
+#define MINIMUM_TIMEOUT 5000
 
 
 //end goal is two state:
@@ -22,9 +23,9 @@ Loader::Loader(int a, int b, I2C::Port p):liftMotor(a), rollerMotor(b), accel(p)
 	liftMotor.ConfigRevLimitSwitchNormallyOpen(true);
 	liftMotor.SetControlMode(CANTalon::kPercentVbus);
 	liftMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
-	sAngCtrl= new PIDController(0.005,0,0, &accel, &liftMotor);
-	targetAngle = ANGLE;
-	state = WAITING;
+	sAngCtrl= new PIDController(0.02,0,0, &accel, &liftMotor);
+	targetAngle = MED_ANGLE;
+	state = HIGH;
 	atLimit = false;
 	oldState = state;
 	timeoutTime = MINIMUM_TIMEOUT;
@@ -34,18 +35,23 @@ Loader::~Loader() {
 	delete sAngCtrl;
 }
 
-void Loader::StateMachine(){
+void Loader::Obey(){
 	switch(state){
-	case SETLOW:
+	case LOW:
 		//GoToZeroLimitSwitch();
+		if(liftMotor.GetReverseLimitOK())
+			liftMotor.Set(SETZEROSPEED);
+		else
+			liftMotor.Set(0);
 		break;
-	case WAITING:
+	case HIGH:
 		ftime(&end_time);
-		if(deltaTime(&start_time, &end_time) < timeoutTime){
+		if(deltaTime(&start_time, &end_time) > timeoutTime){
 			SetLow();
+			std::cout<<"time hit!";
 		}
 		break;
-	case SETHIGH:
+	case MED:
 
 		break;
 	}
@@ -54,8 +60,11 @@ void Loader::StateMachine(){
 void Loader::SetAngle(float a){
 	targetAngle=a;
 }
-void Loader::SpinRoller(bool){
-
+void Loader::SpinRollers(bool forward){
+	if(forward)
+		rollerMotor.Set(ROLLERMOTORSPEED);
+	else
+		rollerMotor.Set(-ROLLERMOTORSPEED);
 }
 void Loader::TeleopInit(){
 	//liftMotor.Set(0.1);//The motor will be directly controlled by the PID anyway, no?
@@ -73,6 +82,7 @@ void Loader::TeleopPeriodic(){
 		//PID loop is running. consider calling PIDController::Disable() first
 		sAngCtrl->SetPID(0,0,0);//I would just call Disable() here -Joseph
 	}*/
+	Obey();
 }
 void Loader::AutonomousInit(){
 
@@ -80,24 +90,28 @@ void Loader::AutonomousInit(){
 void Loader::AutonomousPeriodic(){
 
 }
-
+void Loader::DisabledInit()
+{
+	sAngCtrl->Disable();
+}
 void Loader::SetLow(){
 	GoToZeroLimitSwitch();
-	state=SETLOW;
+	state=LOW;
 	sAngCtrl->Disable();
-	TurnRollersOn(false);
+	StopRollers();
 }
-void Loader::SetHigh(){
-	state=SETHIGH;
+void Loader::SetMed(){
+	state=MED;
 	sAngCtrl->Enable();
-	sAngCtrl->SetSetpoint(targetAngle);
-	TurnRollersOn(true);
+	sAngCtrl->SetSetpoint(MED_ANGLE);
+	SpinRollers(true);
 }
 
 //Stop state: Disables the PID Controller to stop liftMotor
 //also stops the roller motor.
-void Loader::Wait(){
-	state=WAITING;
+void Loader::SetHigh(){
+	state=HIGH;
+	sAngCtrl->SetSetpoint(HIGH_ANGLE);
 	ftime(&start_time);
 }
 
@@ -105,13 +119,9 @@ void Loader::GoToZeroLimitSwitch(){
 	liftMotor.Set(SETZEROSPEED);
 }
 
-void Loader::TurnRollersOn(bool on){
-	if(on){
-		rollerMotor.Set(ROLLERMOTORSPEED);
-	}
-	else{
-		rollerMotor.Set(0);
-	}
+void Loader::StopRollers()
+{
+	rollerMotor.Set(0);
 }
 
 bool Loader::AtGrabAngle(){
@@ -135,8 +145,34 @@ int Loader::deltaTime(struct timeb* first, struct timeb* after){
 	int mdiff= after->millitm-first->millitm;
 	return((1000*diff)+mdiff);
 }
-
-
-
-
+void Loader::Continue()
+{
+	switch(state){
+	case LOW:
+		SetMed();
+		break;
+	case MED:
+		SetHigh();
+		break;
+	}
+}
+void Loader::ExpelBall()
+{
+	state = CANCEL;
+	sAngCtrl->SetSetpoint(HIGH_ANGLE);
+	SpinRollers(false);
+}
+void Loader::Cancel(){
+	switch(state){
+	case MED:
+		ExpelBall();
+		break;
+	case HIGH:
+		ExpelBall();
+		break;
+	case CANCEL:
+		SetLow();
+		break;
+	}
+}
 
