@@ -17,6 +17,8 @@ protected:
 	double heading;
 	bool at_position;
 	bool at_heading;
+	static double speed_error;
+	static double angle_error;
 public:
 	DriveStraight(double d, double h);
 	void Initialize();

@@ -48,10 +48,14 @@ public:
 	void DisabledInit();
 
 	double GetDistance();
+	double GetSpeed();
+
 	double GetLeftDistance();
 	double GetRightDistance();
 	double GetLeftSpeed();
 	double GetRightSpeed();
+	double GetLeftVoltage();
+	double GetRightVoltage();
 
 	virtual double Deadband(double x, double ignore);
 	virtual void SetDeadband(double x, double y);
@@ -60,7 +64,7 @@ public:
 	virtual void SetPID(int mode, double P, double I, double D);
 	virtual void Turn(double d);
 
-	virtual void Drive(double d);
+	virtual void Drive(double l,double r);
 	virtual void SetInverted(bool b) { inverted=b;}
 
 	virtual bool IsDisabled() { return disabled;}

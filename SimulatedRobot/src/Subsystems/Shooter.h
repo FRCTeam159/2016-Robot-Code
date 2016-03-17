@@ -36,10 +36,15 @@ public:
 	bool IsAtSpeed();
 	double GetTargetSpeed();
 	double GetSpeed();
+	double GetAngle();
 
 	void AutonomousInit();
 	void TeleopInit();
 	void DisabledInit();
+	void Log();
+	void LogSpeed(double d);
+	void LogAngle(double d);
+
 
 };
 

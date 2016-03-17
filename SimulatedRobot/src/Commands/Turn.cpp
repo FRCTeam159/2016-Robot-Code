@@ -8,14 +8,14 @@
 #include <Commands/Turn.h>
 #include "Robot.h"
 
-#define MAX_HEADING_ERROR 1 // degrees
-#define TURN_TIMEOUT 2 // degrees
+#define MAX_HEADING_ERROR 0.5 // degrees
+#define TURN_TIMEOUT 3 // degrees
 
-#define AP 0.2
-#define AI 0.001
-#define AD 0.01
+#define AP 0.05
+#define AI 0.0005
+#define AD 0.4
 
-//#define DEBUG_COMMAND
+#define DEBUG_COMMAND
 
 Turn::Turn(double a)  : Command("Turn"), pid(AP,AI,AD,this,this,SIMRATE)
 {
@@ -28,8 +28,9 @@ void Turn::Initialize() {
 	SetTimeout(TURN_TIMEOUT);
 	std::cout << "Turn Started .."<<std::endl;
 	pid.Reset();
-	pid.SetAbsoluteTolerance(MAX_HEADING_ERROR);
 	pid.SetSetpoint(target);
+	pid.SetAbsoluteTolerance(MAX_HEADING_ERROR);
+	pid.SetToleranceBuffer(2);
 	pid.Enable();
 
 }

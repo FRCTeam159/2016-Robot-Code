@@ -18,8 +18,8 @@ Autonomous::Autonomous() : CommandGroup("Autonomous") {
 	Requires(Robot::drivetrain.get());
 	AddSequential(new CloseGate()); // pinch the ball
 	AddSequential(new DriveStraight(6,0)); // go forward
-	AddSequential(new Turn(-43)); // turn
 	AddSequential(new StepShooterAngle(30)); // set angle
+	AddSequential(new Turn(-43)); // turn
 	AddSequential(new ShootBall()); // shoot
 	AddSequential(new FullStop()); // end autonomous
 }
