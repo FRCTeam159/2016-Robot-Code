@@ -13,60 +13,59 @@ class DriveTrain : public Subsystem {
 	GPMotor left_motor;
 	GPMotor right_motor;
 private:
-
-	RobotDrive* drive;
-	//Encoder *left_encoder, *right_encoder;
-	//AnalogInput* rangefinder;
-	//AnalogGyro* gyro;
+	AnalogGyro gyro;
 	double x_deadband,y_deadband;
+	double dpp;
+	bool inverted;
+	bool squared_inputs;
+	bool disabled;
+	bool pid_disabled;
+	double target_distance;
+	double target_angle;
+
+	void DisablePID();
+	void EnablePID();
+	void Limit(double &num);
+	void SquareInputs(double &left, double &right);
+	void SetDistance(double d);
 
 public:
-	DriveTrain(int,int);
+	DriveTrain();
 
-	/**
-	 * When no other command is running let the operator drive around
-	 * using the PS3 joystick.
-	 */
 	void InitDefaultCommand();
-
-	/**
-	 * The log method puts interesting information to the SmartDashboard.
-	 */
+	void SetSquaredInputs(double d){ squared_inputs=d;}
 	void Log();
+	void Reset();
+	void Enable();
+	void Disable();
+	void EndTravel();
 
-	/**
-	 * Tank style driving for the DriveTrain.
-	 * @param left Speed in range [-1,1]
-	 * @param right Speed in range [-1,1]
-	 */
-	void Drive(double left, double right);
-
-	/**
-	 * @param joy The ps3 style joystick to use to drive tank style.
-	 */
 	void Drive(Joystick* joy);
-
-	/**
-	 * @return The robots heading in degrees.
-	 */
 	double GetHeading();
 
-	/**
-	 * Reset the robots sensors to the zero states.
-	 */
-	void Reset();
+	void TeleopInit();
+	void AutonomousInit();
+	void DisabledInit();
 
-	/**
-	 * @return The distance driven (average of left and right encoders).
-	 */
 	double GetDistance();
+	double GetLeftDistance();
+	double GetRightDistance();
+	double GetLeftSpeed();
+	double GetRightSpeed();
 
-	/**
-	 * @return The distance to the obstacle detected by the rangefinder.
-	 */
-	double GetDistanceToObstacle();
 	virtual double Deadband(double x, double ignore);
 	virtual void SetDeadband(double x, double y);
+	virtual void SetDistancePerPulse(double diam,double ticks, bool b);
+	virtual double GetDistancePerPulse();
+	virtual void SetPID(int mode, double P, double I, double D);
+	virtual void Turn(double d);
+
+	virtual void Drive(double d);
+	virtual void SetInverted(bool b) { inverted=b;}
+
+	virtual bool IsDisabled() { return disabled;}
+	virtual bool IsPIDDisabled() { return pid_disabled;}
+	virtual bool IsInverted() { return inverted;}
 
 };
 
