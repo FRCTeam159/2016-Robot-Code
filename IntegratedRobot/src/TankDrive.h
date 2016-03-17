@@ -21,6 +21,7 @@ public:
 	TankDrive(CANTalon*, CANTalon*, SRXSlave*, SRXSlave* ,int);
 	void SetPosTargets(float, float);
 	void ArcadeDrive(Joystick*);
+	void RevArcadeDrive(Joystick*);
 	void ConfigAuto(float, float, float);
 	void ZeroMotors();
 	void ConfigTeleop(float, float, float);

@@ -139,7 +139,7 @@ private:
 		static int currentState=0;
 		AutoStateMachine(currentState);
 		mydrive->Obey(); //tank drive slaving, sets the targets of non slave wheels and sets slave wheel to targets of the master wheels
-		loader->StateMachine(); //loader state machine, only has Waiting state.
+		loader->Obey(); //loader state machine, only has Waiting state.
 		holder->AutoHold(); //holder state machine
 	}
 
@@ -153,61 +153,55 @@ private:
 	void TeleopPeriodic()
 	{
 		visionState = visionStateMachine(visionState);
-		bool button3=stick->GetRawButton(TOGGLE_LIFTER);
-		if(button3&&!pButton3) //toggles the lifter
-		{
-			if((loader->GetState()==Loader::SETHIGH)||(loader->GetState()==Loader::WAITING))
-			{
-				loader->SetLow(); //sets low position for roller
-			}
-			else
-			{
-				loader->SetHigh(); //sets high position for roller
-			}
-		}
-		if(loader->GetState()==Loader::SETHIGH&&holder->IsLoaded())
-		{
-			loader->Wait(); //resets to low position after a delay
-		}
-		pButton3=button3;
-		bool button2=stick->GetRawButton(SWITCH_CAMERA);
-		if(button2 && !pButton2)
-		{
-			if(visionState>3)
-			{
-				visionState=ExitLoop;
-			}
-			else if(visionState==GetForwardImage||visionState==SendForwardImage)
-			{
-				visionState=GetReverseImage;
-			}
-			else if(visionState==GetReverseImage||visionState==SendReverseImage)
-			{
-				visionState=GetForwardImage;
-			}
-		}
-		pButton2=button2;
-
 		bool button1=stick->GetRawButton(AIM);
-		if(visionState<4)
+		if(button1&&!pButton1)
 		{
-			if(button1&&!pButton1)
+			if(visionState==GetForwardImage||visionState==SendForwardImage)
 			{
-				visionState = StartCalibrations;
+				visionState=StartCalibrations;
+			}
+			if(visionState==GetReverseImage||visionState==SendReverseImage)
+			{
+				loader->Continue();
 			}
 		}
 		pButton1 = button1;
 
+		bool button2=stick->GetRawButton(SWITCH_CAMERA);
+		if(button2&&!pButton2)
+		{
+			if(visionState>3)//in the auto aiming machine
+			{
+				visionState=ExitLoop;
+			}
+			else if (visionState==GetReverseImage||visionState==SendReverseImage)
+			{
+				if(!loader->GetState()==Loader::LOW)//loader is doing something
+					loader->Cancel();
+				else
+					visionState=GetForwardImage;//switch to forward camera
+			}
+			else if (visionState==GetForwardImage||visionState==SendForwardImage)
+			{
+				visionState=GetReverseImage;//switch to reverse camera
+			}
+		}
+		pButton2=button2;
+
+		if(visionState==GetForwardImage||visionState==SendForwardImage)//using forward camera
+		{
+			mydrive->ArcadeDrive(stick);
+		}
+		else if (visionState==GetReverseImage||visionState==SendReverseImage)
+		{//if using reverse camera, drive in reverse
+			mydrive->RevArcadeDrive(stick);
+		}
 		if(!vertAnglePID->IsEnabled()) //pid controller is not enabled
 		{//TODO make sure the correct limit switches are plugged into this motor
 			shooterAngleMotor->Set(-.2);//it should stop automatically when it hits the limit switch
 		}
 
-		if(visionState<4)//states 0-3 are the ones that aren't part of aiming
-		{
-			mydrive->ArcadeDrive(stick); //starts arcade drive with the joystick
-		}
-		loader->StateMachine(); //loader state machine
+		loader->Obey(); //loader state machine
 		holder->AutoHold(); //holder state machine
 		mylauncher->Obey(); //setting motors
 		mydrive->Obey(); //more motor slave stuff

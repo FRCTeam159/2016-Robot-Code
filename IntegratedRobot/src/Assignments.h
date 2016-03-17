@@ -42,6 +42,7 @@ enum dio_ids {
 enum joystick_buttons {
 	AIM = 1,
 	SWITCH_CAMERA = 2,
+	CANCEL,
 	TOGGLE_LIFTER = 3,
 	TOGGLE_ROLLER = 5,
 };
