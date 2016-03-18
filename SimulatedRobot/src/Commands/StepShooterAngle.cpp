@@ -8,6 +8,8 @@
 #include <Commands/StepShooterAngle.h>
 #include "Robot.h"
 
+#define STEP_TIMEOUT 1 // degrees
+
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
 	//Requires((Subsystem*)Robot::shooter.get());
 	std::cout << "new StepShooterAngle("<<a<<")"<< std::endl;
@@ -15,6 +17,7 @@ StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
 }
 // Called just before this Command runs the first time
 void StepShooterAngle::Initialize() {
+	SetTimeout(STEP_TIMEOUT);
 	double current=Robot::shooter->GetTargetAngle();
 	double max=Robot::shooter->GetMaxAngle();
 	double min=Robot::shooter->GetMinAngle();
@@ -31,10 +34,13 @@ void StepShooterAngle::Execute() {
 }
 // Make this return true when this Command no longer needs to run execute()
 bool StepShooterAngle::IsFinished() {
+	if(IsTimedOut()){
+		std::cout << "StepAngle Error:  Timeout expired"<<std::endl;
+		return true;
+	}
 	bool ontarget=Robot::shooter->IsAtAngle();
 	if(ontarget)
 		std::cout << "Shooter On Target:"<<std::endl;
-
 	return ontarget;
 }
 // Called once after isFinished returns true

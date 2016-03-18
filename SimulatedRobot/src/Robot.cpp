@@ -16,9 +16,9 @@ void Robot::RobotInit() {
 	oi.reset(new OI());
 	autonomous.reset(new Autonomous());
 
-	SmartDashboard::PutData(drivetrain.get());
-	SmartDashboard::PutData(holder.get());
-	SmartDashboard::PutData(shooter.get());
+	//SmartDashboard::PutData(drivetrain.get());
+	//SmartDashboard::PutData(holder.get());
+	//SmartDashboard::PutData(shooter.get());
 }
 
 void Robot::AutonomousInit() {

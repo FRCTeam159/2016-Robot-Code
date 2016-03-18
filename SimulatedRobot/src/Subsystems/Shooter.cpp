@@ -11,6 +11,7 @@
 #define FP 0.001
 #define FI 0.00001
 #define FD 0.0001
+
 #define AP 0.2
 #define AI 0.001
 #define AD 0.3
@@ -28,7 +29,6 @@ Shooter::Shooter() : Subsystem("Shooter"),
 	max_angle=AMAX; // max elevation (degrees)
 	min_angle=AMIN;
 
-	angleMotor.SetDistance(0);
 	leftMotor.SetInputRange(FVMIN,FVMAX);
 	rightMotor.SetInputRange(FVMIN,FVMAX);
 
@@ -47,10 +47,11 @@ Shooter::Shooter() : Subsystem("Shooter"),
 	angleMotor.SetPID(GPMotor::POSITION, AP, AI, AD);
 	angleMotor.Reset(); // clear IAccum
 	angleMotor.SetDistancePerPulse(1.0); // 1 degree = 0.01745 radians
-	angleMotor.SetInputRange(min_angle,max_angle);      // 0..70 degrees
+	angleMotor.SetDistance(0);
+	//angleMotor.SetInputRange(min_angle,max_angle);      // 0..70 degrees
 	angleMotor.SetTolerance(MAX_ANGLE_ERROR);
-	angleMotor.SetToleranceBuffer(2);
-
+	//angleMotor.SetToleranceBuffer(2);
+	Log();
 }
 
 void Shooter::AutonomousInit(){
@@ -59,6 +60,19 @@ void Shooter::AutonomousInit(){
 void Shooter::TeleopInit(){
 	Init();
 }
+
+void Shooter::LogSpeed(double d) {
+	SmartDashboard::PutNumber("Shooter FW Speed", d);
+}
+void Shooter::LogAngle(double d) {
+	SmartDashboard::PutNumber("Shooter Angle", d);
+}
+
+void Shooter::Log() {
+	LogAngle(GetAngle());
+	LogSpeed(GetSpeed());
+}
+
 void Shooter::DisabledInit(){
 	Disable();
 	angleMotor.SetDebug(0);
@@ -75,8 +89,7 @@ void Shooter::Init(){
 
 	leftMotor.Enable();
 	rightMotor.Enable();
-	//rightMotor.SetDebug(2);
-	//leftMotor.SetDebug(2);
+	Log();
 }
 
 void Shooter::Disable(){
@@ -90,6 +103,7 @@ void Shooter::Disable(){
 	rightMotor.DisablePID();
 
 	angle=0;
+	Log();
 }
 // Set the shooter angle
 void Shooter::SetTargetAngle(double a){
@@ -98,7 +112,6 @@ void Shooter::SetTargetAngle(double a){
 	angle=a;
 	angleMotor.SetDistance(angle);
 	angleMotor.EnablePID();
-	//angleMotor.SetDebug(1);
 }
 
 // Set the shooter angle
@@ -108,10 +121,15 @@ void Shooter::SetTargetSpeed(double a){
 
 bool Shooter::IsAtAngle(){
 	bool ontarget= angleMotor.OnTarget();
-	//if(ontarget)
-	//	angleMotor.DisablePID();
+	GetAngle();
 	return ontarget;
 }
+bool Shooter::IsAtSpeed(){
+	bool ontarget= leftMotor.OnTarget() && rightMotor.OnTarget();
+	GetSpeed();
+	return ontarget;
+}
+
 double Shooter::GetTargetAngle(){
 	return angle;
 }
@@ -119,8 +137,14 @@ double Shooter::GetTargetSpeed(){
 	return flywheel_target;
 }
 double Shooter::GetSpeed(){
-	double ave_speed=leftMotor.GetVelocity()+rightMotor.GetVelocity();
-	return ave_speed/2;
+	double ave_speed=(leftMotor.GetVelocity()+rightMotor.GetVelocity());
+	LogSpeed(ave_speed);
+	return ave_speed;
+}
+double Shooter::GetAngle(){
+	double d=angleMotor.GetDistance();
+	LogAngle(d);
+	return d;
 }
 
 void Shooter::EnableFlywheels(){
@@ -128,16 +152,14 @@ void Shooter::EnableFlywheels(){
 	rightMotor.SetVelocity(flywheel_target);
 	leftMotor.EnablePID();
 	rightMotor.EnablePID();
+	Log();
 }
 void Shooter::DisableFlywheels(){
 	leftMotor.SetVelocity(0);
 	rightMotor.SetVelocity(0);
 	leftMotor.DisablePID();
 	rightMotor.DisablePID();
+	Log();
 }
 
-bool Shooter::IsAtSpeed(){
-	bool ontarget= leftMotor.OnTarget() && rightMotor.OnTarget();
-	return ontarget;
-}
 

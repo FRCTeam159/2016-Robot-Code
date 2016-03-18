@@ -141,7 +141,7 @@ double GPMotor::ReturnPIDInput(){
 		return GetVelocity();
 	default:
 	case VOLTAGE:
-		return Get();
+		return GetVoltage();
 	}
 }
 double GPMotor::PIDGet(){
@@ -154,7 +154,6 @@ void GPMotor::SetVelocity(double value){
 #else
 	if(pid)
 		pid->SetSetpoint(value);
-
 	Talon::Set(value);
 #endif
 }
@@ -165,7 +164,6 @@ double GPMotor::GetVelocity(){
 #else
 	return encoder->GetRate();
 #endif
-
 }
 
 void GPMotor::SetDistance(double value){
@@ -184,6 +182,21 @@ double GPMotor::GetDistance(){
 	return CANTalon::GetPosition();
 #else
 	return encoder->GetDistance();
+#endif
+}
+
+void GPMotor::SetVoltage(double value){
+#if MOTORTYPE == CANTALON
+	CANTalon::Set(value);
+#else
+	Set(value);
+#endif
+}
+double GPMotor::GetVoltage(){
+#if MOTORTYPE == CANTALON
+	return CANTalon::Get();
+#else
+	return Talon::GetSpeed();
 #endif
 }
 
@@ -256,6 +269,14 @@ void GPMotor::SetInverted(bool t) {
 	// This causes purposefully thrown exception in simulation
 	// if(encoder)
 	//	 encoder->SetReverseDirection(t);
+}
+
+PIDController *GPMotor::GetPID(){
+#if MOTORTYPE == CANTALON
+	return 0;
+#else
+   return pid;
+#endif
 }
 
 void GPMotor::SetPID(double P, double I, double D){

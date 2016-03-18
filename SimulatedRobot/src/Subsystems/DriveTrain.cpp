@@ -23,6 +23,10 @@ DriveTrain::DriveTrain() : Subsystem("DriveTrain"),
 	target_distance=0;
 	SetInverted(false); // invert motor direction on right side
 	gyro.Reset();
+	//LiveWindow::GetInstance()->AddSensor("Drive Train", "Heading", gyro);
+	//SmartDashboard::PutNumber("Drive Train Distance", GetDistance());
+
+	Log();
 }
 
 // ===========================================================================================================
@@ -65,11 +69,12 @@ void DriveTrain::InitDefaultCommand() {
  * The log method puts interesting information to the SmartDashboard.
  */
 void DriveTrain::Log() {
-//	SmartDashboard::PutNumber("Left Distance", left_motor.GetDistance());
-//	SmartDashboard::PutNumber("Right Distance", right_motor.GetDistance());
-//	SmartDashboard::PutNumber("Left Speed", left_motor.GetVelocity());
-//	SmartDashboard::PutNumber("Right Speed", right_motor.GetVelocity());
-	//SmartDashboard::PutNumber("Gyro", gyro->GetAngle());
+//	SmartDashboard::PutNumber("Drive Left Distance", left_motor.GetDistance());
+//	SmartDashboard::PutNumber("Drive Right Distance", right_motor.GetDistance());
+//	SmartDashboard::PutNumber("Drive Left Speed", left_motor.GetVelocity());
+	SmartDashboard::PutNumber("Drive Left Speed", GetLeftVoltage());
+	SmartDashboard::PutNumber("Drive Right Speed", GetRightVoltage());
+	SmartDashboard::PutNumber("Drive Heading", GetHeading());
 }
 
 void DriveTrain::Limit(double &num) {
@@ -105,12 +110,7 @@ void DriveTrain::Drive(Joystick* joy) {
 		SquareInputs(left,right);
 	left=Deadband(left,x_deadband);
 	right=Deadband(right,y_deadband);
-	//std::cout<<"left:"<<left<<" right:"<<right<<std::endl;
-	left_motor.Set(left);
-	if(inverted)
-		right_motor.Set(-right);
-	else
-		right_motor.Set(right);
+	Drive(left,right);
 }
 
 double DriveTrain::Deadband(double x, double ignore) {
@@ -139,14 +139,16 @@ void DriveTrain::Turn(double d){
 		right_motor.Set(d);
 	else
 		right_motor.Set(-d);
+	Log();
 }
 
-void DriveTrain::Drive(double d){
-	left_motor.Set(d);
+void DriveTrain::Drive(double l,double r){
+	left_motor.Set(l);
 	if(inverted)
-		right_motor.Set(-d);
+		right_motor.Set(-r);
 	else
-		right_motor.Set(d);
+		right_motor.Set(r);
+	Log();
 }
 void DriveTrain::Reset() {
 	right_motor.Reset();
@@ -163,7 +165,7 @@ void DriveTrain::Disable() {
 	disabled=true;
 }
 void DriveTrain::EndTravel() {
-	Drive(0.0);
+	Drive(0,0);
 }
 void DriveTrain::DisablePID() {
 	right_motor.DisablePID();
@@ -190,40 +192,39 @@ void DriveTrain::TeleopInit() {
 
 void DriveTrain::AutonomousInit() {
 	std::cout << "DriveTrain::AutonomousInit"<<std::endl;
-	left_motor.Set(0.0);
-	right_motor.Set(0.0);
-	//SetPID(GPMotor::POSITION,MP,MI, MD);
-	//right_motor.SetDebug(1);
-	//left_motor.SetDebug(1);
+	Drive(0,0);
 	Reset();
 	gyro.Reset();
 }
 
 void DriveTrain::DisabledInit() {
 	std::cout << "DriveTrain::DisabledInit"<<std::endl;
-	left_motor.SetDebug(0);
-	right_motor.SetDebug(0);
 	Disable();
-	right_motor.Reset();
-	left_motor.Reset();
-	Drive(0.0);
+	Drive(0,0);
+	Reset();
 }
 
 double DriveTrain::GetDistance() {
 	return (left_motor.GetDistance() + right_motor.GetDistance())/2;
 }
-
+double DriveTrain::GetSpeed() {
+	return (left_motor.GetVelocity() + right_motor.GetVelocity())/2;
+}
 double DriveTrain::GetLeftSpeed(){
 	return left_motor.GetVelocity();
 }
 double DriveTrain::GetRightSpeed(){
 	return right_motor.GetVelocity();
 }
-
 double DriveTrain::GetLeftDistance(){
 	return left_motor.GetDistance();
-
 }
 double DriveTrain::GetRightDistance(){
 	return right_motor.GetDistance();
+}
+double DriveTrain::GetLeftVoltage(){
+	return left_motor.GetVoltage();
+}
+double DriveTrain::GetRightVoltage(){
+	return right_motor.GetVoltage();
 }
