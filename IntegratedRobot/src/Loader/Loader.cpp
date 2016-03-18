@@ -9,8 +9,8 @@
 #include <WPILib.h>
 #define SETZEROSPEED -0.6
 #define ROLLERMOTORSPEED 1
-#define MED_ANGLE 30
-#define HIGH_ANGLE 45
+#define MED_ANGLE 8.5
+#define HIGH_ANGLE 17.5
 #define MINIMUM_ANGLE_ERROR 1
 #define MINIMUM_TIMEOUT 5000
 
@@ -23,7 +23,7 @@ Loader::Loader(int a, int b, I2C::Port p):liftMotor(a), rollerMotor(b), accel(p)
 	liftMotor.ConfigRevLimitSwitchNormallyOpen(true);
 	liftMotor.SetControlMode(CANTalon::kPercentVbus);
 	liftMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
-	sAngCtrl= new PIDController(0.02,0,0, &accel, &liftMotor);
+	sAngCtrl= new PIDController(0.1,0,0, &accel, &liftMotor);
 	targetAngle = MED_ANGLE;
 	state = HIGH;
 	atLimit = false;
@@ -69,7 +69,6 @@ void Loader::SpinRollers(bool forward){
 void Loader::TeleopInit(){
 	//liftMotor.Set(0.1);//The motor will be directly controlled by the PID anyway, no?
 	//sAngCtrl->Enable();//-Joseph
-	sAngCtrl->SetPID(0.005,0,0);
 	//sAngCtrl->SetSetpoint(30);
 }
 void Loader::TeleopPeriodic(){

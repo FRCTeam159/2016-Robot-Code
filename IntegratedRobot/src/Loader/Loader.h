@@ -10,7 +10,7 @@
 #define CANTALON_LIFTMOTOR
 #define CANTALON_ROLLERMOTOR
 #include <WPILib.h>
-#include <IntakeAngleAccelerometer.h>
+#include <Sensors/IntakeAngleAccelerometer.h>
 #include <time.h>
 #include <sys/timeb.h>
 
