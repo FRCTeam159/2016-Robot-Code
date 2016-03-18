@@ -12,19 +12,19 @@
 #define PUSHERMOTORSPEED 0.1
 #define BALLDETECTIONDELAY 2000
 #define SENSORTRIPPED 0
-#define FORWARDLIMITPOSITION (gateTicksPerRevolution/4)
+#define FORWARDLIMITPOSITION (80.0/360)
 #define MAXERRORTICKS 100
 #define ENCMULT 1988
-#define PUSHMOTORSPEED .1
-#define P 0.1
-#define I 0
-#define D 0
+#define PUSHMOTORSPEED -.8
+#define P 0.2
+#define I 0.0005
+#define D 0.1
 
 //#define PUSH_EMULATION
 
-Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
-: gateMotor(mtr1), pushMotor(mtr2),revGateLimit(ls1),fwdGateLimit(ls2),IRsensor(IR){
-	gateTicksPerRevolution = (double)GATEMOTOR_ET*GATEMOTOR_GR/ENCMULT;
+Holder::Holder(int mtr1,int mtr2, int IR)
+: gateMotor(mtr1), pushMotor(mtr2),IRsensor(IR){
+	gateTicksPerRevolution = (double)GATEMOTOR_ET*GATEMOTOR_GR;
 	atForwardLimit=false;
 	atReverseLimit=false;
 	state=FIND_ZERO;
@@ -34,6 +34,7 @@ Holder::Holder(int mtr1,int mtr2,int ls1, int ls2, int IR)
 	gateMotor.ConfigEncoderCodesPerRev(gateTicksPerRevolution);
 	gateMotor.SetControlMode(CANSpeedController::kPosition);
 	gateMotor.SetFeedbackDevice(CANTalon::QuadEncoder);
+	gateMotor.SetSensorDirection(true);
 #endif
 
 #ifdef CANTALON_PUSHER
@@ -54,13 +55,15 @@ void Holder::Init(){
 	gateMotor.ConfigRevLimitSwitchNormallyOpen(true);
 	gateMotor.ConfigFwdLimitSwitchNormallyOpen(true);
 	if(foundZero == false){
+		std::cout<<"finding zero"<<std::endl;
 		gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
+		gateMotor.SetControlMode(CANSpeedController::kPercentVbus);
+		gateMotor.Set(-GATEMOTORSPEED);
+		state = FIND_ZERO;
 	}
-	else{
-		gateMotor.SetPosition(0);
-	}
-	gateMotor.Set(-GATEMOTORSPEED);
-	gateMotor.SetControlMode(CANSpeedController::kPercentVbus);
+//	else{
+//		gateMotor.SetPosition(0);
+//	}
 	gateMotor.ConfigNeutralMode(CANSpeedController::NeutralMode::kNeutralMode_Brake);
 	gateMotor.Enable();
 	printf("Holder Init, Motor:%d, Motor Inverted:%d\n",
@@ -78,16 +81,17 @@ void Holder::Init(){
 //- call from teleop periodic
 //===========================================
 void Holder::FindZero(){
+	gateMotor.Set(-GATEMOTORSPEED);
 	bool atTarget=gateMotor.IsRevLimitSwitchClosed();
 	if(atTarget && !atReverseLimit){
 		printf("found zero\n");
 		gateMotor.Set(0);
-		//gateMotor.SetControlMode(CANSpeedController::kPosition);
+		gateMotor.SetControlMode(CANSpeedController::kPosition);
 		gateMotor.Enable();
 		gateMotor.SetPosition(0);
 		gateMotor.Set(0);
 		gateMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SoftPositionLimits);
-		gateMotor.ConfigSoftPositionLimits(496,0);
+		gateMotor.ConfigSoftPositionLimits(FORWARDLIMITPOSITION,0);
 		gateMotor.SetP(P);
 		gateMotor.SetI(I);
 		gateMotor.SetD(D);
@@ -117,14 +121,23 @@ void Holder::AutoHold(){
 	case GO_TO_REVERSE_LIMIT:
 		SetGateToReverseLimit();
 		break;
+	case BALL_PUSH_ERR_1:
+		RemoveBall();
+		break;
+	case BALL_PUSH_ERR_2:
+		ReversePush();
+		break;
 	}
 }
 //ready to load
 void Holder::PushBall(){
-	pushRequested = true;
-	pushComplete = false;
+	if(state==WAIT_FOR_PUSH_REQUEST){
+		pushRequested = true;
+		pushComplete = false;
+	}
+
 }
-bool Holder::CheckPushed(){
+int Holder::CheckPushed(){
 	return pushComplete;
 }
 
@@ -150,9 +163,13 @@ void Holder::TeleopInit(){
 	if(foundZero == false){
 		state=FIND_ZERO;
 	}
-	else
+	else if (IsLoaded())
 	{
-		state = WAIT_FOR_BALL_TO_ENTER;
+		state = WAIT_FOR_PUSH_REQUEST;
+	}
+	else {
+		gateMotor.Set(0);
+		state = GO_TO_REVERSE_LIMIT;
 	}
 }
 
@@ -198,18 +215,25 @@ void Holder::AutonomousPeriodic(){
 //  and push ball into pusher wheel (push motor is off)
 //===========================================
 void Holder::WaitForBallToEnter(){
-	int ballDetected = IRsensor.Get();
-	if(ballDetected == SENSORTRIPPED){
+	static bool pBall= false;
+	bool ballDetected = !IRsensor.Get();
+	if (!pBall&&ballDetected)
+	{
+		ftime(&start_time);
+	}
+	ftime(&end_time);
+	if(ballDetected&&(deltaTime(&start_time, &end_time)>BALLDETECTIONDELAY)){
 		printf("WAIT_FOR_BALL_TO_ENTER ball is detected, going to forward limit\n");
 		//gateMotor.Set(0);
 		//Wait(ballDetectionDelay);
-		gateMotor.SetControlMode(CANSpeedController::kPercentVbus);
+		//gateMotor.SetControlMode(CANSpeedController::kPercentVbus);
 		//gateMotor.ConfigNeutralMode(CANSpeedController::NeutralMode::kNeutralMode_Brake);
 		gateMotor.Enable();
-		gateMotor.Set(GATEMOTORSPEED);
-		//gateMotor.Set(FORWARDLIMITPOSITION);
+//		gateMotor.Set(GATEMOTORSPEED);
+		gateMotor.Set(FORWARDLIMITPOSITION);
 		state=GO_TO_FORWARD_LIMIT;
 	}
+	pBall=ballDetected;
 }
 //===========================================
 //void Holder::SetGateToForwardLimit
@@ -220,8 +244,19 @@ void Holder::WaitForBallToEnter(){
 //- then go to next state and fake pushRequested
 //===========================================
 void Holder::SetGateToForwardLimit(){
+	static float motorPreVal=0;
+	float currVal=gateMotor.Get();
+	if(fabs(currVal-motorPreVal)>.0001)
+	{
+		motorPreVal=currVal;
+		std::cout<<"motor.get = "<<motorPreVal<<std::endl;
+	}
+
 	bool atTarget = IsAtForwardLimit();
 	if(atTarget){
+//		gateMotor.SetControlMode(CANTalon::kPercentVbus);
+//		gateMotor.Set(currVal);
+		gateMotor.Disable();
 		printf("GO_TO_FORWARD_LIMIT at forward limit, waiting for ball to leave\n");
 		state=WAIT_FOR_PUSH_REQUEST;
 #ifdef PUSH_EMULATION
@@ -248,8 +283,9 @@ void Holder::WaitForPushRequest(){
 		printf("pushing ball to fly wheels\n");
 		SetPushMotorSpeed(PUSHMOTORSPEED);
 		pushRequested = false;
-		state=WAIT_FOR_BALL_TO_LEAVE;
+		gateMotor.Enable();
 		ftime(&start_time);
+		state=WAIT_FOR_BALL_TO_LEAVE;
 	}
 }
 
@@ -263,26 +299,53 @@ void Holder::WaitForPushRequest(){
 //- Set gateMotor to reverse speed
 //===========================================
 void Holder::WaitForBallToLeave(){
-	int ballDetected = IRsensor.Get();
-	if(ballDetected != SENSORTRIPPED){
-		ftime(&end_time);
-		double delt=deltaTime(&start_time, &end_time);
-		//printf("WAIT_FOR_BALL_TO_LEAVE ball is not detected delt=%g\n",delt);
-		if(delt >= ballDetectionDelay){
-			pushComplete = true;
-			SetPushMotorSpeed(0);
+	ftime(&end_time);
+	double delt=deltaTime(&start_time, &end_time);
+	//printf("WAIT_FOR_BALL_TO_LEAVE ball is not detected delt=%g\n",delt);
+	if(delt >= ballDetectionDelay){
+		int ballDetected = !IRsensor.Get();
+		if(ballDetected)
+		{
+			pushComplete = PUSH_ERROR;
+			std::cout<<"Holder: push failed!"<<std::endl;
+			SetPushMotorSpeed(-1*PUSHMOTORSPEED);
+			gateMotor.Set(0);
+			state= BALL_PUSH_ERR_1;
+		}
+		else
+		{
+			pushComplete = PUSH_COMPLETE;
 			printf("going to reverse limit\n");
+			SetPushMotorSpeed(0);
+			gateMotor.Set(0);
+			state=GO_TO_REVERSE_LIMIT;
 			//gateMotor.Set(0);
 			//Wait(ballDetectionDelay);
 			//gateMotor.SetPID(P,I,D);
-			state=GO_TO_REVERSE_LIMIT;
 			//gateMotor.SetPosition(FORWARDLIMITPOSITION);
-			gateMotor.Set(-GATEMOTORSPEED);
 			//gateMotor.Set(0);
 		}
 	}
 }
-
+void Holder::RemoveBall()
+{
+	if(IsAtReverseLimit())
+	{
+		gateMotor.SetPosition(0);
+		gateMotor.ClearIaccum();
+		ftime(&start_time);
+		state = BALL_PUSH_ERR_2;
+	}
+}
+void Holder::ReversePush()
+{
+	ftime(&end_time);
+	if(deltaTime(&start_time, &end_time)>3000)
+	{
+		SetPushMotorSpeed(0);
+		state = WAIT_FOR_BALL_TO_ENTER;
+	}
+}
 //===========================================
 //void Holder::SetGateToReverseLimit
 //===========================================

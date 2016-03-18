@@ -9,7 +9,7 @@
 #define SRC_HOLDER_H_
 #define CANTALON_PUSHER
 #define CANTALON_GATE
-#define GATEMOTOR_GR 71
+#define GATEMOTOR_GR 26.9
 #define GATEMOTOR_ET 7
 #include <WPILib.h>
 #include <time.h>
@@ -20,7 +20,9 @@ enum {
 	GO_TO_FORWARD_LIMIT,
 	WAIT_FOR_PUSH_REQUEST,
 	WAIT_FOR_BALL_TO_LEAVE,
-	GO_TO_REVERSE_LIMIT
+	GO_TO_REVERSE_LIMIT,
+	BALL_PUSH_ERR_1,
+	BALL_PUSH_ERR_2
 };
 
 
@@ -32,7 +34,7 @@ class Holder {
 	struct timeb end_time;
 	bool atReverseLimit;
 	bool atForwardLimit;
-	bool pushComplete;
+	int pushComplete;
 	bool pushRequested;
 	bool foundZero;
 	int state;
@@ -48,13 +50,6 @@ class Holder {
 	Victor pushMotor;
 #endif
 
-#ifdef CANTALON_GATE
-	int revGateLimit;
-	int fwdGateLimit;
-#else
-	DigitalInput revGateLimit;
-	DigitalInput fwdGateLimit;
-#endif
 
 	DigitalInput IRsensor;
 
@@ -64,10 +59,17 @@ class Holder {
 	void WaitForPushRequest();
 	void WaitForBallToLeave();
 	void SetGateToReverseLimit();
+	void RemoveBall();
+	void ReversePush();
 	void SetPushMotorSpeed(double);
 	int deltaTime(struct timeb* first, struct timeb* after);
 public:
-	Holder(int mtr1,int mtr2,int ls1, int ls2,int IR);
+	Holder(int mtr1,int mtr2,int IR);
+	enum push_states {
+		PUSH_NOT_COMPLETE = 0,
+		PUSH_COMPLETE = 1,
+		PUSH_ERROR = 2,
+	};
 	void PushBall();
 	void AutoHold();
 	void Init();
@@ -79,7 +81,7 @@ public:
 	void TeleopPeriodic();
 	void AutonomousInit();
 	void AutonomousPeriodic();
-	bool CheckPushed();
+	int CheckPushed();
 	bool IsLoaded();
 	bool IsAtForwardLimit();
 	bool IsAtReverseLimit();
