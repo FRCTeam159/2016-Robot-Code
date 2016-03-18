@@ -35,18 +35,21 @@ double ShootAngleAccelerometer::PIDGet()
 	dAngleX = atan(result) * (180.0/PI);
 
 	// Y Axis
-	result = accelerationY / sqrt(x + z);
+	result = accelerationY / sqrt(x);
 	dAngleY = atan(result) * (180.0/PI);
+	dAngleY=90-dAngleY;
 
 	// Z Axis
 	result = accelerationZ / sqrt(x + y);
 	dAngleZ = atan(result) * (180.0/PI);
-	dAngleZ=90-dAngleZ;
+
 	//		printf("digital angles x=%f, y=%f, z=%f analog x=%f y=%f z=%f\n",
 	//				dAngleX, dAngleY, dAngleZ, angleX, angleY, angleZ);
 //	printf("%f, %f, %f\n",
 //	dAngleX, dAngleY, dAngleZ);
-	return(dAngleZ);
+	float mountErr=4;
+	std::cout<<"angle = "<<dAngleY-mountErr<<std::endl;
+	return(dAngleY-mountErr);
 }
 void ShootAngleAccelerometer::SetPIDSourceType(PIDSourceType type)
 {

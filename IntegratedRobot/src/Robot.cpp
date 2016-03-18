@@ -65,7 +65,7 @@ private:
 		SmartDashboard::PutData("Auto Modes", chooser);
 
 		forwardCamera= new USBCamera("cam2", true);
-		reverseCamera= new USBCamera("cam3", true);
+		reverseCamera= new USBCamera("cam1", true);
 
 		forwardCamera->SetExposureManual(1);
 		forwardCamera->OpenCamera();
@@ -75,6 +75,7 @@ private:
 
 		horizontal = new Target(forwardCamera);
 		leftDrive= new CANTalon(CAN_LEFT_DRIVE);
+		leftDrive->ConfigLimitMode(CANTalon::kLimitMode_SrxDisableSwitchInputs);
 		rightDrive = new CANTalon(CAN_RIGHT_DRIVE);
 		rightDrive->SetInverted(true);
 		leftSlave = new SRXSlave(CAN_LEFT_SLAVE,CAN_LEFT_DRIVE);
@@ -82,21 +83,21 @@ private:
 		mydrive = new TankDrive(leftDrive, rightDrive, leftSlave, rightSlave, 1);
 		drivePID= new PIDController(CAM_DRIVE_P,CAM_DRIVE_I ,CAM_DRIVE_D, horizontal, mydrive);
 		drivePID->SetOutputRange(-1, 1);
-		flyWheelOne= new SRXSpeed(CAN_FLYWHEEL_L,0,0,0,1);//zeros are PID, 1 is maxticks
+		flyWheelOne= new SRXSpeed(CAN_FLYWHEEL_L,0,0,0,1);//zeros are PID, 1 is maxticks TODO
 		flyWheelTwo= new SRXSpeed(CAN_FLYWHEEL_R,0,0,0,1);
 		shooterAngleMotor = new CANTalon(CAN_SHOOT_ANGLE);
-		shooterAngleMotor->ConfigRevLimitSwitchNormallyOpen(false);
+		shooterAngleMotor->ConfigRevLimitSwitchNormallyOpen(true);
 		shooterAngleMotor->SetControlMode(CANTalon::kPercentVbus);
-		shooterAngleMotor->SetInverted(true);
+		shooterAngleMotor->SetInverted(false);
 		shooterAngle = new ShootAngleAccelerometer(I2C::Port::kMXP);
-		vertAnglePID = new PIDController(.1, 0,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
+		vertAnglePID = new PIDController(.01, 0.0001,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
 		vertAnglePID->SetOutputRange(-1,1);
 		vertAnglePID->SetToleranceBuffer(5);
-		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, vertAnglePID);
+//		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, vertAnglePID);
 		lidar = new Lidar(I2C::kMXP, 0x62);
 		stick= new Joystick(0);
-		holder = new Holder(HOLDER_GATE,HOLDER_PUSHER,REVGATELIMIT,FWDGATELIMIT,IRSENSOR);
-		loader = new Loader(CAN_LIFTER, CAN_ROLLER, I2C::Port::kOnboard);
+		holder = new Holder(HOLDER_GATE,HOLDER_PUSHER,IRSENSOR);
+		loader = new Loader(CAN_LIFTER, CAN_ROLLER, I2C::Port::kMXP);
 		sendMe=imaqCreateImage(IMAQ_IMAGE_HSL, 0);
 
 	}
@@ -145,9 +146,14 @@ private:
 
 	void TeleopInit()
 	{
-		mydrive->ConfigTeleop(TEL_DRIVE_P, TEL_DRIVE_I, TEL_DRIVE_D); //configuring for teleop with input for PID
+//		mydrive->ConfigTeleop(TEL_DRIVE_P, TEL_DRIVE_I, TEL_DRIVE_D); //configuring for teleop with input for PID
+		mydrive->ConfigForPID();
 		visionState = 0;
+		loader->SetLow();
 		holder->TeleopInit(); //configuring for teleop
+		flyWheelOne->SetControlMode(CANTalon::kPercentVbus);
+		flyWheelTwo->SetControlMode(CANTalon::kPercentVbus);
+		vertAnglePID->SetSetpoint(20);
 	}
 
 	void TeleopPeriodic()
@@ -158,12 +164,22 @@ private:
 		{
 			if(visionState==GetForwardImage||visionState==SendForwardImage)
 			{
-				visionState=StartCalibrations;
+//				visionState=StartCalibrations;
+				holder->PushBall();
 			}
 			if(visionState==GetReverseImage||visionState==SendReverseImage)
 			{
 				loader->Continue();
 			}
+		}
+		if(button1)
+		{
+			flyWheelOne->Set(.6);
+			flyWheelTwo->Set(-.6);
+		}
+		else{
+			flyWheelOne->Set(0);
+			flyWheelTwo->Set(0);
 		}
 		pButton1 = button1;
 
@@ -176,10 +192,10 @@ private:
 			}
 			else if (visionState==GetReverseImage||visionState==SendReverseImage)
 			{
-				if(!loader->GetState()==Loader::LOW)//loader is doing something
-					loader->Cancel();
+				if(!(loader->GetState()==Loader::LOW))//loader is doing something
+					{loader->Cancel();}
 				else
-					visionState=GetForwardImage;//switch to forward camera
+					{visionState=GetForwardImage;}//switch to forward camera
 			}
 			else if (visionState==GetForwardImage||visionState==SendForwardImage)
 			{
@@ -188,6 +204,49 @@ private:
 		}
 		pButton2=button2;
 
+		//detect when we get the ball
+		if((loader->GetState()==Loader::HIGH)&&holder->IsLoaded())
+		{
+			loader->SetLow();
+			if(visionState==GetReverseImage||visionState==SendReverseImage)
+			{
+				visionState=GetForwardImage;
+			}
+		}
+		//____BEGIN TEST CODE_______ TODO: Remove this
+		static float targetAngle=20;
+		static bool pbutton3 = false;
+		static bool pbutton5 = false;
+
+		bool button3=stick->GetRawButton(3);
+		bool button5=stick->GetRawButton(5);
+		if(button3&&!pbutton3)
+		{
+			targetAngle-=5;
+			std::cout<<"target angle = "<<targetAngle<<std::endl;
+		}
+		if(button5&&!pbutton5)
+		{
+			targetAngle+=5;
+			std::cout<<"target angle = "<<targetAngle<<std::endl;
+		}
+		pbutton3 = button3;
+		pbutton5 = button5;
+		if(stick->GetRawButton(4))
+		{
+
+			vertAnglePID->SetSetpoint(targetAngle);
+			vertAnglePID->Enable();
+		}
+		else
+		{
+			vertAnglePID->Disable();
+		}
+//		if(button2)
+//		{
+//			std::cout<<"angle = "<<shooterAngle->PIDGet()<<std::endl;
+//		}
+		//___END TEST CODE_____
 		if(visionState==GetForwardImage||visionState==SendForwardImage)//using forward camera
 		{
 			mydrive->ArcadeDrive(stick);
@@ -196,14 +255,14 @@ private:
 		{//if using reverse camera, drive in reverse
 			mydrive->RevArcadeDrive(stick);
 		}
-		if(!vertAnglePID->IsEnabled()) //pid controller is not enabled
+		/*if(!vertAnglePID->IsEnabled()) //pid controller is not enabled
 		{//TODO make sure the correct limit switches are plugged into this motor
 			shooterAngleMotor->Set(-.2);//it should stop automatically when it hits the limit switch
-		}
+		}*/
 
 		loader->Obey(); //loader state machine
 		holder->AutoHold(); //holder state machine
-		mylauncher->Obey(); //setting motors
+//		mylauncher->Obey(); //setting motors
 		mydrive->Obey(); //more motor slave stuff
 	}
 

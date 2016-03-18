@@ -14,13 +14,13 @@ private:
 	double analogAccelX;         // variable with smoothed acceleration value
 	double analogAccelY;         // variable with smoothed acceleration value
 	double analogAccelZ;         // variable with smoothed acceleration value
-	double weight = 0.20;
+	double weight = 0.6;
 	double initialX = 0.0;  // values measured when the device was 'flat'
 	double initialY = 0.0;
 	double initialZ = 0.0;
-	double accelerationX;
-	double accelerationY;
-	double accelerationZ;
+	double accelerationX=0;
+	double accelerationY=0;
+	double accelerationZ=0;
 public:
 	void SetPIDSourceType(PIDSourceType);
 	double PIDGet();
