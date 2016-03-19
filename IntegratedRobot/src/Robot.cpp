@@ -320,8 +320,9 @@ private:
 			if(!range==1234)
 			{
 				firstCalibration=true;
-				vertAnglePID->Enable(); //enabling PID controller
-				vertAnglePID->SetSetpoint(20); //setting the PID controller target
+//				vertAnglePID->Enable(); //enabling PID controller
+//				vertAnglePID->SetSetpoint(20); //setting the PID controller target
+				mylauncher->SetAngle(20);
 #if HORIZONTAL_TARGETING ==1
 				mydrive->ConfigForPID();
 #endif
@@ -337,7 +338,7 @@ private:
 		}
 		if(state==SetInitialAngle)
 		{
-			if(vertAnglePID->GetAvgError()<1)
+			if(mylauncher->AngleGood(1))
 				state=GetRangeFromLIDAR;
 		}
 		if(state==GetRangeFromLIDAR)
@@ -458,11 +459,19 @@ private:
 		}
 		if(state==ExitLoop)
 		{
-			state=GetForwardImage;
 			drivePID->Disable();
 			mylauncher->SetTargetSpeed(0);
-			mydrive->ConfigTeleop(TEL_DRIVE_P,TEL_DRIVE_I,TEL_DRIVE_D); //configuring back to init config
-			vertAnglePID->Disable();
+			mylauncher->SetAngle(0);
+//			mydrive->ConfigTeleop(TEL_DRIVE_P,TEL_DRIVE_I,TEL_DRIVE_D); //configuring back to init config
+			if(mylauncher->AngleGood(1))
+			{
+				state=GetForwardImage;
+			}
+			else
+			{
+				state = ExitLoop;
+			}
+//			vertAnglePID->Disable();
 		}
 		return(state);
 	}
