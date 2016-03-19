@@ -48,7 +48,6 @@ double ShootAngleAccelerometer::PIDGet()
 //	printf("%f, %f, %f\n",
 //	dAngleX, dAngleY, dAngleZ);
 	float mountErr=4;
-	std::cout<<"angle = "<<dAngleY-mountErr<<std::endl;
 	return(dAngleY-mountErr);
 }
 void ShootAngleAccelerometer::SetPIDSourceType(PIDSourceType type)

@@ -8,15 +8,21 @@
 #ifndef SRC_LAUNCHER_H_
 #define SRC_LAUNCHER_H_
 class SRXSpeed;
-class PIDController;
+class PIDSource;
+class CANTalon;
 class Launcher {
 private:
 	SRXSpeed *left, *right;
-	PIDController *pid;
+	PIDSource *pid;
+	CANTalon *shootAngle;
+	int cycle=1;
+	float currentAngle;
 	float targetSpeed=0;
 	float targetAngle=0;
+	bool atAngle = false;
+	void ClumsyControl();
 public:
-	Launcher(SRXSpeed*, SRXSpeed*, PIDController*);
+	Launcher(SRXSpeed*, SRXSpeed*, PIDSource*, CANTalon*);
 	void SetTargetSpeed(float);
 	void SetAngle(float);
 	void Obey();

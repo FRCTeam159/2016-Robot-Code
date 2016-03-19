@@ -52,7 +52,7 @@ private:
 	Lidar *lidar;
 	SRXSpeed *flyWheelOne, *flyWheelTwo;
 	Launcher *mylauncher;
-	PIDController *vertAnglePID, *drivePID;
+	PIDController *drivePID, *vertAnglePID;
 	Loader *loader;
 
 	int autoState;
@@ -90,10 +90,10 @@ private:
 		shooterAngleMotor->SetControlMode(CANTalon::kPercentVbus);
 		shooterAngleMotor->SetInverted(false);
 		shooterAngle = new ShootAngleAccelerometer(I2C::Port::kMXP);
-		vertAnglePID = new PIDController(.01, 0.0001,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
-		vertAnglePID->SetOutputRange(-1,1);
-		vertAnglePID->SetToleranceBuffer(5);
-//		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, vertAnglePID);
+//		vertAnglePID = new PIDController(.01, 0.0001,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
+//		vertAnglePID->SetOutputRange(-1,1);
+//		vertAnglePID->SetToleranceBuffer(5);
+		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, shooterAngle, shooterAngleMotor);
 		lidar = new Lidar(I2C::kMXP, 0x62);
 		stick= new Joystick(0);
 		holder = new Holder(HOLDER_GATE,HOLDER_PUSHER,IRSENSOR);
@@ -153,7 +153,8 @@ private:
 		holder->TeleopInit(); //configuring for teleop
 		flyWheelOne->SetControlMode(CANTalon::kPercentVbus);
 		flyWheelTwo->SetControlMode(CANTalon::kPercentVbus);
-		vertAnglePID->SetSetpoint(20);
+//		vertAnglePID->SetSetpoint(20);
+//		vertAnglePID->Disable();
 	}
 
 	void TeleopPeriodic()
@@ -232,13 +233,10 @@ private:
 		}
 		pbutton3 = button3;
 		pbutton5 = button5;
+		shooterAngle->PIDGet();
 		if(stick->GetRawButton(4))
 		{
-			ClumsyControl(targetAngle);
-		}
-		else
-		{
-			shooterAngleMotor->Set(0);
+			mylauncher->SetAngle(targetAngle);
 		}
 //		if(button2)
 //		{
@@ -260,7 +258,7 @@ private:
 
 		loader->Obey(); //loader state machine
 		holder->AutoHold(); //holder state machine
-//		mylauncher->Obey(); //setting motors
+		mylauncher->Obey(); //setting motors
 		mydrive->Obey(); //more motor slave stuff
 	}
 
@@ -593,21 +591,7 @@ private:
 		}
 		return state;
 	}
-	//TODO move this function to launcher
-	void ClumsyControl(float target)
-	{
-		float currentAngle = shooterAngle->PIDGet();
-		if (fabs(target-currentAngle<2))
-			shooterAngleMotor->Set(0);
-		else if(currentAngle>target)
-		{
-			shooterAngleMotor->Set(.8);
-		}
-		else if (currentAngle < target)
-		{
-			shooterAngleMotor->Set(-.35-max(.5, target-currentAngle));
-		}
-	}
+
 };
 
 START_ROBOT_CLASS(Robot)
