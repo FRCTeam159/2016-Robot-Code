@@ -234,13 +234,11 @@ private:
 		pbutton5 = button5;
 		if(stick->GetRawButton(4))
 		{
-
-			vertAnglePID->SetSetpoint(targetAngle);
-			vertAnglePID->Enable();
+			ClumsyControl(targetAngle);
 		}
 		else
 		{
-			vertAnglePID->Disable();
+			shooterAngleMotor->Set(0);
 		}
 //		if(button2)
 //		{
@@ -594,6 +592,21 @@ private:
 			vertAnglePID->Disable();
 		}
 		return state;
+	}
+	//TODO move this function to launcher
+	void ClumsyControl(float target)
+	{
+		float currentAngle = shooterAngle->PIDGet();
+		if (fabs(target-currentAngle<2))
+			shooterAngleMotor->Set(0);
+		else if(currentAngle>target)
+		{
+			shooterAngleMotor->Set(.8);
+		}
+		else if (currentAngle < target)
+		{
+			shooterAngleMotor->Set(-.35-max(.5, target-currentAngle));
+		}
 	}
 };
 
