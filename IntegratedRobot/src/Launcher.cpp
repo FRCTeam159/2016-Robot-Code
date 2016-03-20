@@ -10,6 +10,7 @@
 #include <SRXConfigs/SRXSpeed.h>
 Launcher::Launcher(SRXSpeed *l, SRXSpeed* r, PIDSource* p, CANTalon* a)
 :left(l), right(r), pid(p), shootAngle(a){
+	right->SetInverted(true);
 }
 
 Launcher::~Launcher() {
@@ -27,7 +28,7 @@ void Launcher::SetTargetSpeed(float speed)
 {
 	targetSpeed=speed;
 	left->SetTargetSpeed(targetSpeed);
-	right->SetTargetSpeed(-targetSpeed);
+	right->SetTargetSpeed(targetSpeed);
 }
 
 void Launcher::Obey()
