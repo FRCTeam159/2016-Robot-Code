@@ -41,7 +41,11 @@ void Launcher::Obey()
 
 void Launcher::SetAngle(float angle)
 {
-	targetAngle=angle;
+	targetAngle = fmax(fmin(angle, 55),0);
+	if(!targetAngle==angle)
+	{
+		std::cout<<"bad angle request!";
+	}
 	atAngle = false;
 	cycle = 1;
 //	pid->SetSetpoint(angle);
@@ -67,7 +71,9 @@ void Launcher::Aim(float range)//takes horizontal range, in meters
 	float Iwheel=.004891;//the .168 below is ~ distance from flywheel center to center of shooter
 	float targetSpeed= V0*((((.168)/Iwheel)*(.295/2))+(1/r));//target speed in rad/s
 	targetSpeed*=900/(2*3.1415);//convert from radians to ticks
-	SetTargetSpeed(targetSpeed);
+	std::cout<<"target speed: "<<targetSpeed<<std::endl;
+//	SetTargetSpeed(targetSpeed);
+	SetTargetSpeed(.3);
 
 }
 void Launcher::ClumsyControl()
@@ -87,12 +93,12 @@ void Launcher::ClumsyControl()
 			else if(currentAngle<targetAngle)
 			{
 				std::cout<<"going up!"<<std::endl;
-				shootAngle->Set(.8);
+				shootAngle->Set(.9);
 			}
 			else if (currentAngle > targetAngle)
 			{
 				std::cout<<"going down!"<<std::endl;
-				shootAngle->Set(-.4-fmin(.05, .01*(currentAngle-targetAngle)));
+				shootAngle->Set(-.75-fmin(.05, .01*(currentAngle-targetAngle)));
 			}
 		}
 	}
