@@ -55,8 +55,12 @@ private:
 	PIDController *drivePID, *vertAnglePID;
 	Loader *loader;
 
-	int autoState;
-	bool pButton1=false, pButton2=false, pButton3=false;
+	struct timeb start_time;
+	struct timeb end_time;
+	int autoState, manualState=0;
+	float targetAngle=20;
+	bool pButton1=false, pButton2=false, pButton4=false;
+	bool aimingManually = false;
 	void RobotInit()
 	{
 		chooser = new SendableChooser();
@@ -165,8 +169,9 @@ private:
 		{
 			if(visionState==GetForwardImage||visionState==SendForwardImage)
 			{
+				//if(!aimingManually)
 //				visionState=StartCalibrations;
-				holder->PushBall();
+
 			}
 			if(visionState==GetReverseImage||visionState==SendReverseImage)
 			{
@@ -175,12 +180,10 @@ private:
 		}
 		if(button1)
 		{
-			flyWheelOne->Set(.6);
-			flyWheelTwo->Set(-.6);
+			mylauncher->SetTargetSpeed(.6);
 		}
 		else{
-			flyWheelOne->Set(0);
-			flyWheelTwo->Set(0);
+			mylauncher->SetTargetSpeed(0);
 		}
 		pButton1 = button1;
 
@@ -214,35 +217,7 @@ private:
 				visionState=GetForwardImage;
 			}
 		}
-		//____BEGIN TEST CODE_______ TODO: Remove this
-		static float targetAngle=20;
-		static bool pbutton3 = false;
-		static bool pbutton5 = false;
 
-		bool button3=stick->GetRawButton(3);
-		bool button5=stick->GetRawButton(5);
-		if(button3&&!pbutton3)
-		{
-			targetAngle-=5;
-			std::cout<<"target angle = "<<targetAngle<<std::endl;
-		}
-		if(button5&&!pbutton5)
-		{
-			targetAngle+=5;
-			std::cout<<"target angle = "<<targetAngle<<std::endl;
-		}
-		pbutton3 = button3;
-		pbutton5 = button5;
-		shooterAngle->PIDGet();
-		if(stick->GetRawButton(4))
-		{
-			mylauncher->SetAngle(targetAngle);
-		}
-//		if(button2)
-//		{
-//			std::cout<<"angle = "<<shooterAngle->PIDGet()<<std::endl;
-//		}
-		//___END TEST CODE_____
 		if(visionState==GetForwardImage||visionState==SendForwardImage)//using forward camera
 		{
 			mydrive->ArcadeDrive(stick);
@@ -251,10 +226,23 @@ private:
 		{//if using reverse camera, drive in reverse
 			mydrive->RevArcadeDrive(stick);
 		}
-		/*if(!vertAnglePID->IsEnabled()) //pid controller is not enabled
-		{//TODO make sure the correct limit switches are plugged into this motor
-			shooterAngleMotor->Set(-.2);//it should stop automatically when it hits the limit switch
-		}*/
+		bool button4 = stick->GetRawButton(4);
+		if(button4&&!pButton4)
+		{
+			aimingManually=!aimingManually;
+			if(aimingManually)
+			{
+				manualState=0;
+				targetAngle = 20;
+				mylauncher->SetAngle(targetAngle);
+			}
+			else
+				mylauncher->SetAngle(0);
+		}
+		pButton4 = button4;
+
+		if(aimingManually)
+			ManualAim();
 
 		loader->Obey(); //loader state machine
 		holder->AutoHold(); //holder state machine
@@ -612,7 +600,49 @@ private:
 		}
 		return state;
 	}
+	void ManualAim()
+	{
+		static bool pbutton3 = false;
+		static bool pbutton5 = false;
+		bool button3=stick->GetRawButton(3);
+		bool button5=stick->GetRawButton(5);
+		if(button3&&!pbutton3)
+		{
+			targetAngle-=5;
+			std::cout<<"target angle = "<<targetAngle<<std::endl;
+			mylauncher->SetAngle(targetAngle);
+		}
+		if(button5&&!pbutton5)
+		{
+			targetAngle+=5;
+			std::cout<<"target angle = "<<targetAngle<<std::endl;
+			mylauncher->SetAngle(targetAngle);
+		}
+		pbutton3 = button3;
+		pbutton5 = button5;
+		shooterAngle->PIDGet();//calling this frequently helps with smoothing
+		if((manualState == 0) &&stick->GetRawButton(1))
+		{
+			manualState = 1;
+			ftime(&start_time);
+		}
+		else if(manualState == 1 )
+		{
+			ftime(&end_time);
+			if (deltaTime(&start_time, &end_time)>1500)
+			{
+				holder->PushBall();
+				manualState=2;
+			}
 
+		}
+
+	}
+	int deltaTime(struct timeb* first, struct timeb* after){
+		int diff =after->time-first->time;
+		int mdiff= after->millitm-first->millitm;
+		return((1000*diff)+mdiff);
+	}
 };
 
 START_ROBOT_CLASS(Robot)
