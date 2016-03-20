@@ -316,6 +316,7 @@ private:
 		//states 4-8 acquire and process an image, then wait for dashboard confirmation
 		if(state==StartCalibrations)
 		{
+			std::cout<<"state: StartCalibrations"<<std::endl;
 			range = lidar->GetDistance(); //getting distance
 			if(!range==1234)
 			{
@@ -338,11 +339,13 @@ private:
 		}
 		if(state==SetInitialAngle)
 		{
+			std::cout<<"state: SetInitialAngle"<<std::endl;
 			if(mylauncher->AngleGood(1))
 				state=GetRangeFromLIDAR;
 		}
 		if(state==GetRangeFromLIDAR)
 		{
+			std::cout<<"state: GetRangeFromLIDAR"<<std::endl;
 			int confirmrange = lidar->GetDistance();
 			float angle=shooterAngle->PIDGet();
 			confirmrange=confirmrange*cos(angle*3.14/180);
@@ -364,17 +367,20 @@ private:
 		}
 		if(state==AcquireTargetImage)
 		{
+			std::cout<<"state: AcquireTargetImage"<<std::endl;
 			horizontal->AcquireImage();
 			state=ThresholdTargetImage;
 		}
 		if(state==ThresholdTargetImage)
 		{
+			std::cout<<"state: ThresholdTargetImage"<<std::endl;
 			horizontal->ThresholdImage();
 			state=ProcessTargetImage;
 		}
 
 		if(state==ProcessTargetImage)
 		{
+			std::cout<<"state: ProcessTargetImage"<<std::endl;
 			float targetOffset=horizontal->calculateTargetOffset(range);
 			best=horizontal->GetBestParticle();
 #if HORIZONTAL_TARGETING == 0
@@ -403,6 +409,7 @@ private:
 		}
 		if(state==WaitForCalibrations)
 		{
+			std::cout<<"state: WaitForCalibrations"<<std::endl;
 			bool good = mylauncher->AngleGood(2);//use this
 			good = good && mylauncher->SpeedGood(200);//use this too
 			good = good && drivePID->GetError()<3 && drivePID->IsEnabled();//this is also handy
@@ -429,6 +436,7 @@ private:
 		}
 		if(state==CreateDebugImage)
 		{
+			std::cout<<"state: CreateDebugImage"<<std::endl;
 			horizontal->CreateDebugImage();
 			horizontal->AnnotateDebugImage(best);
 			horizontal->SendDebugImage();
@@ -436,6 +444,7 @@ private:
 		}
 		if(state==RequestConfirmation)// waits for operator confirmation
 		{//the operator can exit loop by hitting button 2 (controlled in Teleop periodic)
+			std::cout<<"state: RequestConfirmation"<<std::endl;
 			if(stick->GetRawButton(AIM))//operator accepts image
 			{
 				state=ShootBall;
@@ -443,11 +452,13 @@ private:
 		}
 		if(state==ShootBall)
 		{
+			std::cout<<"state: ShootBall"<<std::endl;
 			holder->PushBall(); //pushes ball with pusher motor
 			state=CheckBall;
 		}
 		if(state==CheckBall)
 		{
+			std::cout<<"state: CheckBall"<<std::endl;
 			if(holder->CheckPushed())
 			{
 				state=ExitLoop;
@@ -459,6 +470,7 @@ private:
 		}
 		if(state==ExitLoop)
 		{
+			std::cout<<"state: ExitLoop"<<std::endl;
 			drivePID->Disable();
 			mylauncher->SetTargetSpeed(0);
 			mylauncher->SetAngle(0);

@@ -74,7 +74,7 @@ void Launcher::ClumsyControl()
 		cycle=(cycle+1)%10;
 		if(cycle!=0){
 			currentAngle = pid->PIDGet();
-			std::cout<<"angle = "<<currentAngle<<std::endl;
+//			std::cout<<"angle = "<<currentAngle<<std::endl;
 			shootAngle->Set(0);
 		}
 		else if(cycle==0){
