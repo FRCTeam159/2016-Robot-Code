@@ -249,7 +249,7 @@ void Holder::SetGateToForwardLimit(){
 	if(fabs(currVal-motorPreVal)>.0001)
 	{
 		motorPreVal=currVal;
-		std::cout<<"motor.get = "<<motorPreVal<<std::endl;
+//		std::cout<<"motor.get = "<<motorPreVal<<std::endl;
 	}
 
 	bool atTarget = IsAtForwardLimit();
@@ -308,7 +308,7 @@ void Holder::WaitForBallToLeave(){
 		{
 			pushComplete = PUSH_ERROR;
 			std::cout<<"Holder: push failed!"<<std::endl;
-			SetPushMotorSpeed(-1*PUSHMOTORSPEED);
+			SetPushMotorSpeed(-0.25*PUSHMOTORSPEED);
 			gateMotor.Set(0);
 			state= BALL_PUSH_ERR_1;
 		}

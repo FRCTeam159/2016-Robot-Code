@@ -71,10 +71,9 @@ private:
 		forwardCamera= new USBCamera("cam2", true);
 		reverseCamera= new USBCamera("cam1", true);
 
-		forwardCamera->SetExposureManual(1);
 		forwardCamera->OpenCamera();
 		reverseCamera->OpenCamera();
-		forwardCamera->StartCapture();
+
 		reverseCamera->StartCapture();
 
 		horizontal = new Target(forwardCamera);
@@ -103,6 +102,7 @@ private:
 		holder = new Holder(HOLDER_GATE,HOLDER_PUSHER,IRSENSOR);
 		loader = new Loader(CAN_LIFTER, CAN_ROLLER, I2C::Port::kMXP);
 		sendMe=imaqCreateImage(IMAQ_IMAGE_HSL, 0);
+		forwardCamera->SetExposureManual(1);
 
 	}
 
@@ -152,6 +152,7 @@ private:
 	{
 //		mydrive->ConfigTeleop(TEL_DRIVE_P, TEL_DRIVE_I, TEL_DRIVE_D); //configuring for teleop with input for PID
 		mydrive->ConfigForPID();
+		forwardCamera->StartCapture();
 		visionState = 0;
 		loader->SetLow();
 		holder->TeleopInit(); //configuring for teleop
@@ -163,14 +164,14 @@ private:
 
 	void TeleopPeriodic()
 	{
-		visionState = visionStateMachine(visionState);
+		visionState = visionStateMachine();
 		bool button1=stick->GetRawButton(AIM);
 		if(button1&&!pButton1)
 		{
 			if(visionState==GetForwardImage||visionState==SendForwardImage)
 			{
-				//if(!aimingManually)
-//				visionState=StartCalibrations;
+				if(!aimingManually)
+					visionState=StartCalibrations;
 
 			}
 			if(visionState==GetReverseImage||visionState==SendReverseImage)
@@ -178,11 +179,12 @@ private:
 				loader->Continue();
 			}
 		}
-		if(button1)
+		if(button1&&aimingManually)
 		{
 			mylauncher->SetTargetSpeed(.6);
 		}
-		else{
+		else if (aimingManually)
+		{
 			mylauncher->SetTargetSpeed(0);
 		}
 		pButton1 = button1;
@@ -237,6 +239,7 @@ private:
 				mylauncher->SetAngle(targetAngle);
 			}
 			else
+				mylauncher->SetTargetSpeed(0);
 				mylauncher->SetAngle(0);
 		}
 		pButton4 = button4;
@@ -273,40 +276,41 @@ private:
 		CheckBall = 14,
 		SetInitialAngle = 15,
 	};
-	int visionStateMachine(int state)
+	int visionStateMachine()
 	{
 		static int range;
 		static float horizError; //used in horizontal targeting
 		static bool firstCalibration;
 		static Particle *best=NULL;
 		//states 0 and 1 get and send images from the forward camera
-		if (state==GetForwardImage)
+		if (visionState==GetForwardImage)
 		{
 			forwardCamera->GetImage(sendMe);
-			state=SendForwardImage;
+			visionState=SendForwardImage;
 		}
-		if(state==SendForwardImage)
+		if(visionState==SendForwardImage)
 		{
 			CameraServer::GetInstance()->SetImage(sendMe);
-			state=GetForwardImage;
+			visionState=GetForwardImage;
 		}
 		//states 2 and 3 get and send images from reverse camera
-		if (state==GetReverseImage)
+		if (visionState==GetReverseImage)
 		{
 			reverseCamera->GetImage(sendMe);
-			state=SendReverseImage;
+			visionState=SendReverseImage;
 		}
-		if (state==SendReverseImage)
+		if (visionState==SendReverseImage)
 		{
 			CameraServer::GetInstance()->SetImage(sendMe);
-			state=GetReverseImage;
+			visionState=GetReverseImage;
 		}
 		//states 4-8 acquire and process an image, then wait for dashboard confirmation
-		if(state==StartCalibrations)
+		if(visionState==StartCalibrations)
 		{
-			std::cout<<"state: StartCalibrations"<<std::endl;
+			std::cout<<"state: StartCalibrations";
 			range = lidar->GetDistance(); //getting distance
-			if(!range==1234)
+			std::cout<<", range = "<<range<<(!range==1234)<<std::endl;
+			if(!(range==1234))
 			{
 				firstCalibration=true;
 //				vertAnglePID->Enable(); //enabling PID controller
@@ -318,20 +322,20 @@ private:
 #if HORIZONTAL_TARGETING ==0
 				mydrive->ConfigAuto(0,0,0);
 #endif
-				state= SetInitialAngle;
+				visionState= SetInitialAngle;
 			}
 			else
 			{
-				state=StartCalibrations;
+				visionState=StartCalibrations;
 			}
 		}
-		if(state==SetInitialAngle)
+		if(visionState==SetInitialAngle)
 		{
 			std::cout<<"state: SetInitialAngle"<<std::endl;
 			if(mylauncher->AngleGood(1))
-				state=GetRangeFromLIDAR;
+				visionState=GetRangeFromLIDAR;
 		}
-		if(state==GetRangeFromLIDAR)
+		if(visionState==GetRangeFromLIDAR)
 		{
 			std::cout<<"state: GetRangeFromLIDAR"<<std::endl;
 			int confirmrange = lidar->GetDistance();
@@ -340,36 +344,37 @@ private:
 			if(fabs(confirmrange-range)<5){
 				range=(range+confirmrange)/2;
 				mylauncher->Aim(range/100);
-				state=AcquireTargetImage;
+				visionState=AcquireTargetImage;
 			}
 			else if(confirmrange>range)
 			{
 				range=confirmrange;
 				mylauncher->Aim(range/100);
-				state=AcquireTargetImage;
+				visionState=AcquireTargetImage;
 			}
 			else
 			{
-				state=GetRangeFromLIDAR;
+				visionState=GetRangeFromLIDAR;
 			}
 		}
-		if(state==AcquireTargetImage)
+		if(visionState==AcquireTargetImage)
 		{
-			std::cout<<"state: AcquireTargetImage"<<std::endl;
+			std::cout<<"state: AcquireTargetImage, range ="<<range<<std::endl;
 			horizontal->AcquireImage();
-			state=ThresholdTargetImage;
+			visionState=ThresholdTargetImage;
 		}
-		if(state==ThresholdTargetImage)
+		if(visionState==ThresholdTargetImage)
 		{
 			std::cout<<"state: ThresholdTargetImage"<<std::endl;
 			horizontal->ThresholdImage();
-			state=ProcessTargetImage;
+			visionState=ProcessTargetImage;
 		}
 
-		if(state==ProcessTargetImage)
+		if(visionState==ProcessTargetImage)
 		{
-			std::cout<<"state: ProcessTargetImage"<<std::endl;
+			std::cout<<"state: ProcessTargetImage";
 			float targetOffset=horizontal->calculateTargetOffset(range);
+			std::cout<<"...calculating best particle";
 			best=horizontal->GetBestParticle();
 #if HORIZONTAL_TARGETING == 0
 			int currentOffset=(horizontal->GetBestParticle())->CenterX-160;
@@ -380,6 +385,7 @@ private:
 			mydrive->SetPosTargets(-1*horizError, horizError);//set drive targets
 #endif
 #if HORIZONTAL_TARGETING == 1
+			std::cout<<"... setting drive target"<<std::endl;
 			if(best->CenterX!=1234)//1234 is error
 			{
 				if(!drivePID->IsEnabled()) //if drive PID controller is not enabled
@@ -391,89 +397,88 @@ private:
 			else
 			{
 				drivePID->Disable();
+				mydrive->PIDWrite(0);
 			}
 #endif
-			state=WaitForCalibrations;
+			visionState=WaitForCalibrations;
 		}
-		if(state==WaitForCalibrations)
+		if(visionState==WaitForCalibrations)
 		{
 			std::cout<<"state: WaitForCalibrations"<<std::endl;
 			bool good = mylauncher->AngleGood(2);//use this
-			good = good && mylauncher->SpeedGood(200);//use this too
+//			good = good && mylauncher->SpeedGood(200);//use this too
 			good = good && drivePID->GetError()<3 && drivePID->IsEnabled();//this is also handy
 			if(good)//check to see if motors are close enough to target positions
 			{
 				if(firstCalibration)
 				{
-					state=AcquireTargetImage;
+					visionState=AcquireTargetImage;
 					firstCalibration=false;
 				}
 
 				else
 				{
-					state=CreateDebugImage;
+					visionState=CreateDebugImage;
 				}
 
 			}
 			else
 			{
-				state=AcquireTargetImage;
+				visionState=AcquireTargetImage;
 
 			}
 
 		}
-		if(state==CreateDebugImage)
+		if(visionState==CreateDebugImage)
 		{
 			std::cout<<"state: CreateDebugImage"<<std::endl;
 			horizontal->CreateDebugImage();
 			horizontal->AnnotateDebugImage(best);
 			horizontal->SendDebugImage();
-			state=RequestConfirmation;
+			visionState=RequestConfirmation;
 		}
-		if(state==RequestConfirmation)// waits for operator confirmation
+		if(visionState==RequestConfirmation)// waits for operator confirmation
 		{//the operator can exit loop by hitting button 2 (controlled in Teleop periodic)
 			std::cout<<"state: RequestConfirmation"<<std::endl;
 			if(stick->GetRawButton(AIM))//operator accepts image
 			{
-				state=ShootBall;
+				visionState=ShootBall;
 			}
 		}
-		if(state==ShootBall)
+		if(visionState==ShootBall)
 		{
 			std::cout<<"state: ShootBall"<<std::endl;
 			holder->PushBall(); //pushes ball with pusher motor
-			state=CheckBall;
+			visionState=CheckBall;
 		}
-		if(state==CheckBall)
+		if(visionState==CheckBall)
 		{
 			std::cout<<"state: CheckBall"<<std::endl;
-			if(holder->CheckPushed())
+			int done = holder->CheckPushed();
+			if(done==Holder::PUSH_COMPLETE)
 			{
-				state=ExitLoop;
+				visionState=ExitLoop;
+			}
+			else if(done==Holder::PUSH_ERROR)
+			{
+				visionState = ExitLoop;
 			}
 			else
 			{
-				state=CheckBall;
+				visionState=CheckBall;
 			}
 		}
-		if(state==ExitLoop)
+		if(visionState==ExitLoop)
 		{
 			std::cout<<"state: ExitLoop"<<std::endl;
 			drivePID->Disable();
 			mylauncher->SetTargetSpeed(0);
 			mylauncher->SetAngle(0);
 //			mydrive->ConfigTeleop(TEL_DRIVE_P,TEL_DRIVE_I,TEL_DRIVE_D); //configuring back to init config
-			if(mylauncher->AngleGood(1))
-			{
-				state=GetForwardImage;
-			}
-			else
-			{
-				state = ExitLoop;
-			}
+			visionState = GetForwardImage;
 //			vertAnglePID->Disable();
 		}
-		return(state);
+		return(visionState);
 	}
 	int AutoStateMachine(int state)
 	{
