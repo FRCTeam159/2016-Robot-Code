@@ -9,7 +9,7 @@
 #define SRC_HOLDER_H_
 #define CANTALON_PUSHER
 #define CANTALON_GATE
-#define GATEMOTOR_GR 26.9
+#define GATEMOTOR_GR 71
 #define GATEMOTOR_ET 7
 #include <WPILib.h>
 #include <time.h>
@@ -21,8 +21,7 @@ enum {
 	WAIT_FOR_PUSH_REQUEST,
 	WAIT_FOR_BALL_TO_LEAVE,
 	GO_TO_REVERSE_LIMIT,
-	BALL_PUSH_ERR_1,
-	BALL_PUSH_ERR_2
+	BALL_PUSH_ERR,
 };
 
 
@@ -60,16 +59,15 @@ class Holder {
 	void WaitForBallToLeave();
 	void SetGateToReverseLimit();
 	void RemoveBall();
-	void ReversePush();
 	void SetPushMotorSpeed(double);
 	int deltaTime(struct timeb* first, struct timeb* after);
 public:
-	Holder(int mtr1,int mtr2,int IR);
 	enum push_states {
 		PUSH_NOT_COMPLETE = 0,
 		PUSH_COMPLETE = 1,
 		PUSH_ERROR = 2,
 	};
+	Holder(int mtr1,int mtr2,int IR);
 	void PushBall();
 	void AutoHold();
 	void Init();

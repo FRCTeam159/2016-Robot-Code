@@ -1,49 +1,59 @@
 
 #include "Robot.h"
+#include "Assignments.h"
 
 std::shared_ptr<DriveTrain> Robot::drivetrain;
 std::shared_ptr<BallHolder> Robot::holder;
 std::shared_ptr<Shooter> Robot::shooter;
 std::unique_ptr<OI> Robot::oi;
-
-enum motorIDs {
-	DRIVE_LEFT = 1,
-	DRIVE_RIGHT =2,
-	HOLDER_GATE =3,
-	HOLDER_PUSH=4,
-	SHOOTER_ANGLE=5,
-	SHOOTER_LEFT=6,
-	SHOOTER_RIGHT=7,
-};
+std::unique_ptr<Autonomous> Robot::autonomous;
 
 void Robot::RobotInit() {
-	drivetrain.reset(new DriveTrain(DRIVE_LEFT,DRIVE_RIGHT));
-	holder.reset(new BallHolder(HOLDER_GATE,HOLDER_PUSH));
-	shooter.reset(new Shooter(SHOOTER_ANGLE,SHOOTER_LEFT,SHOOTER_RIGHT));
+	std::cout << "Robot::RobotInit" << std::endl;
+	drivetrain.reset(new DriveTrain());
+	holder.reset(new BallHolder());
+	shooter.reset(new Shooter());
 	oi.reset(new OI());
+	autonomous.reset(new Autonomous());
 
-	drivetrain->SetDeadband(0.25,0.25);
-
-	SmartDashboard::PutData(drivetrain.get());
-	SmartDashboard::PutData(holder.get());
-	SmartDashboard::PutData(shooter.get());
+	//SmartDashboard::PutData(drivetrain.get());
+	//SmartDashboard::PutData(holder.get());
+	//SmartDashboard::PutData(shooter.get());
 }
 
 void Robot::AutonomousInit() {
-	std::cout << "Starting Auto" << std::endl;
+	std::cout << "Robot::AutonomousInit" << std::endl;
+	drivetrain->AutonomousInit();
+	shooter->AutonomousInit();
+	holder->AutonomousInit();
+
+	autonomous->Start();
 }
 
 void Robot::AutonomousPeriodic() {
 	Scheduler::GetInstance()->Run();
 }
 
+void Robot::DisabledInit(){
+	std::cout << "Robot::DisabledInit" << std::endl;
+	autonomous->Cancel();
+	drivetrain->DisabledInit();
+	shooter->DisabledInit();
+	holder->DisabledInit();
+}
+void Robot::DisabledPeriodic(){
+}
+
 void Robot::TeleopInit() {
+	std::cout << "Robot::TeleopInit" << std::endl;
 	// This makes sure that the autonomous stops running when
 	// teleop starts running. If you want the autonomous to
 	// continue until interrupted by another command, remove
 	// this line or comment it out.
-	//autonomousCommand.Cancel();
-	std::cout << "Starting Teleop" << std::endl;
+	autonomous->Cancel();
+	shooter->TeleopInit();
+	holder->TeleopInit();
+	drivetrain->TeleopInit();
 }
 
 void Robot::TeleopPeriodic() {

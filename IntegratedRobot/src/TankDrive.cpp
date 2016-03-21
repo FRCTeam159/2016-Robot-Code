@@ -71,6 +71,43 @@ float TankDrive::deadband(float value, float deadzone, float minOutput)
 
 }
 
+void TankDrive::RevArcadeDrive(Joystick* stick)
+{
+	float xAxis = deadband(-1*stick->GetX(), .2);
+	float yAxis = deadband(stick->GetY(), .2);
+	float zAxis = deadband(stick->GetZ(), .3);
+
+	float left=0;
+	float right=0;
+
+	if(!zAxis==0)
+	{
+		left=zAxis;
+		right=-1*zAxis;
+	}
+
+	else if(!xAxis==0)
+	{
+		if(xAxis<0)
+		{
+			left=(fabs(yAxis)-fabs(xAxis))*(yAxis/fabs(yAxis));
+			right=yAxis;
+		}
+		if(xAxis>0)
+		{
+			right=(fabs(yAxis)-fabs(xAxis))*(yAxis/fabs(yAxis));
+			left=yAxis;
+		}
+	}
+	else if(!yAxis==0)
+	{
+		left=yAxis;
+		right=yAxis;
+	}
+	leftTarget=left*maxTicks;
+	rightTarget=right*maxTicks;
+}
+
 void TankDrive::SetPosTargets(float left, float right)
 {
 	leftTarget=left;

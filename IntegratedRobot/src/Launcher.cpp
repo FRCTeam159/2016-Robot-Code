@@ -8,8 +8,9 @@
 #include <Launcher.h>
 #include <WPILib.h>
 #include <SRXConfigs/SRXSpeed.h>
-Launcher::Launcher(SRXSpeed *l, SRXSpeed* r, PIDController* p)
-:left(l), right(r), pid(p){
+Launcher::Launcher(SRXSpeed *l, SRXSpeed* r, PIDSource* p, CANTalon* a)
+:left(l), right(r), pid(p), shootAngle(a){
+	right->SetInverted(true);
 }
 
 Launcher::~Launcher() {
@@ -34,17 +35,27 @@ void Launcher::Obey()
 {
 	left->Obey();
 	right->Obey();
+	if(!atAngle)
+		ClumsyControl();
 }
 
 void Launcher::SetAngle(float angle)
 {
-	targetAngle=angle;
-	pid->SetSetpoint(angle);
+	targetAngle = fmax(fmin(angle, 55),0);
+	if(!targetAngle==angle)
+	{
+		std::cout<<"bad angle request!";
+	}
+	atAngle = false;
+	cycle = 1;
+//	pid->SetSetpoint(angle);
+
 }
 
 bool Launcher::AngleGood(float tolerance)
 {
-	return(fabs(pid->GetAvgError())<tolerance);
+	return(atAngle);
+//	return(fabs(pid->GetAvgError())<tolerance);
 }
 void Launcher::Aim(float range)//takes horizontal range, in meters
 {
@@ -60,6 +71,34 @@ void Launcher::Aim(float range)//takes horizontal range, in meters
 	float Iwheel=.004891;//the .168 below is ~ distance from flywheel center to center of shooter
 	float targetSpeed= V0*((((.168)/Iwheel)*(.295/2))+(1/r));//target speed in rad/s
 	targetSpeed*=900/(2*3.1415);//convert from radians to ticks
-	SetTargetSpeed(targetSpeed);
+	std::cout<<"target speed: "<<targetSpeed<<std::endl;
+//	SetTargetSpeed(targetSpeed);
+	SetTargetSpeed(.3);
 
 }
+void Launcher::ClumsyControl()
+	{
+		cycle=(cycle+1)%10;
+		if(cycle!=0){
+			currentAngle = pid->PIDGet();
+//			std::cout<<"angle = "<<currentAngle<<std::endl;
+			shootAngle->Set(0);
+		}
+		else if(cycle==0){
+			if (fabs(targetAngle-currentAngle)<1.5)
+			{
+				shootAngle->Set(0);
+				atAngle=true;
+			}
+			else if(currentAngle<targetAngle)
+			{
+				std::cout<<"going up!"<<std::endl;
+				shootAngle->Set(.9);
+			}
+			else if (currentAngle > targetAngle)
+			{
+				std::cout<<"going down!"<<std::endl;
+				shootAngle->Set(-.75-fmin(.05, .01*(currentAngle-targetAngle)));
+			}
+		}
+	}

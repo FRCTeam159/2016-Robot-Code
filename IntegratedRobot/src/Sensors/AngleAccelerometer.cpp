@@ -7,17 +7,17 @@
 
 #include <Sensors/AngleAccelerometer.h>
 #define PI 3.14159265
-AngleAccelerometer::AngleAccelerometer(I2C::Port p) {
-	accel = new ADXL345_I2C(p, Accelerometer::Range::kRange_4G);
+ShootAngleAccelerometer::ShootAngleAccelerometer(I2C::Port p) {
+	accel = new ADXL345_I2C(p, Accelerometer::Range::kRange_4G, 0x53);
 	m_pidSource = PIDSourceType::kDisplacement;
 }
 
-AngleAccelerometer::~AngleAccelerometer() {
+ShootAngleAccelerometer::~ShootAngleAccelerometer() {
 	// TODO Auto-generated destructor stub
 
 }
 
-double AngleAccelerometer::PIDGet()
+double ShootAngleAccelerometer::PIDGet()
 {
 	double dAngleX, dAngleY, dAngleZ;
 	double x,y,z;
@@ -35,20 +35,22 @@ double AngleAccelerometer::PIDGet()
 	dAngleX = atan(result) * (180.0/PI);
 
 	// Y Axis
-	result = accelerationY / sqrt(x + z);
+	result = accelerationY / sqrt(x);
 	dAngleY = atan(result) * (180.0/PI);
+	dAngleY=90-dAngleY;
 
 	// Z Axis
 	result = accelerationZ / sqrt(x + y);
 	dAngleZ = atan(result) * (180.0/PI);
-	dAngleZ=90-dAngleZ;
+
 	//		printf("digital angles x=%f, y=%f, z=%f analog x=%f y=%f z=%f\n",
 	//				dAngleX, dAngleY, dAngleZ, angleX, angleY, angleZ);
 //	printf("%f, %f, %f\n",
 //	dAngleX, dAngleY, dAngleZ);
-	return(dAngleZ);
+	float mountErr=4;
+	return(dAngleY-mountErr);
 }
-void AngleAccelerometer::SetPIDSourceType(PIDSourceType type)
+void ShootAngleAccelerometer::SetPIDSourceType(PIDSourceType type)
 {
 	m_pidSource=type;
 }

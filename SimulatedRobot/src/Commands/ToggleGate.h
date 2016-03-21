@@ -11,6 +11,13 @@
 #include <Commands/Command.h>
 
 class ToggleGate: public Command {
+	enum {
+		UNDEFINED = 0,
+		CLOSED = 1,
+		OPEN =2
+	};
+	int current_state;
+	int target_state;
 public:
 	ToggleGate();
 	void Initialize();

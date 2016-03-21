@@ -21,9 +21,11 @@ private:
 	double randomTest;
 	double wRatio;
 	double holeRatio;
+
 public:
 	double finalScore;
 	double CenterX=160;
+	double CenterY = 120;
 
 	double DetermineScore(double, double);
 	double AreaOverBoundingArea();

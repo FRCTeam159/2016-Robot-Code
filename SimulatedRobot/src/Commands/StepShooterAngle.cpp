@@ -8,31 +8,44 @@
 #include <Commands/StepShooterAngle.h>
 #include "Robot.h"
 
+#define STEP_TIMEOUT 1 // degrees
+
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
-	Requires(Robot::shooter.get());
+	//Requires((Subsystem*)Robot::shooter.get());
+	std::cout << "new StepShooterAngle("<<a<<")"<< std::endl;
 	direction=a;
 }
 // Called just before this Command runs the first time
 void StepShooterAngle::Initialize() {
+	SetTimeout(STEP_TIMEOUT);
 	double current=Robot::shooter->GetTargetAngle();
+	double max=Robot::shooter->GetMaxAngle();
+	double min=Robot::shooter->GetMinAngle();
+
 	double target=current+direction;
-	//Robot::elevator->Disable();
-	Robot::shooter->SetTargetAngle(target);
+	target=target>=max?max:target;
+	target=target<=min?min:target;
 	std::cout << "Changing Shooter Angle - current:"<< current <<" new:"<<target<<std::endl;
-	//Robot::elevator->Enable();
+	Robot::shooter->SetTargetAngle(target);
 }
 
 // Called repeatedly when this Command is scheduled to run
 void StepShooterAngle::Execute() {
-	//Robot::drivetrain->Drive(Robot::oi->GetJoystick());
 }
 // Make this return true when this Command no longer needs to run execute()
 bool StepShooterAngle::IsFinished() {
-	return false;
+	if(IsTimedOut()){
+		std::cout << "StepAngle Error:  Timeout expired"<<std::endl;
+		return true;
+	}
+	bool ontarget=Robot::shooter->IsAtAngle();
+	if(ontarget)
+		std::cout << "Shooter On Target:"<<std::endl;
+	return ontarget;
 }
 // Called once after isFinished returns true
 void StepShooterAngle::End() {
-	//Robot::drivetrain->Drive(0, 0);
+	//Robot::shooter->DisablePID();
 }
 // Called when another command which requires one or more of the same
 // subsystems is scheduled to run

@@ -10,6 +10,7 @@
 
 #include "WPILib.h"
 #include "Commands/Command.h"
+#include "Commands/Autonomous.h"
 
 #include <Subsystems/DriveTrain.h>
 #include <Subsystems/Shooter.h>
@@ -23,15 +24,20 @@ public:
 	static std::shared_ptr<BallHolder> holder;
 	static std::shared_ptr<Shooter> shooter;
 	static std::unique_ptr<OI> oi;
+	static std::unique_ptr<Autonomous> autonomous;
 
 private:
 	LiveWindow *lw = LiveWindow::GetInstance();
+
 	void RobotInit();
 	void AutonomousInit();
 	void AutonomousPeriodic();
 	void TeleopInit();
 	void TeleopPeriodic();
 	void TestPeriodic();
+	void DisabledInit();
+	void DisabledPeriodic();
+
 };
 
 

@@ -13,13 +13,26 @@
 class BallHolder: public Subsystem {
 	GPMotor gateMotor;
 	GPMotor pushMotor;
+	DigitalInput lowerLimit;
+	DigitalInput upperLimit;
+	AnalogInput ballSensor;
+
 	bool gateopen;
+	void Init();
+
 public:
-	BallHolder(int m1, int m2);
-	bool GateIsOpen();
+	BallHolder();
+	bool IsGateOpen();
+	bool IsGateClosed();
+	bool IsBallPresent();
 	void OpenGate();
 	void CloseGate();
 	void PushBall(bool);
+
+	void AutonomousInit();
+	void TeleopInit();
+	void DisabledInit();
+
 };
 
 #endif /* SRC_SUBSYSTEMS_BALLHOLDER_H_ */

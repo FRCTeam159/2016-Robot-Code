@@ -10,7 +10,7 @@
 #define CANTALON_LIFTMOTOR
 #define CANTALON_ROLLERMOTOR
 #include <WPILib.h>
-#include <Sensors/AngleAccelerometer.h>
+#include <Sensors/IntakeAngleAccelerometer.h>
 #include <time.h>
 #include <sys/timeb.h>
 
@@ -20,7 +20,7 @@ private:
 	//Victor *rollerMotor;
 	PIDController *sAngCtrl;
 	void SetAngle(float);
-	void SpinRoller(bool);
+	void SpinRollers(bool);
 	int state;
 	bool atLimit;
 	double targetAngle;
@@ -40,38 +40,41 @@ private:
 #else
 	Victor rollerMotor;
 #endif
-	AngleAccelerometer accel;
+	IntakeAngleAccelerometer accel;
 	void GoToZeroLimitSwitch();
 	bool IsAtLimit();
-	void TurnRollersOn(bool);
+	void StopRollers();
 public:
 	struct timeb start_time;
 	struct timeb end_time;
 	enum {
-		SETLOW,
-		WAITING,
-		SETHIGH,
+		LOW,
+		HIGH,
+		MED,
+		CANCEL,
 	};
 	Loader(int motor1, int motor2, I2C::Port p);
 	bool AtGrabAngle();
 	bool AtZeroAngle();
-	void StartRoller();
-	void StopRoller();
 	void LowerLifter();
 	void RaiseLifter();
 	bool AngleGood(float);
-	void StateMachine();
+	void Obey();
 	virtual ~Loader();
 	void TeleopInit();
 	void TeleopPeriodic();
 	void AutonomousInit();
 	void AutonomousPeriodic();
+	void DisabledInit();
 	void SetLow();
+	void SetMed();
 	void SetHigh();
-	void Wait();
 	void SetTimeoutTime(double t){
 		timeoutTime = t;
 	}
+	void Continue();
+	void Cancel();
+	void ExpelBall();
 	int deltaTime(struct timeb* first, struct timeb* after);
 	int GetState(){
 		return state;
