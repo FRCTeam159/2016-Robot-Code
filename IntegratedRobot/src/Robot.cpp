@@ -275,6 +275,7 @@ private:
 		ShootBall = 13,
 		CheckBall = 14,
 		SetInitialAngle = 15,
+		SetFinalAngle = 16,
 	};
 	int visionStateMachine()
 	{
@@ -343,13 +344,11 @@ private:
 			confirmrange=confirmrange*cos(angle*3.14/180);
 			if(fabs(confirmrange-range)<5){
 				range=(range+confirmrange)/2;
-				mylauncher->Aim(range/100);
 				visionState=AcquireTargetImage;
 			}
 			else if(confirmrange>range)
 			{
 				range=confirmrange;
-				mylauncher->Aim(range/100);
 				visionState=AcquireTargetImage;
 			}
 			else
@@ -405,8 +404,6 @@ private:
 		if(visionState==WaitForCalibrations)
 		{
 			std::cout<<"state: WaitForCalibrations"<<std::endl;
-			bool good = mylauncher->AngleGood(2);//use this
-//			good = good && mylauncher->SpeedGood(200);//use this too
 			good = good && drivePID->GetError()<3 && drivePID->IsEnabled();//this is also handy
 			if(good)//check to see if motors are close enough to target positions
 			{
@@ -418,7 +415,8 @@ private:
 
 				else
 				{
-					visionState=CreateDebugImage;
+					mylauncher->Aim(range/100);
+					visionState=SetFinalAngle;
 				}
 
 			}
@@ -428,6 +426,13 @@ private:
 
 			}
 
+		}
+		if(visionState == SetFinalAngle)
+		{
+			bool good = mylauncher->AngleGood(2);//use this
+			good = good && mylauncher->SpeedGood(200);//use this too
+			if(good)
+				visionState = CreateDebugImage;
 		}
 		if(visionState==CreateDebugImage)
 		{
