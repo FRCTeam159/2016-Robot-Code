@@ -68,14 +68,15 @@ float TankDrive::deadband(float value, float deadzone, float minOutput)
 	{
 		return((((minOutput-1)*pow(value+deadzone,2))/pow(deadzone -1,2))-minOutput);
 	}
-
+	else
+		return 0;
 }
 
 void TankDrive::RevArcadeDrive(Joystick* stick)
 {
-	float xAxis = deadband(-1*stick->GetX(), .2);
-	float yAxis = deadband(stick->GetY(), .2);
-	float zAxis = deadband(stick->GetZ(), .3);
+	float xAxis = deadband(-1*stick->GetX(), .2,0);
+	float yAxis = deadband(stick->GetY(), .2,0);
+	float zAxis = deadband(stick->GetZ(), .3,0);
 
 	float left=0;
 	float right=0;
