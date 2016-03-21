@@ -404,7 +404,7 @@ private:
 		if(visionState==WaitForCalibrations)
 		{
 			std::cout<<"state: WaitForCalibrations"<<std::endl;
-			good = good && drivePID->GetError()<3 && drivePID->IsEnabled();//this is also handy
+			bool good =drivePID->GetError()<3 && drivePID->IsEnabled();//this is also handy
 			if(good)//check to see if motors are close enough to target positions
 			{
 				if(firstCalibration)
