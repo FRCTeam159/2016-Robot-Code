@@ -10,7 +10,12 @@
 #include <SRXConfigs/SRXSpeed.h>
 #define HAVE_LIMIT
 Launcher::Launcher(SRXSpeed *l, SRXSpeed* r, PIDSource* p, CANTalon* a)
-:left(l), right(r), pid(p), shootAngle(a){
+:left(l), right(r), pidsource(p), shootAngle(a){
+#ifdef USING_PID
+	pid=  new PIDController(0.01,0,0, pidsource, shootAngle, .01);
+	pid->SetToleranceBuffer(5);
+	pid->SetTolerance(1.5);
+#endif
 	right->SetInverted(true);
 #ifdef HAVE_LIMIT
 	shootAngle->ConfigLimitMode(CANTalon::LimitMode::kLimitMode_SwitchInputsOnly);
@@ -20,6 +25,9 @@ Launcher::Launcher(SRXSpeed *l, SRXSpeed* r, PIDSource* p, CANTalon* a)
 
 Launcher::~Launcher() {
 	// TODO Auto-generated destructor stub
+#ifdef USING_PID
+	delete PIDController;
+#endif
 }
 
 bool Launcher::SpeedGood(float tolerance)
@@ -40,20 +48,40 @@ void Launcher::Obey()
 {
 	left->Obey();
 	right->Obey();
+#ifdef USING_PID
+	if(!atAngle){
+		if(targetAngle!=0){
+			if(pid->OnTarget())
+			{
+				atAngle = true;
+				pid->Disable();
+			}
+		}
+		else
+			GoToZero();
+	}
+#else
 	if(!atAngle)
 		ClumsyControl();
+#endif
 }
 
 void Launcher::SetAngle(float angle)
 {
-	targetAngle = fmax(fmin(angle, 55),0);
-	if(!targetAngle==angle)
+	targetAngle = fmax(fmin(angle, 70),0);
+	if(targetAngle!=angle)
 	{
 		std::cout<<"bad angle request!";
 	}
 	atAngle = false;
 	cycle = 1;
-//	pid->SetSetpoint(angle);
+#ifdef USING_PID
+	if(!targetAngle==0)
+	{
+		pid->SetSetpoint(targetAngle);
+		pid->Enable();
+	}
+#endif
 
 }
 
@@ -86,13 +114,7 @@ void Launcher::ClumsyControl()
 #ifdef HAVE_LIMIT
 		if(targetAngle==0)//if we're going to zero, go until we hit the limit switch
 		{
-			if(shootAngle->GetReverseLimitOK())//the reverse limit switch is not depressed
-				shootAngle->Set(-.4);
-			else
-			{
-				shootAngle->Set(0);
-				atAngle=true;
-			}
+			GoToZero();
 		}
 
 		else
@@ -100,7 +122,7 @@ void Launcher::ClumsyControl()
 		{
 			cycle=(cycle+1)%10;
 			if(cycle!=0){
-				currentAngle = pid->PIDGet();
+				currentAngle = pidsource->PIDGet();
 				//			std::cout<<"angle = "<<currentAngle<<std::endl;
 				shootAngle->Set(0);
 			}
@@ -124,3 +146,13 @@ void Launcher::ClumsyControl()
 			}
 		}
 	}
+void Launcher::GoToZero()
+{
+	if(shootAngle->GetReverseLimitOK())//the reverse limit switch is not depressed
+		shootAngle->Set(-.4);
+	else
+	{
+		shootAngle->Set(0);
+		atAngle=true;
+	}
+}
