@@ -14,7 +14,7 @@ private:
 	int config=0;
 	CANTalon *leftMotor, *rightMotor;
 	SRXSlave *leftSlave, *rightSlave;
-	float deadband(float, float);
+	float deadband(float, float, float);
 	float leftTarget=0, rightTarget=0;
 	int maxTicks;
 public:

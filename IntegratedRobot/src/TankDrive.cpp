@@ -18,9 +18,9 @@ TankDrive::~TankDrive() {
 
 void TankDrive::ArcadeDrive(Joystick* stick)
 {
-	float xAxis = deadband(stick->GetX(), .2);
-	float yAxis = deadband(-1*stick->GetY(), .2);
-	float zAxis = deadband(stick->GetZ(), .3);
+	float xAxis = deadband(stick->GetX(), .2, .2);
+	float yAxis = deadband(-1*stick->GetY(), .2, 0);
+	float zAxis = deadband(stick->GetZ(), .3, .05);
 
 	float left=0;
 	float right=0;
@@ -53,23 +53,30 @@ void TankDrive::ArcadeDrive(Joystick* stick)
 	rightTarget=right*maxTicks;
 }
 
-float TankDrive::deadband(float value, float deadzone)
+float TankDrive::deadband(float value, float deadzone, float minOutput)
 {
 	if(fabs(value)<deadzone)
 	{
 		return(0);
 	}
-	else
+
+	else if(value>0)
 	{
-		return(value);
+		return((((1-minOutput)*pow(value-deadzone,2))/pow(1-deadzone,2))+minOutput);
 	}
+	else if(value<0)
+	{
+		return((((minOutput-1)*pow(value+deadzone,2))/pow(deadzone -1,2))-minOutput);
+	}
+	else
+		return 0;
 }
 
 void TankDrive::RevArcadeDrive(Joystick* stick)
 {
-	float xAxis = deadband(-1*stick->GetX(), .2);
-	float yAxis = deadband(stick->GetY(), .2);
-	float zAxis = deadband(stick->GetZ(), .3);
+	float xAxis = deadband(-1*stick->GetX(), .2,0);
+	float yAxis = deadband(stick->GetY(), .2,0);
+	float zAxis = deadband(stick->GetZ(), .3,0);
 
 	float left=0;
 	float right=0;

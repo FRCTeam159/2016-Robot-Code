@@ -8,13 +8,26 @@
 #include <Launcher.h>
 #include <WPILib.h>
 #include <SRXConfigs/SRXSpeed.h>
+#define HAVE_LIMIT
 Launcher::Launcher(SRXSpeed *l, SRXSpeed* r, PIDSource* p, CANTalon* a)
-:left(l), right(r), pid(p), shootAngle(a){
+:left(l), right(r), pidsource(p), shootAngle(a){
+#ifdef USING_PID
+	pid=  new PIDController(0.01,0,0, pidsource, shootAngle, .01);
+	pid->SetToleranceBuffer(5);
+	pid->SetTolerance(1.5);
+#endif
 	right->SetInverted(true);
+#ifdef HAVE_LIMIT
+	shootAngle->ConfigLimitMode(CANTalon::LimitMode::kLimitMode_SwitchInputsOnly);
+	shootAngle->ConfigFwdLimitSwitchNormallyOpen(true);
+#endif
 }
 
 Launcher::~Launcher() {
 	// TODO Auto-generated destructor stub
+#ifdef USING_PID
+	delete PIDController;
+#endif
 }
 
 bool Launcher::SpeedGood(float tolerance)
@@ -35,20 +48,40 @@ void Launcher::Obey()
 {
 	left->Obey();
 	right->Obey();
+#ifdef USING_PID
+	if(!atAngle){
+		if(targetAngle!=0){
+			if(pid->OnTarget())
+			{
+				atAngle = true;
+				pid->Disable();
+			}
+		}
+		else
+			GoToZero();
+	}
+#else
 	if(!atAngle)
 		ClumsyControl();
+#endif
 }
 
 void Launcher::SetAngle(float angle)
 {
-	targetAngle = fmax(fmin(angle, 55),0);
-	if(!targetAngle==angle)
+	targetAngle = fmax(fmin(angle, 70),0);
+	if(targetAngle!=angle)
 	{
 		std::cout<<"bad angle request!";
 	}
 	atAngle = false;
 	cycle = 1;
-//	pid->SetSetpoint(angle);
+#ifdef USING_PID
+	if(!targetAngle==0)
+	{
+		pid->SetSetpoint(targetAngle);
+		pid->Enable();
+	}
+#endif
 
 }
 
@@ -78,27 +111,48 @@ void Launcher::Aim(float range)//takes horizontal range, in meters
 }
 void Launcher::ClumsyControl()
 	{
-		cycle=(cycle+1)%10;
-		if(cycle!=0){
-			currentAngle = pid->PIDGet();
-//			std::cout<<"angle = "<<currentAngle<<std::endl;
-			shootAngle->Set(0);
+#ifdef HAVE_LIMIT
+		if(targetAngle==0)//if we're going to zero, go until we hit the limit switch
+		{
+			GoToZero();
 		}
-		else if(cycle==0){
-			if (fabs(targetAngle-currentAngle)<1.5)
-			{
+
+		else
+#endif
+		{
+			cycle=(cycle+1)%10;
+			if(cycle!=0){
+				currentAngle = pidsource->PIDGet();
+				//			std::cout<<"angle = "<<currentAngle<<std::endl;
 				shootAngle->Set(0);
-				atAngle=true;
 			}
-			else if(currentAngle<targetAngle)
-			{
-				std::cout<<"going up!"<<std::endl;
-				shootAngle->Set(.9);
-			}
-			else if (currentAngle > targetAngle)
-			{
-				std::cout<<"going down!"<<std::endl;
-				shootAngle->Set(-.75-fmin(.05, .01*(currentAngle-targetAngle)));
+			else if(cycle==0){
+
+				if (fabs(targetAngle-currentAngle)<1.5)
+				{
+					shootAngle->Set(0);
+					atAngle=true;
+				}
+				else if(currentAngle<targetAngle)
+				{
+					std::cout<<"going up!"<<std::endl;
+					shootAngle->Set(.9);
+				}
+				else if (currentAngle > targetAngle)
+				{
+					std::cout<<"going down!"<<std::endl;
+					shootAngle->Set(-.75-fmin(.05, .01*(currentAngle-targetAngle)));
+				}
 			}
 		}
 	}
+void Launcher::GoToZero()
+{
+	if(shootAngle->GetReverseLimitOK())//the reverse limit switch is not depressed
+		shootAngle->Set(-.4);
+	else
+	{
+		shootAngle->Set(0);
+		atAngle=true;
+	}
+}
