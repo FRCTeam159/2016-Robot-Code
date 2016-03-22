@@ -5,20 +5,26 @@
 std::shared_ptr<DriveTrain> Robot::drivetrain;
 std::shared_ptr<BallHolder> Robot::holder;
 std::shared_ptr<Shooter> Robot::shooter;
-std::unique_ptr<OI> Robot::oi;
+std::shared_ptr<Loader> Robot::loader;
+std::shared_ptr<OI> Robot::oi;
+
 std::unique_ptr<Autonomous> Robot::autonomous;
+
 
 void Robot::RobotInit() {
 	std::cout << "Robot::RobotInit" << std::endl;
 	drivetrain.reset(new DriveTrain());
 	holder.reset(new BallHolder());
 	shooter.reset(new Shooter());
+	loader.reset(new Loader());
 	oi.reset(new OI());
+
 	autonomous.reset(new Autonomous());
 
 	//SmartDashboard::PutData(drivetrain.get());
 	//SmartDashboard::PutData(holder.get());
 	//SmartDashboard::PutData(shooter.get());
+	OI::SetMode(OI::SHOOTING);
 }
 
 void Robot::AutonomousInit() {
@@ -26,6 +32,7 @@ void Robot::AutonomousInit() {
 	drivetrain->AutonomousInit();
 	shooter->AutonomousInit();
 	holder->AutonomousInit();
+	loader->AutonomousInit();
 
 	autonomous->Start();
 }
@@ -40,6 +47,8 @@ void Robot::DisabledInit(){
 	drivetrain->DisabledInit();
 	shooter->DisabledInit();
 	holder->DisabledInit();
+	loader->DisabledInit();
+
 }
 void Robot::DisabledPeriodic(){
 }
@@ -54,6 +63,7 @@ void Robot::TeleopInit() {
 	shooter->TeleopInit();
 	holder->TeleopInit();
 	drivetrain->TeleopInit();
+	loader->TeleopInit();
 }
 
 void Robot::TeleopPeriodic() {

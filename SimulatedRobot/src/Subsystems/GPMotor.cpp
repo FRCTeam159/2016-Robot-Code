@@ -4,7 +4,7 @@
  *  Created on: Jul 6, 2015
  *      Author: alpiner
  */
-
+#include "WPILib.h"
 #include <Subsystems/GPMotor.h>
 
 #ifdef SIMULATION

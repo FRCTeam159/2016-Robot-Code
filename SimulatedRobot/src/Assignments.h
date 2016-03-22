@@ -9,24 +9,29 @@
 #define SRC_ASSIGNMENTS_H_
 
 enum motorIDs {  // PWM or CAN ids
-	DRIVE_LEFT    = 1,
-	DRIVE_RIGHT   = 2,
-	HOLDER_GATE   = 3,
-	HOLDER_PUSH   = 4,
-	SHOOTER_ANGLE = 5,
-	SHOOTER_LEFT  = 6,
-	SHOOTER_RIGHT = 7,
+	DRIVE_LEFT     = 1,
+	DRIVE_RIGHT    = 2,
+	HOLDER_GATE    = 5,
+	SHOOTER_LEFT   = 6,
+	HOLDER_PUSH    = 7,
+	SHOOTER_RIGHT  = 8,
+	SHOOTER_ANGLE  = 9,
+	LOADER_ROLLERS = 10,
+	LOADER_ANGLE   = 11,
 };
 
 enum dioIDs {  // limit switch ids
 	GATE_MIN     = 0,
 	GATE_MAX     = 1,
+	LOADER_MIN   = 2,
+	LOADER_MAX   = 3,
 };
 
 enum AnalogIDs {  // limit switch ids
 	SHOOTER_PITCH  = 1, // gyro in simulation
 	BALL_SENSOR    = 2, // sonar in simulation
 	DRIVE_ANGLE    = 3, // gyro in simulation
+	LOADER_PITCH   = 4, // gyro in simulation
 
 };
 

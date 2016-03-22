@@ -14,11 +14,12 @@ class StepShooterAngle: public Command {
 	double direction;
 public:
 	StepShooterAngle(double a);
+	~StepShooterAngle();
 	void Initialize();
-	void Execute();
+	void Execute() {}
 	bool IsFinished();
 	void End();
-	void Interrupted();
+	void Interrupted() {End();}
 };
 
 #endif /* SRC_COMMANDS_STEPSHOOTERANGLE_H_ */

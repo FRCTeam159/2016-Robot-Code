@@ -8,12 +8,15 @@
 #include <Commands/StepShooterAngle.h>
 #include "Robot.h"
 
-#define STEP_TIMEOUT 1 // degrees
+#define STEP_TIMEOUT 1
 
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
-	//Requires((Subsystem*)Robot::shooter.get());
+	Requires(Robot::shooter.get());
 	std::cout << "new StepShooterAngle("<<a<<")"<< std::endl;
 	direction=a;
+}
+StepShooterAngle::~StepShooterAngle(){
+	std::cout << "Deleting StepShooterAngle"<< std::endl;
 }
 // Called just before this Command runs the first time
 void StepShooterAngle::Initialize() {
@@ -29,9 +32,6 @@ void StepShooterAngle::Initialize() {
 	Robot::shooter->SetTargetAngle(target);
 }
 
-// Called repeatedly when this Command is scheduled to run
-void StepShooterAngle::Execute() {
-}
 // Make this return true when this Command no longer needs to run execute()
 bool StepShooterAngle::IsFinished() {
 	if(IsTimedOut()){
@@ -46,9 +46,4 @@ bool StepShooterAngle::IsFinished() {
 // Called once after isFinished returns true
 void StepShooterAngle::End() {
 	//Robot::shooter->DisablePID();
-}
-// Called when another command which requires one or more of the same
-// subsystems is scheduled to run
-void StepShooterAngle::Interrupted() {
-	End();
 }

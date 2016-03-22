@@ -15,20 +15,24 @@
 #include <Subsystems/DriveTrain.h>
 #include <Subsystems/Shooter.h>
 #include <Subsystems/BallHolder.h>
+#include <Subsystems/Loader.h>
 
 #include "OI.h"
 
 class Robot: public IterativeRobot {
 public:
+	static int mode;
+
 	static std::shared_ptr<DriveTrain> drivetrain;
 	static std::shared_ptr<BallHolder> holder;
 	static std::shared_ptr<Shooter> shooter;
-	static std::unique_ptr<OI> oi;
+	static std::shared_ptr<Loader> loader;
+	static std::shared_ptr<OI> oi;
+
 	static std::unique_ptr<Autonomous> autonomous;
 
 private:
 	LiveWindow *lw = LiveWindow::GetInstance();
-
 	void RobotInit();
 	void AutonomousInit();
 	void AutonomousPeriodic();

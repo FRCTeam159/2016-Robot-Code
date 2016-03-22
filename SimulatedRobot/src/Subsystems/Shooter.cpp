@@ -60,6 +60,12 @@ void Shooter::AutonomousInit(){
 void Shooter::TeleopInit(){
 	Init();
 }
+void Shooter::DisabledInit(){
+	Disable();
+	angleMotor.SetDebug(0);
+	leftMotor.SetDebug(0);
+	rightMotor.SetDebug(0);
+}
 
 void Shooter::LogSpeed(double d) {
 	SmartDashboard::PutNumber("Shooter FW Speed", d);
@@ -73,15 +79,11 @@ void Shooter::Log() {
 	LogSpeed(GetSpeed());
 }
 
-void Shooter::DisabledInit(){
-	Disable();
-	angleMotor.SetDebug(0);
-	leftMotor.SetDebug(0);
-	rightMotor.SetDebug(0);
-}
 
 // Initialize
 void Shooter::Init(){
+	angleMotor.SetDebug(2);
+
 	angleMotor.ClearIaccum();
 	angleMotor.Enable();
 	leftMotor.SetVelocity(0);
@@ -89,6 +91,7 @@ void Shooter::Init(){
 
 	leftMotor.Enable();
 	rightMotor.Enable();
+
 	Log();
 }
 
