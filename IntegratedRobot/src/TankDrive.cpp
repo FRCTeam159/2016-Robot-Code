@@ -20,7 +20,7 @@ void TankDrive::ArcadeDrive(Joystick* stick)
 {
 	float xAxis = deadband(stick->GetX(), .2, .2);
 	float yAxis = deadband(-1*stick->GetY(), .2, 0);
-	float zAxis = deadband(stick->GetZ(), .3, .05);
+	float zAxis = deadband(stick->GetZ(), .2, .05);
 
 	float left=0;
 	float right=0;

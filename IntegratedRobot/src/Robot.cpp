@@ -170,18 +170,19 @@ private:
 		{
 			if(visionState==GetForwardImage||visionState==SendForwardImage)
 			{
-				if(!aimingManually)
-					visionState=StartCalibrations;
+//				if(!aimingManually)
+//					visionState=StartCalibrations; RIP
 
 			}
 			if(visionState==GetReverseImage||visionState==SendReverseImage)
 			{
-				loader->Continue();
+				if(!aimingManually)
+					loader->Continue();
 			}
 		}
 		if(button1&&aimingManually)
 		{
-			mylauncher->SetTargetSpeed(.6);
+			mylauncher->SetTargetSpeed(.9);
 		}
 		else if (aimingManually)
 		{
@@ -639,12 +640,19 @@ private:
 		else if(manualState == 1 )
 		{
 			ftime(&end_time);
-			if (deltaTime(&start_time, &end_time)>1500)
+			if (deltaTime(&start_time, &end_time)>2500)
 			{
+				std::cout<<"speed: "<<flyWheelOne->GetEncVel();
+				std::cout<<" , "<<flyWheelTwo->GetEncVel()<<std::endl;
 				holder->PushBall();
 				manualState=2;
 			}
 
+		}
+		else if (manualState==2)
+		{
+			std::cout<<"speed: "<<flyWheelOne->GetEncVel();
+			std::cout<<" , "<<flyWheelTwo->GetEncVel()<<std::endl;
 		}
 
 	}

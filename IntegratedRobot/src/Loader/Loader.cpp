@@ -9,7 +9,7 @@
 #include <WPILib.h>
 #define SETZEROSPEED -0.6
 #define ROLLERMOTORSPEED 1
-#define MED_ANGLE 8.5
+#define MED_ANGLE 7
 #define HIGH_ANGLE 17.5
 #define MINIMUM_ANGLE_ERROR 1
 #define MINIMUM_TIMEOUT 5000
@@ -39,10 +39,15 @@ void Loader::Obey(){
 	switch(state){
 	case LOW:
 		//GoToZeroLimitSwitch();
-		if(liftMotor.GetReverseLimitOK())
-			liftMotor.Set(SETZEROSPEED);
-		else
-			liftMotor.Set(0);
+		if(!atLimit){
+			if(liftMotor.GetReverseLimitOK())
+				liftMotor.Set(SETZEROSPEED);
+			else
+			{
+				atLimit = true;
+				liftMotor.Set(0);
+			}
+		}
 		break;
 	case HIGH:
 		ftime(&end_time);
@@ -95,6 +100,7 @@ void Loader::DisabledInit()
 }
 void Loader::SetLow(){
 	GoToZeroLimitSwitch();
+	atLimit = false;
 	state=LOW;
 	sAngCtrl->Disable();
 	StopRollers();

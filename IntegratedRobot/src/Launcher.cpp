@@ -51,6 +51,8 @@ void Launcher::Obey()
 #ifdef USING_PID
 	if(!atAngle){
 		if(targetAngle!=0){
+			pidsource->PIDGet();
+			pidsource->PIDGet();
 			if(pid->OnTarget())
 			{
 				atAngle = true;
@@ -141,7 +143,7 @@ void Launcher::ClumsyControl()
 				else if (currentAngle > targetAngle)
 				{
 					std::cout<<"going down!"<<std::endl;
-					shootAngle->Set(-.75-fmin(.05, .01*(currentAngle-targetAngle)));
+					shootAngle->Set(-.4-fmin(.05, .01*(currentAngle-targetAngle)));
 				}
 			}
 		}
@@ -149,7 +151,7 @@ void Launcher::ClumsyControl()
 void Launcher::GoToZero()
 {
 	if(shootAngle->GetReverseLimitOK())//the reverse limit switch is not depressed
-		shootAngle->Set(-.4);
+		shootAngle->Set(-.6);
 	else
 	{
 		shootAngle->Set(0);
