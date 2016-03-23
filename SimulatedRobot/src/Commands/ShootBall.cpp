@@ -9,7 +9,7 @@
 #include "Robot.h"
 #define GATE_DELAY 3
 #define FLYWHEEL_DELAY 2
-#define PUSH_DELAY 0.5
+#define PUSH_DELAY 1
 #define RESET_DELAY 0.1
 
 enum {
@@ -106,10 +106,8 @@ bool ShootBall::IsFinished() {
 				std::cout << "Shoot Error (ball did not leave before timeout)"<<std::endl;
 				return true;
 			}
-			else{
-				//std::cout << "Shot complete (ball ejected)"<<std::endl;
+			else
 				ResetShooter();
-			}
 		}
 		break;
 	case RESET_ANGLE:

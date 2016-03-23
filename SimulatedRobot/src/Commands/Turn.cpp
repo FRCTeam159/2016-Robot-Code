@@ -15,7 +15,7 @@
 #define AI 0.0005
 #define AD 0.4
 
-#define DEBUG_COMMAND
+//#define DEBUG_COMMAND
 
 Turn::Turn(double a)  : Command("Turn"), pid(AP,AI,AD,this,this,SIMRATE)
 {

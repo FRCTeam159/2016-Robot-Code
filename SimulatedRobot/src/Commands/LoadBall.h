@@ -11,6 +11,12 @@
 #include <Commands/Command.h>
 
 class LoadBall: public Command {
+	int state;
+	double elapsed_time;
+	void FindLow();
+	void SetLow();
+	void SetMedium();
+	void SetHigh();
 public:
 	LoadBall();
 	void Initialize();

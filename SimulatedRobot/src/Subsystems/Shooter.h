@@ -11,15 +11,21 @@
 #include "WPILib.h"
 #include "Subsystems/GPMotor.h"
 
-class Shooter: public Subsystem {
+class Shooter: public Subsystem , public PIDSource {
 	GPMotor angleMotor;
 	GPMotor leftMotor;
 	GPMotor rightMotor;
-	AnalogGyro angleGyro;
+	AnalogGyro accel;
+	DigitalInput lowerLimit;
+
 	double angle,max_angle,min_angle;
 	double flywheel_target;
 	double flywheel_speed;
 	void Init();
+	bool initialized;
+	double PIDGet();
+	void InitDefaultCommand();
+	void GoToLowerLimitSwitch();
 
 public:
 	Shooter();
@@ -34,6 +40,8 @@ public:
 
 	bool IsAtAngle();
 	bool IsAtSpeed();
+	bool AtLowerLimit();
+
 	double GetTargetSpeed();
 	double GetSpeed();
 	double GetAngle();
@@ -44,6 +52,10 @@ public:
 	void Log();
 	void LogSpeed(double d);
 	void LogAngle(double d);
+
+	bool IsInitialized();
+	void Initialize();
+	void SetInitialized();
 
 
 };

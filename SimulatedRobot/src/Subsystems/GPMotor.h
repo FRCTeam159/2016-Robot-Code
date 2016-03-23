@@ -96,6 +96,8 @@ public:
 	virtual void SetVoltage(double value);
 	virtual double GetVoltage();
 	virtual void SetDistance(double value);
+	virtual void SetSetpoint(double value);
+
 	virtual double GetDistance();
 	virtual double GetTargetError();
 	virtual double GetTargetCorrection();
@@ -110,7 +112,10 @@ public:
 
 	virtual void Disable();
 	virtual void SetPID(int mode, double P, double I, double D);
+	virtual void SetPID(int mode, double P, double I, double D, PIDSource *s);
 	virtual void SetPID(double P, double I, double D);
+	virtual void SetPID(double P, double I, double D, PIDSource *s);
+
 	virtual void ClearPID();
 	virtual PIDController *GetPID();
 	virtual void SetInputRange(double min, double max);

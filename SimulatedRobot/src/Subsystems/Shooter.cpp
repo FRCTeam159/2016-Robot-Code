@@ -6,6 +6,7 @@
  */
 #include "Assignments.h"
 #include <Subsystems/Shooter.h>
+#include <Commands/InitShooter.h>
 
 #define FWSPEED 300
 #define FP 0.001
@@ -21,9 +22,15 @@
 #define AMAX 70
 #define MAX_SPEED_ERROR 10
 #define MAX_ANGLE_ERROR 1
+#define SETZEROSPEED -0.6
 
 Shooter::Shooter() : Subsystem("Shooter"),
-	angleMotor(SHOOTER_ANGLE,true), leftMotor(SHOOTER_LEFT),rightMotor(SHOOTER_RIGHT),angleGyro(SHOOTER_PITCH)
+	angleMotor(SHOOTER_ANGLE,false),
+	leftMotor(SHOOTER_LEFT,true),
+	rightMotor(SHOOTER_RIGHT,true),
+	accel(SHOOTER_PITCH),
+	lowerLimit(SHOOTER_MIN)
+
 {
 	std::cout<<"New Shooter("<<SHOOTER_ANGLE<<","<<SHOOTER_LEFT<<","<<SHOOTER_RIGHT<<")"<<std::endl;
 	max_angle=AMAX; // max elevation (degrees)
@@ -44,23 +51,35 @@ Shooter::Shooter() : Subsystem("Shooter"),
 	flywheel_speed=0;
 
 	angle=0;
-	angleMotor.SetPID(GPMotor::POSITION, AP, AI, AD);
-	angleMotor.Reset(); // clear IAccum
-	angleMotor.SetDistancePerPulse(1.0); // 1 degree = 0.01745 radians
-	angleMotor.SetDistance(0);
+	angleMotor.SetPID(AP, AI, AD,this);
+	//angleMotor.Reset(); // clear IAccum
+	//angleMotor.SetDistancePerPulse(1.0); // 1 degree = 0.01745 radians
+	//angleMotor.SetDistance(0);
 	//angleMotor.SetInputRange(min_angle,max_angle);      // 0..70 degrees
 	angleMotor.SetTolerance(MAX_ANGLE_ERROR);
 	//angleMotor.SetToleranceBuffer(2);
+	initialized=false;
 	Log();
 }
 
+double Shooter::PIDGet() {
+	return accel.GetAngle();
+}
+
+void Shooter::InitDefaultCommand() {
+	SetDefaultCommand(new InitShooter());
+}
+
 void Shooter::AutonomousInit(){
+	std::cout << "Shooter::AutonomousInit"<<std::endl;
 	Init();
 }
 void Shooter::TeleopInit(){
+	std::cout << "Shooter::TeleopInit"<<std::endl;
 	Init();
 }
 void Shooter::DisabledInit(){
+	std::cout << "Shooter::DisabledInit"<<std::endl;
 	Disable();
 	angleMotor.SetDebug(0);
 	leftMotor.SetDebug(0);
@@ -82,8 +101,9 @@ void Shooter::Log() {
 
 // Initialize
 void Shooter::Init(){
-	angleMotor.SetDebug(2);
-
+	//angleMotor.SetDebug(2);
+	initialized=false;
+	angleMotor.SetTolerance(MAX_ANGLE_ERROR);
 	angleMotor.ClearIaccum();
 	angleMotor.Enable();
 	leftMotor.SetVelocity(0);
@@ -106,6 +126,8 @@ void Shooter::Disable(){
 	rightMotor.DisablePID();
 
 	angle=0;
+	initialized=false;
+
 	Log();
 }
 // Set the shooter angle
@@ -145,7 +167,7 @@ double Shooter::GetSpeed(){
 	return ave_speed;
 }
 double Shooter::GetAngle(){
-	double d=angleMotor.GetDistance();
+	double d=accel.GetAngle();
 	LogAngle(d);
 	return d;
 }
@@ -165,4 +187,27 @@ void Shooter::DisableFlywheels(){
 	Log();
 }
 
+void Shooter::SetInitialized() {
+	initialized=true;
+	angleMotor.Set(0);
+}
+void Shooter::Initialize() {
+	if(!AtLowerLimit())
+		GoToLowerLimitSwitch();
+	else
+		initialized=true;
+}
+bool Shooter::IsInitialized() {
+	if(initialized)
+		return true;
+	else
+		return AtLowerLimit();
+}
 
+void Shooter::GoToLowerLimitSwitch() {
+	angleMotor.SetVoltage(SETZEROSPEED);
+}
+
+bool Shooter::AtLowerLimit() {
+	return lowerLimit.Get();
+}

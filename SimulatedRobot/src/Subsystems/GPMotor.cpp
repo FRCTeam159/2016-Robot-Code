@@ -148,6 +148,14 @@ double GPMotor::PIDGet(){
 	return ReturnPIDInput();
 }
 
+void GPMotor::SetSetpoint(double value){
+#if MOTORTYPE == CANTALON
+	CANTalon::Set(value);
+#else
+	if(pid)
+		pid->SetSetpoint(value);
+#endif
+}
 void GPMotor::SetVelocity(double value){
 #if MOTORTYPE == CANTALON
 	CANTalon::Set(value);
@@ -181,7 +189,12 @@ double GPMotor::GetDistance(){
 #if MOTORTYPE == CANTALON
 	return CANTalon::GetPosition();
 #else
-	return encoder->GetDistance();
+	if(encoder)
+		return encoder->GetDistance();
+	else{
+		std::cout<<"ERROR GetDistance:encoder=NULL"<<std::endl;
+		return 0;
+	}
 #endif
 }
 
@@ -233,10 +246,8 @@ void GPMotor::Enable(){
 #if MOTORTYPE == CANTALON
 	CANTalon::Enable();
 #else
-//	if(pid)
-//		pid->Enable();
-	//else
-	//	std::cout<<"ERROR Enable:PID=NULL"<<std::endl;
+	if(pid)
+		pid->Enable();
 #endif
 }
 
@@ -255,8 +266,8 @@ void GPMotor::Disable(){
 	CANTalon::Disable();
 #else
 	Talon::Disable();
-//	if(pid)
-//		pid->Disable();
+	if(pid)
+		pid->Disable();
 #endif
 }
 
@@ -264,6 +275,11 @@ void GPMotor::SetPID(int mode, double P, double I, double D){
 	SetPID(P,I,D);
 	SetMode(mode);
 }
+void GPMotor::SetPID(int mode, double P, double I, double D,PIDSource *s){
+	SetPID(P,I,D,s);
+	SetMode(mode);
+}
+
 void GPMotor::SetInverted(bool t) {
 	inverted=t;
 	// This causes purposefully thrown exception in simulation
@@ -280,16 +296,20 @@ PIDController *GPMotor::GetPID(){
 }
 
 void GPMotor::SetPID(double P, double I, double D){
+	SetPID(P,I,D,this);
+}
+
+void GPMotor::SetPID(double P, double I, double D, PIDSource *s){
 #if MOTORTYPE != CANTALON
 	if(pid)
 		delete pid;
 #ifdef SIMULATION
-	pid=new GPPIDController(id,P, I, D,this,this,SIMPIDRATE);
+	pid=new GPPIDController(id,P, I, D,s,this,SIMPIDRATE);
 #else
-	pid=new PIDController(P, I, D,this,this);
+	pid=new PIDController(P, I, D,s,this);
 #endif
 #else
-	CANTalon::SetPID(P,I,D);
+	CANTalon::SetPID(P,I,D,s);
 #endif
 }
 

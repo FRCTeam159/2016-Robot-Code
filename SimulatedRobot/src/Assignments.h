@@ -25,6 +25,7 @@ enum dioIDs {  // limit switch ids
 	GATE_MAX     = 1,
 	LOADER_MIN   = 2,
 	LOADER_MAX   = 3,
+	SHOOTER_MIN  = 4,
 };
 
 enum AnalogIDs {  // limit switch ids
