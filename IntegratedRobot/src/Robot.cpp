@@ -118,7 +118,7 @@ private:
 	 */
 	void AutonomousInit()
 	{
-		autoSelected = *((std::string*)chooser->GetSelected());
+		/*autoSelected = *((std::string*)chooser->GetSelected());
 		//std::string autoSelected = SmartDashboard::GetString("Auto Selector", autoNameDefault);
 		std::cout << "Auto selected: " << autoSelected << std::endl;
 
@@ -126,25 +126,25 @@ private:
 			//Custom Auto goes here
 		} else {
 			//Default Auto goes here
-		}
-		mydrive->ConfigAuto(0,0,0); //configuring the left and right motors for autonomous and takes an input of PID
-		holder->AutonomousInit(); //configuring holder for autonomous, finds zero if it has not yet been found
+		}*/
+//		mydrive->ConfigAuto(0,0,0); //configuring the left and right motors for autonomous and takes an input of PID
+//		holder->AutonomousInit(); //configuring holder for autonomous, finds zero if it has not yet been found
 		loader->SetLow(); //make sure the loader is in the low position
 		autoState=1;
 	}
 
 	void AutonomousPeriodic()
 	{
-		if(autoSelected == autoNameCustom){
+		/*if(autoSelected == autoNameCustom){
 			//Custom Auto goes here
 		} else {
 			//Default Auto goes here
 
-		}
-		static int currentState=0;
-		AutoStateMachine(currentState);
-		mydrive->Obey(); //tank drive slaving, sets the targets of non slave wheels and sets slave wheel to targets of the master wheels
-		loader->Obey(); //loader state machine, only has Waiting state.
+		}*/
+//		static int currentState=0;
+//		AutoStateMachine(currentState);
+//		mydrive->Obey(); //tank drive slaving, sets the targets of non slave wheels and sets slave wheel to targets of the master wheels
+		loader->Obey(); //loader state machine
 		holder->AutoHold(); //holder state machine
 	}
 

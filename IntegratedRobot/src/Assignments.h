@@ -35,7 +35,7 @@ enum pwm_ids {
 enum dio_ids {
 	REVGATELIMIT=8,
 	FWDGATELIMIT=9,
-	IRSENSOR=10,
+	IRSENSOR=11,
 	SHOOTER_LIMIT = 1,
 };
 
