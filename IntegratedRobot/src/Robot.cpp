@@ -61,6 +61,7 @@ private:
 	float targetAngle=20;
 	bool pButton1=false, pButton2=false, pButton4=false;
 	bool aimingManually = false;
+	bool loadingManually = false;
 	void RobotInit()
 	{
 		chooser = new SendableChooser();

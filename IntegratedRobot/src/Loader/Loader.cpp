@@ -8,7 +8,7 @@
 #include <Loader/Loader.h>
 #include <WPILib.h>
 #define SETZEROSPEED -0.6
-#define ROLLERMOTORSPEED 1
+#define ROLLERMOTORSPEED -1
 #define MED_ANGLE 7
 #define HIGH_ANGLE 17.5
 #define MINIMUM_ANGLE_ERROR 1
@@ -47,6 +47,7 @@ void Loader::Obey(){
 			{
 				atLimit = true;
 				liftMotor.Set(0);
+				std::cout<<"loader::at bottom"<<std::endl;
 			}
 		}
 		break;
@@ -59,6 +60,9 @@ void Loader::Obey(){
 		break;
 	case MED:
 
+		break;
+	case MANUAL:
+		liftMotor.Set(ManualTarget);
 		break;
 	}
 }
@@ -119,6 +123,12 @@ void Loader::SetHigh(){
 	state=HIGH;
 	sAngCtrl->SetSetpoint(HIGH_ANGLE);
 	ftime(&start_time);
+}
+
+void Loader::SetManual()
+{
+	state = MANUAL;
+	sAngCtrl->Disable();
 }
 
 void Loader::GoToZeroLimitSwitch(){
@@ -182,3 +192,7 @@ void Loader::Cancel(){
 	}
 }
 
+void Loader::SetManualPower(float power)
+{
+	ManualTarget = power;
+}

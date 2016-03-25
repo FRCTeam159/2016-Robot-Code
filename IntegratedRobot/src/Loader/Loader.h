@@ -26,7 +26,7 @@ private:
 	double targetAngle;
 	int oldState;
 	double timeoutTime;
-
+	float ManualTarget= 0;
 
 
 #ifdef CANTALON_LIFTMOTOR
@@ -52,6 +52,7 @@ public:
 		HIGH,
 		MED,
 		CANCEL,
+		MANUAL,
 	};
 	Loader(int motor1, int motor2, I2C::Port p);
 	bool AtGrabAngle();
@@ -69,6 +70,8 @@ public:
 	void SetLow();
 	void SetMed();
 	void SetHigh();
+	void SetManual();
+	void SetManualPower(float);
 	void SetTimeoutTime(double t){
 		timeoutTime = t;
 	}
