@@ -47,6 +47,7 @@ void Loader::Obey(){
 			{
 				atLimit = true;
 				liftMotor.Set(0);
+				std::cout<<"loader::at bottom"<<std::endl;
 			}
 		}
 		break;
@@ -59,6 +60,9 @@ void Loader::Obey(){
 		break;
 	case MED:
 
+		break;
+	case MANUAL:
+		liftMotor.Set(ManualTarget);
 		break;
 	}
 }
@@ -119,6 +123,13 @@ void Loader::SetHigh(){
 	state=HIGH;
 	sAngCtrl->SetSetpoint(HIGH_ANGLE);
 	ftime(&start_time);
+}
+
+void Loader::SetManual()
+{
+	ManualTarget = 0;
+	state = MANUAL;
+	sAngCtrl->Disable();
 }
 
 void Loader::GoToZeroLimitSwitch(){
@@ -182,3 +193,7 @@ void Loader::Cancel(){
 	}
 }
 
+void Loader::SetManualPower(float power)
+{
+	ManualTarget = power;
+}

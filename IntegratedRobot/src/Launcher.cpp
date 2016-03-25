@@ -158,3 +158,8 @@ void Launcher::GoToZero()
 		atAngle=true;
 	}
 }
+
+void Launcher::ForceMove(float power)
+{
+	shootAngle->Set(power);
+}

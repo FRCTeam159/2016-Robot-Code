@@ -20,13 +20,12 @@ private:
 	//Victor *rollerMotor;
 	PIDController *sAngCtrl;
 	void SetAngle(float);
-	void SpinRollers(bool);
 	int state;
 	bool atLimit;
 	double targetAngle;
 	int oldState;
 	double timeoutTime;
-
+	float ManualTarget= 0;
 
 
 #ifdef CANTALON_LIFTMOTOR
@@ -43,7 +42,6 @@ private:
 	IntakeAngleAccelerometer accel;
 	void GoToZeroLimitSwitch();
 	bool IsAtLimit();
-	void StopRollers();
 public:
 	struct timeb start_time;
 	struct timeb end_time;
@@ -52,6 +50,7 @@ public:
 		HIGH,
 		MED,
 		CANCEL,
+		MANUAL,
 	};
 	Loader(int motor1, int motor2, I2C::Port p);
 	bool AtGrabAngle();
@@ -69,6 +68,10 @@ public:
 	void SetLow();
 	void SetMed();
 	void SetHigh();
+	void SetManual();
+	void SetManualPower(float);
+	void SpinRollers(bool);
+	void StopRollers();
 	void SetTimeoutTime(double t){
 		timeoutTime = t;
 	}
