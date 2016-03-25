@@ -8,7 +8,7 @@
 #include <Loader/Loader.h>
 #include <WPILib.h>
 #define SETZEROSPEED -0.6
-#define ROLLERMOTORSPEED -1
+#define ROLLERMOTORSPEED 1
 #define MED_ANGLE 7
 #define HIGH_ANGLE 17.5
 #define MINIMUM_ANGLE_ERROR 1
@@ -127,6 +127,7 @@ void Loader::SetHigh(){
 
 void Loader::SetManual()
 {
+	ManualTarget = 0;
 	state = MANUAL;
 	sAngCtrl->Disable();
 }

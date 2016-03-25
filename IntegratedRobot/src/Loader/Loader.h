@@ -20,7 +20,6 @@ private:
 	//Victor *rollerMotor;
 	PIDController *sAngCtrl;
 	void SetAngle(float);
-	void SpinRollers(bool);
 	int state;
 	bool atLimit;
 	double targetAngle;
@@ -43,7 +42,6 @@ private:
 	IntakeAngleAccelerometer accel;
 	void GoToZeroLimitSwitch();
 	bool IsAtLimit();
-	void StopRollers();
 public:
 	struct timeb start_time;
 	struct timeb end_time;
@@ -72,6 +70,8 @@ public:
 	void SetHigh();
 	void SetManual();
 	void SetManualPower(float);
+	void SpinRollers(bool);
+	void StopRollers();
 	void SetTimeoutTime(double t){
 		timeoutTime = t;
 	}

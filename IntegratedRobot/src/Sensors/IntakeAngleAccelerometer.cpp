@@ -44,8 +44,8 @@ double IntakeAngleAccelerometer::PIDGet()
 	dAngleZ = atan(result) * (180.0/PI);
 	//		printf("digital angles x=%f, y=%f, z=%f analog x=%f y=%f z=%f\n",
 	//				dAngleX, dAngleY, dAngleZ, angleX, angleY, angleZ);
-//	printf("%f, %f, %f\n",
-//	dAngleX, dAngleY, dAngleZ);
+	printf("%f, %f, %f\n",
+	dAngleX, dAngleY, dAngleZ);
 	float mountErr = 1;//mounting error
 	return(dAngleX-mountErr);
 }

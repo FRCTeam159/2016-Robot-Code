@@ -97,7 +97,7 @@ private:
 //		vertAnglePID = new PIDController(.01, 0.0001,0, shooterAngle, shooterAngleMotor);//INPUT CONSTANTS TODO
 //		vertAnglePID->SetOutputRange(-1,1);
 //		vertAnglePID->SetToleranceBuffer(5);
-		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, shooterAngle, shooterAngleMotor);
+//		mylauncher = new Launcher(flyWheelOne, flyWheelTwo, shooterAngle, shooterAngleMotor);
 		lidar = new Lidar(I2C::kMXP, 0x62);
 		stick= new Joystick(0);
 		holder = new Holder(HOLDER_GATE,HOLDER_PUSHER,IRSENSOR);
@@ -181,14 +181,14 @@ private:
 					loader->Continue();
 			}
 		}
-		if(button1&&aimingManually)
+		/*if(button1&&aimingManually)
 		{
 			mylauncher->SetTargetSpeed(.9);
 		}
 		else if (aimingManually)
 		{
 			mylauncher->SetTargetSpeed(0);
-		}
+		}*/ //disabled launcher
 		pButton1 = button1;
 
 		bool button2=stick->GetRawButton(SWITCH_CAMERA);
@@ -233,25 +233,46 @@ private:
 		bool button4 = stick->GetRawButton(4);
 		if(button4&&!pButton4)
 		{
-			aimingManually=!aimingManually;
-			if(aimingManually)
+			if(visionState==GetForwardImage||visionState==SendForwardImage)
 			{
-				manualState=0;
-				targetAngle = 20;
-//				mylauncher->SetAngle(targetAngle);
+				loadingManually = false;
+				loader->SetLow();
+				aimingManually=!aimingManually;
+				if(aimingManually)
+				{
+					manualState=0;
+					targetAngle = 20;
+					//				mylauncher->SetAngle(targetAngle);
+				}
+				else
+				{
+					/*mylauncher->SetTargetSpeed(0);
+					mylauncher->SetAngle(0);*/ //disabled launcher
+				}
 			}
 			else
-				mylauncher->SetTargetSpeed(0);
-				mylauncher->SetAngle(0);
+			{
+				aimingManually = false;
+				/*mylauncher->SetTargetSpeed(0);
+				mylauncher->SetAngle(0);*/ //disabled launcher
+				loadingManually = !loadingManually;
+				if(loadingManually)
+				{
+					loader->SetManual();
+				}
+				else
+					loader->SetLow();
+			}
 		}
 		pButton4 = button4;
 
-		if(aimingManually)
-			ManualAim();
-
+		/*if(aimingManually)
+			ManualAim();*/ //disabled launcher
+		if(loadingManually)
+			ManualLoad();
 		loader->Obey(); //loader state machine
 		holder->AutoHold(); //holder state machine
-		mylauncher->Obey(); //setting motors
+		//mylauncher->Obey(); //setting motors (disabled launcher)
 		mydrive->Obey(); //more motor slave stuff
 	}
 
@@ -657,6 +678,27 @@ private:
 			std::cout<<"speed: "<<flyWheelOne->GetEncVel();
 			std::cout<<" , "<<flyWheelTwo->GetEncVel()<<std::endl;
 		}
+
+	}
+	void ManualLoad()
+	{
+		bool button3=stick->GetRawButton(3);
+		bool button5=stick->GetRawButton(5);
+		if(button3)
+		{
+			loader->SetManualPower(-.6);
+		}
+		else if(button5)
+		{
+			loader->SetManualPower(.8);
+		}
+		else
+			loader->SetManualPower(0);
+		if(stick->GetRawButton(1))
+			loader->SpinRollers(true);
+		else
+			loader->StopRollers();
+
 
 	}
 	int deltaTime(struct timeb* first, struct timeb* after){
