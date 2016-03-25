@@ -237,7 +237,7 @@ private:
 			{
 				manualState=0;
 				targetAngle = 20;
-				mylauncher->SetAngle(targetAngle);
+//				mylauncher->SetAngle(targetAngle);
 			}
 			else
 				mylauncher->SetTargetSpeed(0);
@@ -621,13 +621,15 @@ private:
 		{
 			targetAngle-=5;
 			std::cout<<"target angle = "<<targetAngle<<std::endl;
-			mylauncher->SetAngle(targetAngle);
+//			mylauncher->SetAngle(targetAngle);
+			mylauncher->ForceMove(-.6);
 		}
 		if(button5&&!pbutton5)
 		{
 			targetAngle+=5;
 			std::cout<<"target angle = "<<targetAngle<<std::endl;
-			mylauncher->SetAngle(targetAngle);
+//			mylauncher->SetAngle(targetAngle);
+			mylauncher->ForceMove(1);
 		}
 		pbutton3 = button3;
 		pbutton5 = button5;

@@ -32,6 +32,7 @@ public:
 	bool AngleGood(float);
 	bool SpeedGood(float);
 	void Aim(float);
+	void ForceMove(float);
 	virtual ~Launcher();
 };
 
