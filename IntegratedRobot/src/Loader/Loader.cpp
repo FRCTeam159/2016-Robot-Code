@@ -20,7 +20,7 @@
 //state 2: roller motors stop and roller goes to limit switch
 
 Loader::Loader(int a, int b, I2C::Port p):liftMotor(a), rollerMotor(b), accel(p) {
-	liftMotor.ConfigRevLimitSwitchNormallyOpen(true);
+	liftMotor.ConfigFwdLimitSwitchNormallyOpen(true);
 	liftMotor.SetControlMode(CANTalon::kPercentVbus);
 	liftMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
 	liftMotor.SetInverted(true);
@@ -41,7 +41,7 @@ void Loader::Obey(){
 	case LOW:
 		//GoToZeroLimitSwitch();
 		if(!atLimit){
-			if(liftMotor.GetReverseLimitOK())
+			if(liftMotor.GetForwardLimitOK())
 				liftMotor.Set(SETZEROSPEED);
 			else
 			{
@@ -142,7 +142,7 @@ bool Loader::AtGrabAngle(){
 }
 
 bool Loader::AtZeroAngle(){
-	atLimit = liftMotor.IsRevLimitSwitchClosed();
+	atLimit = liftMotor.IsFwdLimitSwitchClosed();
 	return atLimit;
 }
 
