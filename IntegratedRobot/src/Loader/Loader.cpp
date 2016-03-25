@@ -23,6 +23,7 @@ Loader::Loader(int a, int b, I2C::Port p):liftMotor(a), rollerMotor(b), accel(p)
 	liftMotor.ConfigRevLimitSwitchNormallyOpen(true);
 	liftMotor.SetControlMode(CANTalon::kPercentVbus);
 	liftMotor.ConfigLimitMode(CANSpeedController::kLimitMode_SwitchInputsOnly);
+	liftMotor.SetInverted(true);
 	sAngCtrl= new PIDController(0.1,0,0, &accel, &liftMotor);
 	targetAngle = MED_ANGLE;
 	state = HIGH;
