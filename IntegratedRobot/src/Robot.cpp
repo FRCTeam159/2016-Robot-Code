@@ -69,7 +69,7 @@ private:
 		SmartDashboard::PutData("Auto Modes", chooser);
 
 		forwardCamera= new USBCamera("cam2", true);
-		reverseCamera= new USBCamera("cam1", true);
+		reverseCamera= new USBCamera("cam3", true);
 
 		forwardCamera->OpenCamera();
 		reverseCamera->OpenCamera();
