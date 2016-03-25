@@ -165,7 +165,9 @@ void Holder::TeleopInit(){
 	}
 	else if (IsLoaded())
 	{
-		state = WAIT_FOR_PUSH_REQUEST;
+		gateMotor.Enable();
+		gateMotor.Set(FORWARDLIMITPOSITION);
+		state=GO_TO_FORWARD_LIMIT;
 	}
 	else {
 		gateMotor.Set(0);
