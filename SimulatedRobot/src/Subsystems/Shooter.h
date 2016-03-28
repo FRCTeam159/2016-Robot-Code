@@ -13,8 +13,8 @@
 
 class Shooter: public Subsystem , public PIDSource {
 	GPMotor angleMotor;
-	GPMotor leftMotor;
-	GPMotor rightMotor;
+	GPMotor leftFWMotor;
+	GPMotor rightFWMotor;
 	AnalogGyro accel;
 	DigitalInput lowerLimit;
 

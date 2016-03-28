@@ -16,24 +16,29 @@ InitLoader::InitLoader() : Command("InitLoader") {
 }
 
 void InitLoader::Initialize() {
-	SetTimeout(INIT_TIMEOUT);
 	if(!Robot::loader->IsInitialized()){
-		std::cout << "InitLoader initializing Loader"<< std::endl;
+//		SetTimeout(INIT_TIMEOUT);
+		//std::cout << "InitLoader initializing Loader"<< std::endl;
 		Robot::loader->Initialize();
 	}
 }
 
 bool InitLoader::IsFinished() {
-	if(IsTimedOut()){
-		std::cout << "InitLoader Error: Timeout expired"<<std::endl;
-		return true;
-	}
-	return Robot::loader->AtLowerLimit();
+//	if(!Robot::loader->IsInitialized() &&  IsTimedOut()){
+//		return true;
+//	}
+	if(!Robot::loader->IsInitialized())
+		return Robot::loader->LifterTestLowerLimit();
+	return true;
 }
 
 void InitLoader::End() {
-	if(!Robot::loader->IsInitialized()){
-		std::cout << "InitLoader::End()"<< std::endl;
+	if(!Robot::loader->IsInitialized() && Robot::loader->LifterAtLowerLimit()){
+		std::cout << "InitLoader Loader at lower limit"<< std::endl;
 		Robot::loader->SetInitialized();
 	}
+}
+
+void InitLoader::Execute() {
+	Robot::loader->Log();
 }

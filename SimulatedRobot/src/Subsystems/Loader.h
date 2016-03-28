@@ -25,20 +25,23 @@ class Loader: public Subsystem, public PIDSource {
 	bool at_limit=false;
 	bool initialized;
 	void Init();
-	void Log();
 	void Disable();
 
 	double PIDGet();
 	void InitDefaultCommand();
 public:
 	Loader();
-	void SetTargetAngle(double a);
-	double GetTargetAngle();
-	bool AtAngle();
-	bool AtLowerLimit();
+	void Log();
 
-	void TurnRollerOn(bool b);
-	bool AreRollersOn();
+	void SetLifterAngle(double a);
+	double GetLifterAngle();
+	bool LifterAtTargetAngle();
+	bool LifterAtLowerLimit();
+	bool LifterTestLowerLimit();
+
+	void SpinRollers(bool b);
+	void TurnRollersOff();
+	bool RollersAreOn();
 
 	void AutonomousInit();
 	void TeleopInit();

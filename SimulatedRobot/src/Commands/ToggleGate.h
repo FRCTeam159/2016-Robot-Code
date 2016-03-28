@@ -21,10 +21,10 @@ class ToggleGate: public Command {
 public:
 	ToggleGate();
 	void Initialize();
-	void Execute();
+	void Execute() {}
 	bool IsFinished();
 	void End();
-	void Interrupted();
+	void Interrupted() { End();}
 };
 
 #endif /* SRC_COMMANDS_TOGGLEGATE_H_ */

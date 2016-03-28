@@ -12,7 +12,7 @@
 ToggleMode::ToggleMode()  : Command("ToggleMode"){
 	//Requires(Robot::oi.get());
 	last_state=OI::GetMode();
-	std::cout << "new ToggleMode("<<last_state<<")"<< std::endl;
+	std::cout << "new ToggleMode()"<< std::endl;
 
 }
 // Called just before this Command runs the first time
@@ -23,6 +23,10 @@ void ToggleMode::Initialize() {
 	else
 		OI::SetMode(OI::SHOOTING);
 	bool new_state=OI::GetMode();
-	std::cout << "Changing Mode - prev:"<< old_state <<" new:"<<new_state<<std::endl;
+	if(new_state==OI::SHOOTING)
+		std::cout << "Changing Mode to Shooting"<<std::endl;
+	else
+		std::cout << "Changing Mode to Loading"<<std::endl;
+
 	last_state=new_state;
 }

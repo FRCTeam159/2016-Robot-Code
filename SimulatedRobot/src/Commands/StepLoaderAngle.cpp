@@ -18,10 +18,10 @@ StepLoaderAngle::StepLoaderAngle(double a) : Command("StepLoaderAngle")  {
 
 void StepLoaderAngle::Initialize() {
 	SetTimeout(STEP_TIMEOUT);
-	double current=Robot::loader->GetTargetAngle();
+	double current=Robot::loader->GetLifterAngle();
 	double target=current+direction;
-	Robot::loader->SetTargetAngle(target);
-	double newangle=Robot::loader->GetTargetAngle();
+	Robot::loader->SetLifterAngle(target);
+	double newangle=Robot::loader->GetLifterAngle();
 	std::cout << "Changing Loader Angle - current:"<< current <<" new:"<<newangle<<std::endl;
 }
 
@@ -31,7 +31,7 @@ bool StepLoaderAngle::IsFinished() {
 		std::cout << "StepLoaderAngle Error:  Timeout expired"<<std::endl;
 		return true;
 	}
-	bool ontarget=Robot::loader->AtAngle();
+	bool ontarget=Robot::loader->LifterAtTargetAngle();
 	if(ontarget)
 		std::cout << "Loader At Angle:"<<std::endl;
 	return ontarget;

@@ -104,6 +104,7 @@ void DriveTrain::Drive(Joystick* joy) {
 	double left=-joy->GetY();
 	double right=-joy->GetRawAxis(4);
 #endif
+	//std::cout<<"l:"<<left<<" r:"<<right<<std::endl;
 	Limit(left);
 	Limit(right);
 	if(squared_inputs)

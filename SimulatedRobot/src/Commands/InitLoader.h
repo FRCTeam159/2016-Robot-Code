@@ -14,7 +14,7 @@ class InitLoader: public Command {
 public:
 	InitLoader();
 	void Initialize();
-	void Execute() {}
+	void Execute();
 	bool IsFinished();
 	void End();
 	void Interrupted() {End();}

@@ -21,6 +21,7 @@ public:
     JoystickButton* d_left;  // step angle down (shooter or loader)
     JoystickButton* d_up;    // shoot or grab ball (mode dependent)
     JoystickButton* d_down;  // mode switch button
+    JoystickButton* d_mode;  // mode switch button
 	Joystick* joy;
 
 	OI();
@@ -66,12 +67,28 @@ public:
 		bool Get(){ return oi->mode==LOADING && oi->d_up->Get();}
 	};
 
+	// Subclasses to bind up button depending on mode
+	class DownBtnCmnd1 : public Button {
+		OI *oi;
+	public:
+		DownBtnCmnd1(OI* p){ oi=p;}
+		bool Get(){ return oi->mode==SHOOTING && oi->d_down->Get();}
+	};
+	class DownBtnCmnd2 : public Button {
+		OI *oi;
+	public:
+		DownBtnCmnd2(OI* p){ oi=p;}
+		bool Get(){ return oi->mode==LOADING && oi->d_down->Get();}
+	};
+
 	RightBtnCmnd1 rightBtnCmnd1;
 	RightBtnCmnd2 rightBtnCmnd2;
 	LeftBtnCmnd1 leftBtnCmnd1;
 	LeftBtnCmnd2 leftBtnCmnd2;
 	UpBtnCmnd1 upBtnCmnd1;
 	UpBtnCmnd2 upBtnCmnd2;
+	DownBtnCmnd1 downBtnCmnd1;
+	DownBtnCmnd2 downBtnCmnd2;
 	static int mode;
 public:
 	Joystick* GetJoystick();

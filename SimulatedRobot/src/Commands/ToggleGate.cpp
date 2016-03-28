@@ -36,10 +36,6 @@ void ToggleGate::Initialize() {
 	}
 }
 
-// Called repeatedly when this Command is scheduled to run
-void ToggleGate::Execute() {
-	//Robot::holder->IsBallPresent();
-}
 // Make this return true when this Command no longer needs to run execute()
 bool ToggleGate::IsFinished() {
 	bool ontarget=false;
@@ -51,18 +47,11 @@ bool ToggleGate::IsFinished() {
 		ontarget=Robot::holder->IsGateOpen();
 		break;
 	}
-	if(ontarget){
-		std::cout << "ToggleGate on target"<< std::endl;
-	}
 	return ontarget;
 }
 // Called once after isFinished returns true
 void ToggleGate::End() {
+	std::cout << "ToggleGate on target"<< std::endl;
 	//Robot::holder->CloseGate();
 }
 
-// Called when another command which requires one or more of the same
-// subsystems is scheduled to run
-void ToggleGate::Interrupted() {
-	End();
-}

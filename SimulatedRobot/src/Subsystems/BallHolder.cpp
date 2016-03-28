@@ -27,7 +27,6 @@ void BallHolder::TeleopInit(){
 	Init();
 }
 void BallHolder::DisabledInit(){
-
 }
 
 bool BallHolder::IsGateOpen(){
@@ -41,13 +40,14 @@ bool BallHolder::IsGateClosed(){
 // BallHolder::IsBallPresent
 // ===========================================================================================================
 // - return true if the ball is in the holder
-// - for Gazebo simulation need to use an ultrasonic sensor (IRSensor not supported yet)
-//   o but sensor doesn't detect other surfaces of the robot(need something external)
-//   o also, if no object is detected the value returned is not changed from what was last detected
-//   o A problem observed is that if the ball is initially in holder the sensor returns some value (e.g.2.9)
-//     but if the sensor cone is at a low angle and narrow the value is unchanged when the ball is ejected
+// - Problems in simulation mode
+//   o for Gazebo simulation need to use an ultrasonic sensor (because IRSensor isn't supported yet)
+//   o but sensor doesn't detect other surfaces of the robot (i.e. need some external object)
+//   o also, if no object is detected the value returned is not changed from what was last detected (bug?)
+//   o A problem is that if the ball is initially in the holder the sensor returns some value (e.g. 2.9)
+//     but if the sensor is at a low angle (e.g. 0) the value is unchanged when the ball is ejected
 //     (because no other object is detected when the ball isn't present)
-//   o workaround was to point the sensor downward and increase the radius so that it detects
+//   o The workaround was to point the sensor downward and increase the radius so that it detects
 //     the ground plane when the ball isn't present
 // ===========================================================================================================
 bool BallHolder::IsBallPresent(){
@@ -59,7 +59,6 @@ bool BallHolder::IsBallPresent(){
 void BallHolder::Init(){
 	//pushMotor.SetPID(GPMotor::SPEED, 1.5, 0.001, 4);
 	pushMotor.Set(PUSHHOLDSPEED);
-
 }
 
 void BallHolder::OpenGate(){

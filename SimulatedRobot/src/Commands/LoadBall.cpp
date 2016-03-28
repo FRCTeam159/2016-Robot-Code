@@ -14,7 +14,6 @@
 #define FIND_LOW_DELAY 2
 
 enum {
-	FIND_LOW=1,
 	SET_MED=2,
 	SET_HIGH=3,
 	SET_LOW=4,
@@ -22,6 +21,7 @@ enum {
 
 LoadBall::LoadBall() : Command("LoadBall") {
 	Requires(Robot::loader.get());
+	Requires(Robot::holder.get());
 	state=0;
 	elapsed_time=0;
 	std::cout << "new LoadBall()"<< std::endl;
@@ -33,10 +33,8 @@ void LoadBall::Initialize() {
 
 }
 bool LoadBall::IsFinished() {
-	bool timed_out= IsTimedOut();
+	//bool timed_out= IsTimedOut();
 	switch(state){
-	case FIND_LOW:
-		break;
 	case SET_MED:
 		break;
 	case SET_HIGH:
