@@ -3,7 +3,7 @@
 #include "Assignments.h"
 
 std::shared_ptr<DriveTrain> Robot::drivetrain;
-std::shared_ptr<BallHolder> Robot::holder;
+std::shared_ptr<Holder> Robot::holder;
 std::shared_ptr<Shooter> Robot::shooter;
 std::shared_ptr<Loader> Robot::loader;
 std::shared_ptr<OI> Robot::oi;
@@ -13,10 +13,10 @@ std::unique_ptr<Autonomous> Robot::autonomous;
 
 void Robot::RobotInit() {
 	std::cout << "Robot::RobotInit" << std::endl;
-	drivetrain.reset(new DriveTrain());
-	holder.reset(new BallHolder());
-	shooter.reset(new Shooter());
+	holder.reset(new Holder());
 	loader.reset(new Loader());
+	shooter.reset(new Shooter());
+	drivetrain.reset(new DriveTrain());
 	oi.reset(new OI());
 
 	autonomous.reset(new Autonomous());

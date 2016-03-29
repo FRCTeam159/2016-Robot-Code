@@ -23,7 +23,7 @@ class Loader: public Subsystem, public PIDSource {
 	double min_angle=0;
 	bool rollers_on=false;
 	bool at_limit=false;
-	bool initialized;
+	bool initialized=false;
 	void Init();
 	void Disable();
 
@@ -37,7 +37,6 @@ public:
 	double GetLifterAngle();
 	bool LifterAtTargetAngle();
 	bool LifterAtLowerLimit();
-	bool LifterTestLowerLimit();
 
 	void SpinRollers(bool b);
 	void TurnRollersOff();
@@ -55,6 +54,8 @@ public:
 	bool IsInitialized();
 	void SetInitialized();
 	void Initialize();
+	bool TestIsInitialized();
+
 };
 
 #endif /* SRC_SUBSYSTEMS_LOADER_H_ */

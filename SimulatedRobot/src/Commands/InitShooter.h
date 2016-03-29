@@ -14,7 +14,7 @@ class InitShooter: public Command {
 public:
 	InitShooter();
 	void Initialize();
-	void Execute() {}
+	void Execute();
 	bool IsFinished();
 	void End();
 	void Interrupted() {End();}

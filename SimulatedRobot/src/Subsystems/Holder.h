@@ -5,23 +5,26 @@
  *      Author: alpiner
  */
 
-#ifndef SRC_SUBSYSTEMS_BALLHOLDER_H_
-#define SRC_SUBSYSTEMS_BALLHOLDER_H_
+#ifndef SRC_SUBSYSTEMS_HOLDER_H_
+#define SRC_SUBSYSTEMS_HOLDER_H_
 #include "WPILib.h"
 #include "Subsystems/GPMotor.h"
 
-class BallHolder: public Subsystem {
+class Holder: public Subsystem {
 	GPMotor gateMotor;
 	GPMotor pushMotor;
 	DigitalInput lowerLimit;
 	DigitalInput upperLimit;
 	AnalogInput ballSensor;
 
-	bool gateopen;
+	bool gateopen=false;
+	bool initialized=false;
+
 	void Init();
+	void InitDefaultCommand();
 
 public:
-	BallHolder();
+	Holder();
 	bool IsGateOpen();
 	bool IsGateClosed();
 	bool IsBallPresent();
@@ -33,6 +36,11 @@ public:
 	void TeleopInit();
 	void DisabledInit();
 
+	bool IsInitialized();
+	void SetInitialized();
+	void Initialize();
+	void Log();
+	void Execute();
 };
 
-#endif /* SRC_SUBSYSTEMS_BALLHOLDER_H_ */
+#endif /* SRC_SUBSYSTEMS_HOLDER_H_ */

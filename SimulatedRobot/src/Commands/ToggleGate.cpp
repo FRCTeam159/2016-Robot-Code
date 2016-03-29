@@ -22,7 +22,7 @@ void ToggleGate::Initialize() {
 		std::cout << "ToggleGate gate is currently Open: Closing ..."<< std::endl;
 		Robot::holder->CloseGate();
 	}
-	else if (Robot::holder->IsGateClosed()){//Otherwise, keep claws open.
+	else if (Robot::holder->IsGateClosed()){//Otherwise,open.
 		current_state=CLOSED;
 		target_state=OPEN;
 		std::cout << "ToggleGate gate is currently Closed: Opening ..."<< std::endl;

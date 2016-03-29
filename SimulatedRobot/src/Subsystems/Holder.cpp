@@ -4,40 +4,60 @@
  *  Created on: Feb 19, 2016
  *      Author: alpiner
  */
+#include <Commands/ExecHolder.h>
+#include <Subsystems/Holder.h>
 #include "Assignments.h"
-#include <Subsystems/BallHolder.h>
 
-#define GATEMOTORSPEED 0.5
+#define GATEMOTORSPEED 0.2
 #define PUSHMOTORSPEED 1.0
-#define PUSHHOLDSPEED 0.05
+#define PUSHHOLDSPEED 0.1
+
 #define BALLDETECTVALUE 0.5
 
-BallHolder::BallHolder() : Subsystem("Holder"),
+Holder::Holder() : Subsystem("Holder"),
 	gateMotor(HOLDER_GATE,false),pushMotor(HOLDER_PUSH,false),
 	lowerLimit(GATE_MIN),upperLimit(GATE_MAX),ballSensor(BALL_SENSOR)
 {
-	gateopen=false;
 	std::cout<<"New BallHolder("<<HOLDER_GATE<<","<<HOLDER_PUSH<<")"<<std::endl;
+	Log();
 }
 
-void BallHolder::AutonomousInit(){
-	Init();
-}
-void BallHolder::TeleopInit(){
-	Init();
-}
-void BallHolder::DisabledInit(){
+void Holder::Log() {
+	SmartDashboard::PutBoolean("Holder Initialized", IsInitialized());
+	SmartDashboard::PutBoolean("Gate Open", IsGateOpen());
+	SmartDashboard::PutBoolean("Gate Closed", IsGateClosed());
+	SmartDashboard::PutBoolean("Ball present", IsBallPresent());
 }
 
-bool BallHolder::IsGateOpen(){
+void Holder::InitDefaultCommand() {
+	SetDefaultCommand(new ExecHolder());
+}
+
+void Holder::Init(){
+	initialized=false;
+	pushMotor.Set(0);
+	gateMotor.Set(0);
+}
+
+void Holder::AutonomousInit(){
+	Init();
+}
+void Holder::TeleopInit(){
+	Init();
+}
+void Holder::DisabledInit(){
+	Init();
+}
+
+bool Holder::IsGateOpen(){
 	return upperLimit.Get();
 }
 
-bool BallHolder::IsGateClosed(){
+bool Holder::IsGateClosed(){
 	return lowerLimit.Get();
 }
 // ===========================================================================================================
-// BallHolder::IsBallPresent
+// Holder::IsBallPresent
 // ===========================================================================================================
 // - return true if the ball is in the holder
 // - Problems in simulation mode
@@ -50,30 +70,56 @@ bool BallHolder::IsGateClosed(){
 //   o The workaround was to point the sensor downward and increase the radius so that it detects
 //     the ground plane when the ball isn't present
 // ===========================================================================================================
-bool BallHolder::IsBallPresent(){
+bool Holder::IsBallPresent(){
 	double distance=ballSensor.GetAverageVoltage();
 	//std::cout<<"ballSensor:"<<distance<<std::endl;
 	return distance<BALLDETECTVALUE?true:false;
 }
 
-void BallHolder::Init(){
-	//pushMotor.SetPID(GPMotor::SPEED, 1.5, 0.001, 4);
-	pushMotor.Set(PUSHHOLDSPEED);
-}
-
-void BallHolder::OpenGate(){
-	gateopen=true;
-	pushMotor.Set(PUSHHOLDSPEED);
+void Holder::OpenGate(){
 	gateMotor.Set(GATEMOTORSPEED);
 }
-void BallHolder::CloseGate(){
-	gateopen=false;
-	pushMotor.Set(PUSHHOLDSPEED);
+void Holder::CloseGate(){
 	gateMotor.Set(-GATEMOTORSPEED);
 }
-void BallHolder::PushBall(bool t){
+void Holder::PushBall(bool t){
 	if(t)
 		pushMotor.Set(PUSHMOTORSPEED);
 	else
 		pushMotor.Set(PUSHHOLDSPEED);
+}
+
+bool Holder::IsInitialized() {
+	return initialized;
+}
+
+void Holder::SetInitialized() {
+	initialized=true;
+	gateMotor.Set(0);
+}
+
+void Holder::Initialize() {
+	if(!IsGateClosed())
+		gateMotor.Set(-GATEMOTORSPEED);
+}
+
+// ===========================================================================================================
+// Holder::Execute
+// ===========================================================================================================
+// Called repeatedly from Default Command (ExecHolder) in Teleop Mode
+// - if !initialized, goto lower limit switch (close gate)
+// - else if ball is present pinch ball (open gate)
+// ===========================================================================================================
+void Holder::Execute() {
+	Log();
+	if(!initialized){
+		if(IsGateClosed())
+			SetInitialized();
+		else
+			gateMotor.Set(-GATEMOTORSPEED);
+	}
+	else if(IsBallPresent()){
+		gateMotor.Set(GATEMOTORSPEED);
+		pushMotor.Set(PUSHHOLDSPEED);
+	}
 }

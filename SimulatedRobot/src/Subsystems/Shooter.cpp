@@ -13,9 +13,9 @@
 #define FI 0.00001
 #define FD 0.0001
 
-#define AP 0.2
+#define AP 0.1
 #define AI 0.001
-#define AD 0.3
+#define AD 0.2
 #define FVMAX 1000
 #define FVMIN -1000
 #define AMIN 0
@@ -62,13 +62,20 @@ Shooter::Shooter() : Subsystem("Shooter"),
 	Log();
 }
 
-double Shooter::PIDGet() {
-	return accel.GetAngle();
+void Shooter::Log() {
+	SmartDashboard::PutBoolean("Shooter Initialized", IsInitialized());
+	LogAngle(GetAngle());
+	LogSpeed(GetSpeed());
 }
 
 void Shooter::InitDefaultCommand() {
 	SetDefaultCommand(new InitShooter());
 }
+
+double Shooter::PIDGet() {
+	return accel.GetAngle();
+}
+
 
 void Shooter::AutonomousInit(){
 	std::cout << "Shooter::AutonomousInit"<<std::endl;
@@ -93,25 +100,16 @@ void Shooter::LogAngle(double d) {
 	SmartDashboard::PutNumber("Shooter Angle", d);
 }
 
-void Shooter::Log() {
-	LogAngle(GetAngle());
-	LogSpeed(GetSpeed());
-}
-
-
 // Initialize
 void Shooter::Init(){
 	//angleMotor.SetDebug(2);
 	initialized=false;
 	angleMotor.SetTolerance(MAX_ANGLE_ERROR);
 	angleMotor.ClearIaccum();
-	angleMotor.Enable();
+	angleMotor.DisablePID();
+
 	leftFWMotor.SetVelocity(0);
 	rightFWMotor.SetVelocity(0);
-
-	//leftFWMotor.Enable();
-	//rightFWMotor.Enable();
-
 	Log();
 }
 
@@ -189,19 +187,20 @@ void Shooter::DisableFlywheels(){
 
 void Shooter::SetInitialized() {
 	initialized=true;
-	angleMotor.Set(0);
+	angleMotor.SetSetpoint(0);
+	angle=0;
+	accel.Reset();
+	angleMotor.EnablePID();
 }
+
 void Shooter::Initialize() {
-	if(!AtLowerLimit())
+	if(!AtLowerLimit()){
+		angleMotor.DisablePID();
 		GoToLowerLimitSwitch();
-	else
-		initialized=true;
+	}
 }
 bool Shooter::IsInitialized() {
-	if(initialized)
-		return true;
-	else
-		return AtLowerLimit();
+	return initialized;
 }
 
 void Shooter::GoToLowerLimitSwitch() {
@@ -210,4 +209,14 @@ void Shooter::GoToLowerLimitSwitch() {
 
 bool Shooter::AtLowerLimit() {
 	return lowerLimit.Get();
+}
+
+bool Shooter::TestIsInitialized() {
+	if(AtLowerLimit() || initialized){
+		return true;
+	}
+	else{
+		angleMotor.SetVoltage(SETZEROSPEED);
+		return false;
+	}
 }

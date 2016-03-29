@@ -57,6 +57,7 @@ public:
 	void Initialize();
 	void SetInitialized();
 
+	bool TestIsInitialized();
 
 };
 

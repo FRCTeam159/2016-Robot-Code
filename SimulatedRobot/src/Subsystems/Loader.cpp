@@ -40,6 +40,7 @@ void Loader::InitDefaultCommand() {
 }
 
 void Loader::Log() {
+	SmartDashboard::PutBoolean("Loader Initialized", IsInitialized());
 	SmartDashboard::PutNumber("Loader Angle", accel.GetAngle());
 }
 
@@ -110,7 +111,6 @@ double Loader::PIDGet() {
 }
 
 void Loader::GoToLowerLimitSwitch() {
-	liftMotor.DisablePID();
 	liftMotor.SetVoltage(SETZEROSPEED);
 }
 
@@ -140,23 +140,23 @@ void Loader::SetInitialized() {
 	accel.Reset();
 }
 
-bool Loader::LifterTestLowerLimit() {
-	if(LifterAtLowerLimit()){
-		liftMotor.Set(0);
+bool Loader::TestIsInitialized() {
+	if(LifterAtLowerLimit() || initialized){
 		return true;
 	}
-	else{
+	else{ // keep stepping lifter downwards to lower limit switch
 		liftMotor.SetVoltage(SETZEROSPEED);
 		return false;
 	}
 }
 
 void Loader::Initialize() {
-	if(!LifterAtLowerLimit())
+	if(!LifterAtLowerLimit()){
+		liftMotor.DisablePID();
 		GoToLowerLimitSwitch();
-	else
-		initialized=true;
+	}
 }
+
 bool Loader::IsInitialized() {
 	return initialized;
 }

@@ -11,8 +11,8 @@
 #define MAX_HEADING_ERROR 0.5 // degrees
 #define TURN_TIMEOUT 3 // degrees
 
-#define AP 0.05
-#define AI 0.0005
+#define AP 0.1
+#define AI 0.001
 #define AD 0.4
 
 //#define DEBUG_COMMAND

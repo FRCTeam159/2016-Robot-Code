@@ -95,10 +95,13 @@ public:
 	virtual double GetVelocity();
 	virtual void SetVoltage(double value);
 	virtual double GetVoltage();
+
 	virtual void SetDistance(double value);
 	virtual void SetSetpoint(double value);
 
 	virtual double GetDistance();
+	virtual double GetPosition() { return GetDistance();}
+
 	virtual double GetTargetError();
 	virtual double GetTargetCorrection();
 

@@ -7,7 +7,7 @@
 
 #include <Commands/ShootBall.h>
 #include "Robot.h"
-#define GATE_DELAY 3
+#define GATE_DELAY 2
 #define FLYWHEEL_DELAY 2
 #define PUSH_DELAY 1
 #define RESET_DELAY 0.1

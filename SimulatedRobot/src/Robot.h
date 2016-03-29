@@ -13,8 +13,8 @@
 #include "Commands/Autonomous.h"
 
 #include <Subsystems/DriveTrain.h>
+#include <Subsystems/Holder.h>
 #include <Subsystems/Shooter.h>
-#include <Subsystems/BallHolder.h>
 #include <Subsystems/Loader.h>
 
 #include "OI.h"
@@ -24,7 +24,7 @@ public:
 	static int mode;
 
 	static std::shared_ptr<DriveTrain> drivetrain;
-	static std::shared_ptr<BallHolder> holder;
+	static std::shared_ptr<Holder> holder;
 	static std::shared_ptr<Shooter> shooter;
 	static std::shared_ptr<Loader> loader;
 	static std::shared_ptr<OI> oi;
