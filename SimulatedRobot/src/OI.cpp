@@ -13,6 +13,7 @@
 #include "Commands/LoadBall.h"
 #include "Commands/ToggleGate.h"
 #include "Commands/ToggleRollers.h"
+#include <Commands/CancelLoad.h>
 
 int OI::mode=SHOOTING;
 
@@ -43,17 +44,17 @@ OI::OI() :
 
     // bind commands based on current mode
     // case 1: SHOOTER mode
+    upBtnCmnd1.WhenPressed(new ShootBall());
     rightBtnCmnd1.WhenPressed(new StepShooterAngle(10));
     leftBtnCmnd1.WhenPressed(new StepShooterAngle(-10));
-    upBtnCmnd1.WhenPressed(new ShootBall());
     downBtnCmnd1.WhenPressed(new ToggleGate());
 
     // case 1: LOADER mode
+    upBtnCmnd2.WhenPressed(new LoadBall());
     rightBtnCmnd2.WhenPressed(new StepLoaderAngle(5));
     leftBtnCmnd2.WhenPressed(new StepLoaderAngle(-5));
-    upBtnCmnd2.WhenPressed(new LoadBall());
-    downBtnCmnd2.WhenPressed(new ToggleRollers());
-
+    downBtnCmnd2.WhenPressed(new CancelLoad()); // cancel load
+    //downBtnCmnd2.WhenPressed(new ToggleRollers()); // cancel load
 }
 
 Joystick* OI::GetJoystick() {

@@ -10,13 +10,14 @@
 
 #include "WPILib.h"
 
-class OI {
-public:
 	enum {
 		SHOOTING,
 		LOADING,
 	};
+
+class OI {
 public:
+
     JoystickButton* d_right; // step angle up (shooter or loader)
     JoystickButton* d_left;  // step angle down (shooter or loader)
     JoystickButton* d_up;    // shoot or grab ball (mode dependent)

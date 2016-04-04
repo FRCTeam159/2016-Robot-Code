@@ -7,21 +7,22 @@
 
 #include <Commands/Autonomous.h>
 #include <Commands/DriveStraight.h>
+#include <Commands/ExecLoader.h>
+#include <Commands/CloseGate.h>
 #include <Commands/OpenGate.h>
 #include <Commands/StepShooterAngle.h>
 #include <Commands/ShootBall.h>
 #include <Commands/Turn.h>
 #include <Commands/FullStop.h>
-#include <Commands/InitLoader.h>
 #include "Robot.h"
 
 Autonomous::Autonomous() : CommandGroup("Autonomous") {
-	Requires(Robot::drivetrain.get());
-	AddSequential(new InitLoader()); // lower lifter
+	//Requires(Robot::drivetrain.get());
+	AddSequential(new CloseGate()); // hold the ball
 	AddSequential(new OpenGate()); // pinch the ball
-	AddSequential(new DriveStraight(6,0)); // go forward
-	AddSequential(new Turn(-43)); // turn
-	AddSequential(new StepShooterAngle(30)); // set angle
+	AddSequential(new DriveStraight(7,0)); // go forward
+	AddSequential(new Turn(-45)); // turn
+	AddSequential(new StepShooterAngle(35)); // set angle
 	AddSequential(new ShootBall()); // shoot
 	AddSequential(new FullStop()); // end autonomous
 }

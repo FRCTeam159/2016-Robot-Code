@@ -19,9 +19,7 @@ void CloseGate::Initialize() {
 	std::cout << "CloseGate started"<<std::endl;
 }
 bool CloseGate::IsFinished() {
-	bool done=Robot::holder->IsGateClosed();
-	//std::cout << "CloseGate complete"<< std::endl;
-	return done;
+	return Robot::holder->IsGateClosed();
 }
 
 void CloseGate::End() {

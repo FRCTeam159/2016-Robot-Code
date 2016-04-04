@@ -4,22 +4,25 @@
  *  Created on: Mar 21, 2016
  *      Author: alpiner
  */
-#include <Commands/InitLoader.h>
+#include <Commands/ExecLoader.h>
 #include "Assignments.h"
 #include <Subsystems/Loader.h>
 
-#define ROLLER_SPEED 1
-#define SETZEROSPEED -0.2
+#define LOAD_ROLLER_SPEED 0.9
+#define EXPEL_ROLLER_SPEED 0.5
 
-#define MED_ANGLE 7.0
-#define HIGH_ANGLE 17.5
+#define SETZEROSPEED -0.2
+#define LIFT_ASSIST_SPEED 0.3
+
+#define MED_ANGLE 6
+#define HIGH_ANGLE 12
 #define LOW_ANGLE 0.0
 #define MAX_ANGLE 50
 
 #define MAX_ANGLE_ERROR 1
-#define P 0.1
-#define I 0.0
-#define D 0.0
+#define P 0.3
+#define I 0.002
+#define D 0.2
 
 Loader::Loader() : Subsystem("Loader"),
   liftMotor(LOADER_ANGLE,false),
@@ -31,32 +34,90 @@ Loader::Loader() : Subsystem("Loader"),
 	liftMotor.SetTolerance(MAX_ANGLE_ERROR);
 	liftMotor.Disable();
 	initialized=false;
+	roller_speed=LOAD_ROLLER_SPEED;
 	accel.Reset();
 	Log();
 }
 
 void Loader::InitDefaultCommand() {
-	SetDefaultCommand(new InitLoader());
+	SetDefaultCommand(new ExecLoader());
 }
 
 void Loader::Log() {
-	SmartDashboard::PutBoolean("Loader Initialized", IsInitialized());
-	SmartDashboard::PutNumber("Loader Angle", accel.GetAngle());
+	SmartDashboard::PutBoolean("Loading", Loading());
+	SmartDashboard::PutNumber("Lifter Angle", -accel.GetAngle());
+	SmartDashboard::PutBoolean("Rollers", rollers_on);
+}
+
+// ===========================================================================================================
+// Loader::Execute
+// ===========================================================================================================
+// Called repeatedly in Teleop Mode
+// - if not initialized, goto lower limit switch
+// ===========================================================================================================
+void Loader::Execute() {
+	Log();
+	if(!initialized){
+		if(!LifterAtLowerLimit())
+			GoToZeroLimitSwitch();
+		else
+			SetInitialized();
+	}
+}
+
+// ===========================================================================================================
+// Loader::SetMin
+// - Set lifter to low position
+// ===========================================================================================================
+void Loader::SetLow() {
+	StopRollers();
+	liftMotor.Disable();
+	GoToZeroLimitSwitch();
+}
+
+// ===========================================================================================================
+// Loader::SetMed
+// - Set lifter to grab position
+// ===========================================================================================================
+void Loader::LoadBall() {
+	liftMotor.Disable();
+	liftMotor.Set(LIFT_ASSIST_SPEED);
+	roller_speed=LOAD_ROLLER_SPEED;
+}
+
+void Loader::CancelLoad()
+{
+	SetLow();
+//	liftMotor.SetSetpoint(HIGH_ANGLE);
+//	roller_speed=EXPEL_ROLLER_SPEED;
+//	SpinRollers(false);
+//	cancelling=true;
+}
+bool Loader::LifterAtLowerLimit() {
+	return lowerLimit.Get();
+}
+
+bool Loader::Loading() {
+	return loading;
+}
+void Loader::SetLoading(bool b) {
+	loading=b;
 }
 
 void Loader::Disable(){
 	liftMotor.Reset();
 	liftMotor.Disable();
 	rollerMotor.Disable();
-	angle=0;
-	liftMotor.SetDebug(0);
 	initialized=false;
+	roller_speed=0;
 	Log();
 }
 
 // Initialize
 void Loader::Init(){
 	initialized=false;
+	roller_speed=LOAD_ROLLER_SPEED;
+	Log();
 }
 
 void Loader::AutonomousInit(){
@@ -78,8 +139,9 @@ void Loader::SetLifterAngle(double a){
 	angle=a;
 	liftMotor.SetSetpoint(angle);
 	liftMotor.Enable();
+	Log();
 }
-bool Loader::LifterAtTargetAngle(){
+bool Loader::LifterIsAtTargetAngle(){
 	Log();
 	return liftMotor.OnTarget();
 }
@@ -88,50 +150,26 @@ double Loader::GetLifterAngle(){
 	return angle;
 }
 
-void Loader::TurnRollersOff() {
+void Loader::StopRollers() {
 	rollerMotor.Disable();
-	//rollerMotor.SetVoltage(0);
 	rollers_on=false;
 }
 
 void Loader::SpinRollers(bool forward) {
 	if(forward)
-		rollerMotor.SetVoltage(ROLLER_SPEED);
+		rollerMotor.Set(roller_speed);
 	else
-		rollerMotor.SetVoltage(-ROLLER_SPEED);
+		rollerMotor.Set(-roller_speed);
 	rollers_on=true;
+	liftMotor.Set(LIFT_ASSIST_SPEED);
 }
 
 bool Loader::RollersAreOn() {
 	return rollers_on;
 }
 
-double Loader::PIDGet() {
-	return -accel.GetAngle();
-}
-
-void Loader::GoToLowerLimitSwitch() {
+void Loader::GoToZeroLimitSwitch() {
 	liftMotor.SetVoltage(SETZEROSPEED);
-}
-
-void Loader::SetLow() {
-	liftMotor.SetSetpoint(LOW_ANGLE);
-}
-
-void Loader::SetMed() {
-	liftMotor.SetSetpoint(MED_ANGLE);
-}
-
-void Loader::SetHigh() {
-	liftMotor.SetSetpoint(HIGH_ANGLE);
-}
-
-void Loader::SetMax() {
-	liftMotor.SetSetpoint(MAX_ANGLE);
-}
-
-bool Loader::LifterAtLowerLimit() {
-	return lowerLimit.Get();
 }
 
 void Loader::SetInitialized() {
@@ -140,23 +178,18 @@ void Loader::SetInitialized() {
 	accel.Reset();
 }
 
-bool Loader::TestIsInitialized() {
-	if(LifterAtLowerLimit() || initialized){
-		return true;
-	}
-	else{ // keep stepping lifter downwards to lower limit switch
-		liftMotor.SetVoltage(SETZEROSPEED);
-		return false;
-	}
-}
-
 void Loader::Initialize() {
 	if(!LifterAtLowerLimit()){
 		liftMotor.DisablePID();
-		GoToLowerLimitSwitch();
+		GoToZeroLimitSwitch();
 	}
 }
 
 bool Loader::IsInitialized() {
 	return initialized;
 }
+
+double Loader::PIDGet() {
+	return -accel.GetAngle();
+}
+

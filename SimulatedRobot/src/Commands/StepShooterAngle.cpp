@@ -12,6 +12,7 @@
 
 StepShooterAngle::StepShooterAngle(double a) : Command("StepShooterAngle") {
 	Requires(Robot::shooter.get());
+	Requires(Robot::holder.get());
 	std::cout << "new StepShooterAngle("<<a<<")"<< std::endl;
 	direction=a;
 }
@@ -28,7 +29,10 @@ void StepShooterAngle::Initialize() {
 	double target=current+direction;
 	target=target>=max?max:target;
 	target=target<=min?min:target;
-	std::cout << "Changing Shooter Angle - current:"<< current <<" new:"<<target<<std::endl;
+	double push_speed=0.1*target/max;
+
+	std::cout << "Changing Shooter Angle - current:"<< current <<" new:"<<target<<" push:"<<push_speed<<std::endl;
+	Robot::holder->SetPushHoldSpeed(push_speed);
 	Robot::shooter->SetTargetAngle(target);
 }
 

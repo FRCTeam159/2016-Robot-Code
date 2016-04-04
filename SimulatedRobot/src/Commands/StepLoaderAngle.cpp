@@ -31,7 +31,7 @@ bool StepLoaderAngle::IsFinished() {
 		std::cout << "StepLoaderAngle Error:  Timeout expired"<<std::endl;
 		return true;
 	}
-	bool ontarget=Robot::loader->LifterAtTargetAngle();
+	bool ontarget=Robot::loader->LifterIsAtTargetAngle();
 	if(ontarget)
 		std::cout << "Loader At Angle:"<<std::endl;
 	return ontarget;

@@ -18,14 +18,7 @@ DriveTrain::DriveTrain() : Subsystem("DriveTrain"),
 	std::cout<<"New DriveTrain("<<DRIVE_LEFT<<","<<DRIVE_RIGHT<<")"<<std::endl;
 	SetDistancePerPulse(WHEEL_DIAMETER,WHEEL_TICKS,INVERT_RIGHT_SIDE);
 	SetDeadband(DEADBAND,DEADBAND);
-	disabled=true;
-	pid_disabled=true;
-	target_distance=0;
-	SetInverted(false); // invert motor direction on right side
 	gyro.Reset();
-	//LiveWindow::GetInstance()->AddSensor("Drive Train", "Heading", gyro);
-	//SmartDashboard::PutNumber("Drive Train Distance", GetDistance());
-
 	Log();
 }
 
@@ -104,6 +97,12 @@ void DriveTrain::Drive(Joystick* joy) {
 	double left=-joy->GetY();
 	double right=-joy->GetRawAxis(4);
 #endif
+	if(reverse_driving){
+		double r=right;
+		double l=left;
+		left=-r;
+		right=-l;
+	}
 	//std::cout<<"l:"<<left<<" r:"<<right<<std::endl;
 	Limit(left);
 	Limit(right);
@@ -228,4 +227,12 @@ double DriveTrain::GetLeftVoltage(){
 }
 double DriveTrain::GetRightVoltage(){
 	return right_motor.GetVoltage();
+}
+
+void DriveTrain::SetReverseDriving(bool b) {
+	reverse_driving=b;
+}
+
+bool DriveTrain::ReverseDriving() {
+	return reverse_driving;
 }

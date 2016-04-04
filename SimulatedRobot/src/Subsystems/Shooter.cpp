@@ -13,9 +13,9 @@
 #define FI 0.00001
 #define FD 0.0001
 
-#define AP 0.1
+#define AP 0.08
 #define AI 0.001
-#define AD 0.2
+#define AD 0.3
 #define FVMAX 1000
 #define FVMIN -1000
 #define AMIN 0
@@ -65,7 +65,7 @@ Shooter::Shooter() : Subsystem("Shooter"),
 void Shooter::Log() {
 	SmartDashboard::PutBoolean("Shooter Initialized", IsInitialized());
 	LogAngle(GetAngle());
-	LogSpeed(GetSpeed());
+	LogSpeed(GetFWSpeed());
 }
 
 void Shooter::InitDefaultCommand() {
@@ -149,7 +149,7 @@ bool Shooter::IsAtAngle(){
 }
 bool Shooter::IsAtSpeed(){
 	bool ontarget= leftFWMotor.OnTarget() && rightFWMotor.OnTarget();
-	GetSpeed();
+	GetFWSpeed();
 	return ontarget;
 }
 
@@ -159,7 +159,7 @@ double Shooter::GetTargetAngle(){
 double Shooter::GetTargetSpeed(){
 	return flywheel_target;
 }
-double Shooter::GetSpeed(){
+double Shooter::GetFWSpeed(){
 	double ave_speed=(leftFWMotor.GetVelocity()+rightFWMotor.GetVelocity());
 	LogSpeed(ave_speed);
 	return ave_speed;

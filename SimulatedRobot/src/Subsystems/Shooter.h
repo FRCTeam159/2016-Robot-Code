@@ -43,7 +43,7 @@ public:
 	bool AtLowerLimit();
 
 	double GetTargetSpeed();
-	double GetSpeed();
+	double GetFWSpeed();
 	double GetAngle();
 
 	void AutonomousInit();

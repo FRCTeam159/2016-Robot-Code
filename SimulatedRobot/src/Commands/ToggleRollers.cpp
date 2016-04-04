@@ -16,7 +16,7 @@ void ToggleRollers::Initialize() {
 	initial_state=Robot::loader->RollersAreOn();
 	if(initial_state==ROLLERS_ON){
 		target_state=ROLLERS_OFF;
-		Robot::loader->TurnRollersOff();
+		Robot::loader->StopRollers();
 		std::cout << "Rollers are currently On: Stopping ..."<< std::endl;
 	}
 	else{
@@ -34,4 +34,9 @@ void ToggleRollers::End() {
 	else
 		std::cout << "ToggleRollers Rollers are Off"<< std::endl;
 
+}
+
+void ToggleRollers::Execute() {
+	if(target_state==ROLLERS_ON)
+		Robot::loader->SpinRollers(true);
 }

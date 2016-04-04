@@ -14,6 +14,8 @@ ExecHolder::ExecHolder() : Command("InitHolder")  {
 }
 
 void ExecHolder::Initialize() {
+	std::cout << "ExecHolder:Initialize()"<< std::endl;
+
 	if(!Robot::holder->IsInitialized())
 		Robot::holder->Initialize();
 }
@@ -23,9 +25,13 @@ bool ExecHolder::IsFinished() {
 }
 
 void ExecHolder::End() {
-	std::cout << "InitHolder:End()"<< std::endl;
+	std::cout << "ExecHolder:End()"<< std::endl;
 }
 
 void ExecHolder::Execute() {
 	Robot::holder->Execute();
+}
+
+void ExecHolder::Interrupted() {
+	std::cout << "ExecHolder:Interrupted()"<< std::endl;
 }

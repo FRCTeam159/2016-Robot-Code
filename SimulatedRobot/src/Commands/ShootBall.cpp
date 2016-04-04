@@ -7,8 +7,8 @@
 
 #include <Commands/ShootBall.h>
 #include "Robot.h"
-#define GATE_DELAY 2
-#define FLYWHEEL_DELAY 2
+#define GATE_DELAY 1
+#define FLYWHEEL_DELAY 1
 #define PUSH_DELAY 1
 #define RESET_DELAY 0.1
 
@@ -43,7 +43,7 @@ void ShootBall::TurnFlywheelsOn(){
 void ShootBall::PushBall(){
 	state=PUSHER_ON;
 	elapsed_time=TimeSinceInitialized();
-	double speed=Robot::shooter->GetSpeed();
+	double speed=Robot::shooter->GetFWSpeed();
 	std::cout<<elapsed_time << " Flywheel speed="<<speed<<" PushBall started .."<<std::endl;
 	Robot::holder->PushBall(true);
 	SetTimeout(elapsed_time+PUSH_DELAY);
@@ -92,11 +92,11 @@ bool ShootBall::IsFinished() {
 			TurnFlywheelsOn();
 		break;
 	case FLYWHEELS_ON:
-		if(timed_out){
-			std::cout << "Shoot Error (flywheels not at speed before timeout)"<<std::endl;
-			return true;
-		}
-		if(Robot::shooter->IsAtSpeed()){
+		//if(timed_out){
+			//std::cout << "Shoot Error (flywheels not at speed before timeout)"<<std::endl;
+			//return true;
+		//}
+		if(timed_out && Robot::shooter->IsAtSpeed()){
 			PushBall();
 		}
 		break;
@@ -123,6 +123,7 @@ void ShootBall::End() {
 	elapsed_time=TimeSinceInitialized();
 	std::cout<< elapsed_time << " ShootBall End"<<std::endl;
 	Robot::shooter->DisableFlywheels();
+	Robot::holder->SetPushHoldSpeed(0.0);
 	Robot::holder->PushBall(false);
 }
 // Called when another command which requires one or more of the same

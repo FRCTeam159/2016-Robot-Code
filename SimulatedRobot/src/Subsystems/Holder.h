@@ -19,6 +19,7 @@ class Holder: public Subsystem {
 
 	bool gateopen=false;
 	bool initialized=false;
+	double push_hold_speed;
 
 	void Init();
 	void InitDefaultCommand();
@@ -41,6 +42,7 @@ public:
 	void Initialize();
 	void Log();
 	void Execute();
+	void SetPushHoldSpeed(double d);
 };
 
 #endif /* SRC_SUBSYSTEMS_HOLDER_H_ */

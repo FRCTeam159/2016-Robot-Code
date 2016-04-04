@@ -7,7 +7,6 @@
 
 #include <Commands/ToggleMode.h>
 #include "Robot.h"
-#include "OI.h"
 
 ToggleMode::ToggleMode()  : Command("ToggleMode"){
 	//Requires(Robot::oi.get());
@@ -17,16 +16,20 @@ ToggleMode::ToggleMode()  : Command("ToggleMode"){
 }
 // Called just before this Command runs the first time
 void ToggleMode::Initialize() {
-	bool old_state=OI::GetMode();
-	if(old_state==OI::SHOOTING)
-		OI::SetMode(OI::LOADING);
+	int old_state=OI::GetMode();
+	if(old_state==SHOOTING)
+		Robot::SetMode(LOADING);
 	else
-		OI::SetMode(OI::SHOOTING);
-	bool new_state=OI::GetMode();
-	if(new_state==OI::SHOOTING)
+		Robot::SetMode(SHOOTING);
+	int new_state=OI::GetMode();
+	if(new_state==SHOOTING){
 		std::cout << "Changing Mode to Shooting"<<std::endl;
-	else
+		Robot::loader->SetLoading(false);
+	}
+	else{
 		std::cout << "Changing Mode to Loading"<<std::endl;
+		Robot::loader->SetLoading(true);
+	}
 
 	last_state=new_state;
 }

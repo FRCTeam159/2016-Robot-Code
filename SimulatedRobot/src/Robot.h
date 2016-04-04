@@ -20,18 +20,7 @@
 #include "OI.h"
 
 class Robot: public IterativeRobot {
-public:
-	static int mode;
-
-	static std::shared_ptr<DriveTrain> drivetrain;
-	static std::shared_ptr<Holder> holder;
-	static std::shared_ptr<Shooter> shooter;
-	static std::shared_ptr<Loader> loader;
-	static std::shared_ptr<OI> oi;
-
-	static std::unique_ptr<Autonomous> autonomous;
-
-private:
+	private:
 	LiveWindow *lw = LiveWindow::GetInstance();
 	void RobotInit();
 	void AutonomousInit();
@@ -41,7 +30,15 @@ private:
 	void TestPeriodic();
 	void DisabledInit();
 	void DisabledPeriodic();
-
+public:
+	static std::shared_ptr<DriveTrain> drivetrain;
+	static std::shared_ptr<Holder> holder;
+	static std::shared_ptr<Shooter> shooter;
+	static std::shared_ptr<Loader> loader;
+	static std::shared_ptr<OI> oi;
+	static std::unique_ptr<Autonomous> autonomous;
+	static void SetMode(int m);
+	static int GetMode();
 };
 
 

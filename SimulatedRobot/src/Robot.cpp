@@ -24,7 +24,7 @@ void Robot::RobotInit() {
 	//SmartDashboard::PutData(drivetrain.get());
 	//SmartDashboard::PutData(holder.get());
 	//SmartDashboard::PutData(shooter.get());
-	OI::SetMode(OI::SHOOTING);
+	OI::SetMode(SHOOTING);
 }
 
 void Robot::AutonomousInit() {
@@ -78,3 +78,15 @@ void Robot::TestPeriodic() {
 }
 
 START_ROBOT_CLASS(Robot);
+
+void Robot::SetMode(int m) {
+	OI::SetMode(m);
+	if(m==LOADING)
+		drivetrain->SetReverseDriving(true);
+	else
+		drivetrain->SetReverseDriving(false);
+}
+
+int Robot::GetMode() {
+	return OI::GetMode();
+}

@@ -8,7 +8,6 @@
 #ifndef SRC_SUBSYSTEMS_LOADER_H_
 #define SRC_SUBSYSTEMS_LOADER_H_
 
-//#include <Commands/Subsystem.h>
 #include "WPILib.h"
 #include "Subsystems/GPMotor.h"
 
@@ -21,9 +20,13 @@ class Loader: public Subsystem, public PIDSource {
 	double angle=0;
 	double max_angle=80;
 	double min_angle=0;
+	double roller_speed=0;
+
 	bool rollers_on=false;
-	bool at_limit=false;
 	bool initialized=false;
+	bool loading=false;
+	bool cancelling=false;
+
 	void Init();
 	void Disable();
 
@@ -35,26 +38,27 @@ public:
 
 	void SetLifterAngle(double a);
 	double GetLifterAngle();
-	bool LifterAtTargetAngle();
+	bool LifterIsAtTargetAngle();
 	bool LifterAtLowerLimit();
 
 	void SpinRollers(bool b);
-	void TurnRollersOff();
+	void StopRollers();
 	bool RollersAreOn();
 
 	void AutonomousInit();
 	void TeleopInit();
 	void DisabledInit();
 
-	void GoToLowerLimitSwitch();
+	void GoToZeroLimitSwitch();
 	void SetLow();
-	void SetMed();
-	void SetHigh();
-	void SetMax();
+	void LoadBall();
 	bool IsInitialized();
 	void SetInitialized();
 	void Initialize();
-	bool TestIsInitialized();
+	void Execute();
+	void CancelLoad();
+	bool Loading();
+	void SetLoading(bool b);
 
 };
 

@@ -11,19 +11,20 @@
 #include <Commands/Command.h>
 
 class LoadBall: public Command {
+	enum {
+		LOAD,LOW,CANCEL
+	};
 	int state;
 	double elapsed_time;
-	void FindLow();
 	void SetLow();
-	void SetMedium();
-	void SetHigh();
+	void SetLoad();
 public:
 	LoadBall();
 	void Initialize();
 	void Execute() {}
 	bool IsFinished();
 	void End();
-	void Interrupted() {End();}
+	void Interrupted();
 };
 
 #endif /* SRC_COMMANDS_LOADBALL_H_ */

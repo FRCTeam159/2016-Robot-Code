@@ -8,9 +8,9 @@
 #include <Subsystems/Holder.h>
 #include "Assignments.h"
 
-#define GATEMOTORSPEED 0.2
+#define GATEMOTORSPEED 0.1
 #define PUSHMOTORSPEED 1.0
-#define PUSHHOLDSPEED 0.1
+#define PUSHHOLDSPEED 0.02
 
 #define BALLDETECTVALUE 0.5
 
@@ -19,6 +19,7 @@ Holder::Holder() : Subsystem("Holder"),
 	lowerLimit(GATE_MIN),upperLimit(GATE_MAX),ballSensor(BALL_SENSOR)
 {
 	std::cout<<"New BallHolder("<<HOLDER_GATE<<","<<HOLDER_PUSH<<")"<<std::endl;
+	push_hold_speed=0;
 	Log();
 }
 
@@ -86,7 +87,7 @@ void Holder::PushBall(bool t){
 	if(t)
 		pushMotor.Set(PUSHMOTORSPEED);
 	else
-		pushMotor.Set(PUSHHOLDSPEED);
+		pushMotor.Set(push_hold_speed);
 }
 
 bool Holder::IsInitialized() {
@@ -120,6 +121,16 @@ void Holder::Execute() {
 	}
 	else if(IsBallPresent()){
 		gateMotor.Set(GATEMOTORSPEED);
-		pushMotor.Set(PUSHHOLDSPEED);
+		pushMotor.Set(push_hold_speed);
 	}
+	else{
+		if(!IsGateClosed())
+			gateMotor.Set(-GATEMOTORSPEED);
+		else
+			gateMotor.Set(0);
+	}
+}
+
+void Holder::SetPushHoldSpeed(double d) {
+	push_hold_speed=d;
 }

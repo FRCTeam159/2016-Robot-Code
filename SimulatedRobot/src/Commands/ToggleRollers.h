@@ -20,7 +20,7 @@ class ToggleRollers: public Command {
 public:
 	ToggleRollers();
 	void Initialize();
-	void Execute() {}
+	void Execute();
 	bool IsFinished();
 	void End();
 	void Interrupted() { End();}

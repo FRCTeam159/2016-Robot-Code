@@ -1,6 +1,5 @@
 /.metadata
 /Debug
 /linux_simulate
-/.settings
-*.settings.xml
+*language.settings.xml
 

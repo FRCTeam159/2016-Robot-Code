@@ -17,7 +17,7 @@ public:
 	void Execute();
 	bool IsFinished();
 	void End();
-	void Interrupted() {End();}
+	void Interrupted();
 };
 
 #endif /* SRC_COMMANDS_EXECHOLDER_H_ */

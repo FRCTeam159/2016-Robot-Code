@@ -5,19 +5,19 @@
  *      Author: alpiner
  */
 
-#ifndef SRC_COMMANDS_INITLOADER_H_
-#define SRC_COMMANDS_INITLOADER_H_
+#ifndef SRC_COMMANDS_EXECLOADER_H_
+#define SRC_COMMANDS_EXECLOADER_H_
 
 #include <Commands/Command.h>
 
-class InitLoader: public Command {
+class ExecLoader: public Command {
 public:
-	InitLoader();
+	ExecLoader();
 	void Initialize();
 	void Execute();
 	bool IsFinished();
 	void End();
-	void Interrupted() {End();}
+	void Interrupted();
 };
 
-#endif /* SRC_COMMANDS_INITLOADER_H_ */
+#endif /* SRC_COMMANDS_EXECLOADER_H_ */
