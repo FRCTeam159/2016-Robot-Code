@@ -17,9 +17,9 @@ class Holder: public Subsystem {
 	DigitalInput upperLimit;
 	AnalogInput ballSensor;
 
-	bool gateopen=false;
 	bool initialized=false;
 	double push_hold_speed;
+	bool pushRequested=false;
 
 	void Init();
 	void InitDefaultCommand();
@@ -31,7 +31,9 @@ public:
 	bool IsBallPresent();
 	void OpenGate();
 	void CloseGate();
-	void PushBall(bool);
+	void PushBall();
+	void HoldBall();
+	void RemoveBall();
 
 	void AutonomousInit();
 	void TeleopInit();
@@ -40,9 +42,11 @@ public:
 	bool IsInitialized();
 	void SetInitialized();
 	void Initialize();
+	void Reset();
 	void Log();
 	void Execute();
 	void SetPushHoldSpeed(double d);
+	bool PushRequested() { return pushRequested;}
 };
 
 #endif /* SRC_SUBSYSTEMS_HOLDER_H_ */

@@ -11,6 +11,11 @@
 #include <Commands/Command.h>
 
 class ExecLoader: public Command {
+	int state;
+	void Low();
+	void Load();
+	void Idle();
+
 public:
 	ExecLoader();
 	void Initialize();

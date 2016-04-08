@@ -29,7 +29,7 @@ void StepShooterAngle::Initialize() {
 	double target=current+direction;
 	target=target>=max?max:target;
 	target=target<=min?min:target;
-	double push_speed=0.1*target/max;
+	double push_speed=0.2*target/max;
 
 	std::cout << "Changing Shooter Angle - current:"<< current <<" new:"<<target<<" push:"<<push_speed<<std::endl;
 	Robot::holder->SetPushHoldSpeed(push_speed);

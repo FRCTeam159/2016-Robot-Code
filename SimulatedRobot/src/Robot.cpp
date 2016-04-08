@@ -77,16 +77,22 @@ void Robot::TestPeriodic() {
 	lw->Run();
 }
 
-START_ROBOT_CLASS(Robot);
-
 void Robot::SetMode(int m) {
 	OI::SetMode(m);
-	if(m==LOADING)
+	if(m==LOADING){
+		std::cout << "Changing Mode to Loading"<<std::endl;
+		loader->SpinRollers(true);
+		loader->LoadBall();
 		drivetrain->SetReverseDriving(true);
-	else
+	}
+	else{
+		std::cout << "Changing Mode to Shooting"<<std::endl;
 		drivetrain->SetReverseDriving(false);
+	}
 }
 
 int Robot::GetMode() {
 	return OI::GetMode();
 }
+START_ROBOT_CLASS(Robot);
+

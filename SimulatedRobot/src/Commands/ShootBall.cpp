@@ -13,11 +13,12 @@
 #define RESET_DELAY 0.1
 
 enum {
-	OPENGATE=1,
-	FLYWHEELS_ON=2,
-	PUSHER_ON=3,
-	RESET_ANGLE=4,
+	OPEN_GATE,
+	TURN_FLYWHEELS_ON,
+	PUSH_BALL,
+	RESET,
 };
+
 
 ShootBall::ShootBall() : Command("ShootBall") {
 	Requires(Robot::shooter.get());
@@ -26,108 +27,145 @@ ShootBall::ShootBall() : Command("ShootBall") {
 	elapsed_time=0;
 	std::cout << "new ShootBall"<< std::endl;
 }
-void ShootBall::OpenGate(){
-	state=OPENGATE;
+
+//*********** Utility Functions ******************************************************
+
+#define DEBUG_COMMAND
+#ifdef DEBUG_COMMAND
+#define DEBUG_PRINT(s) \
+	std::cout<<TimeSinceInitialized()<<" ShootBall: " << s <<std::endl
+#else
+  #define DEBUG_PRINT(s)
+#endif
+
+void ShootBall::SetDeltaTimeout(double t) {
+	timing=true;
 	elapsed_time=TimeSinceInitialized();
-	std::cout<< elapsed_time << " Opening gate .."<<std::endl;
-	Robot::holder->OpenGate();
-	SetTimeout(elapsed_time+GATE_DELAY);
+	SetTimeout(elapsed_time+t);
 }
-void ShootBall::TurnFlywheelsOn(){
-	Robot::shooter->EnableFlywheels();
-	state=FLYWHEELS_ON;
-	elapsed_time=TimeSinceInitialized();
-	std::cout<<elapsed_time << " Gate Open, Turning flywheels on .."<<std::endl;
-	SetTimeout(elapsed_time+FLYWHEEL_DELAY);
+
+bool ShootBall::CheckTimeout() {
+	if(IsTimedOut()){
+		timing=false;
+		return true;
+	}
+	return false;
 }
-void ShootBall::PushBall(){
-	state=PUSHER_ON;
-	elapsed_time=TimeSinceInitialized();
-	double speed=Robot::shooter->GetFWSpeed();
-	std::cout<<elapsed_time << " Flywheel speed="<<speed<<" PushBall started .."<<std::endl;
-	Robot::holder->PushBall(true);
-	SetTimeout(elapsed_time+PUSH_DELAY);
-}
-void ShootBall::ResetShooter(){
-	state=RESET_ANGLE;
-	elapsed_time=TimeSinceInitialized();
-	std::cout<<elapsed_time << " Shot Complete, Resetting shooter .."<<std::endl;
-	SetTimeout(elapsed_time+RESET_DELAY);
-	double min=Robot::shooter->GetMinAngle();
-	Robot::shooter->SetTargetAngle(min);
-	Robot::holder->CloseGate();
-}
+//*********** Command Override Functions **************************************************
 
 // Called just before this Command runs the first time
 void ShootBall::Initialize() {
 	elapsed_time=0;
-	std::cout << "ShootBall Started"<<std::endl;
-
+	finished=false;
+	DEBUG_PRINT("Initialize");
 	if(Robot::holder->IsBallPresent()){
 		if(Robot::holder->IsGateClosed())
-			OpenGate();
+			state=OPEN_GATE; // In teleop mode Holder state machine should take care of this
 		else
-			TurnFlywheelsOn();
+			state=TURN_FLYWHEELS_ON;
 	}
-	else
+	else{
 		std::cout << "Shoot Aborted (no ball detected)"<<std::endl;
-}
-
-// Called repeatedly when this Command is scheduled to run
-void ShootBall::Execute() {
-}
-// Make this return true when this Command no longer needs to run execute()
-bool ShootBall::IsFinished() {
-	bool timed_out= IsTimedOut();
-	bool ball_present=Robot::holder->IsBallPresent();
-	bool gate_open=Robot::holder->IsGateOpen();
-
-	switch(state){
-	case OPENGATE:
-		if(timed_out && !gate_open){
-			std::cout << "Shoot Error (gate did not open before timeout)"<<std::endl;
-			return true;
-		}
-		if(gate_open)
-			TurnFlywheelsOn();
-		break;
-	case FLYWHEELS_ON:
-		//if(timed_out){
-			//std::cout << "Shoot Error (flywheels not at speed before timeout)"<<std::endl;
-			//return true;
-		//}
-		if(timed_out && Robot::shooter->IsAtSpeed()){
-			PushBall();
-		}
-		break;
-	case PUSHER_ON:
-		if(timed_out){
-			if(ball_present){
-				std::cout << "Shoot Error (ball did not leave before timeout)"<<std::endl;
-				return true;
-			}
-			else
-				ResetShooter();
-		}
-		break;
-	case RESET_ANGLE:
-		if(timed_out){
-			state=0;
-			return true;
-		}
+		finished=true;
 	}
-	return false;
 }
-// Called once after isFinished returns true
+
+// Called repeatedly while this Command is running
+void ShootBall::Execute() {
+	switch(state){
+	case OPEN_GATE:
+		OpenGate();
+		break;
+	case TURN_FLYWHEELS_ON:
+		TurnFlywheelsOn();
+		break;
+	case PUSH_BALL:
+		PushBall();
+		break;
+	case RESET:
+		Reset();
+	}
+}
+bool ShootBall::IsFinished() {
+	return finished;
+}
 void ShootBall::End() {
-	elapsed_time=TimeSinceInitialized();
-	std::cout<< elapsed_time << " ShootBall End"<<std::endl;
+	DEBUG_PRINT("End");
 	Robot::shooter->DisableFlywheels();
 	Robot::holder->SetPushHoldSpeed(0.0);
-	Robot::holder->PushBall(false);
 }
-// Called when another command which requires one or more of the same
-// subsystems is scheduled to run
 void ShootBall::Interrupted() {
-	End();
+	DEBUG_PRINT("Interrupted");
+	Robot::shooter->DisableFlywheels();
+	Robot::holder->SetPushHoldSpeed(0.0);
 }
+
+//*********** State Machine Functions ******************************************************
+//==========================================================================================
+// ShootBall::OpenGate()
+//==========================================================================================
+// - Pinch the Ball
+//==========================================================================================
+void ShootBall::OpenGate(){
+	Robot::holder->OpenGate();
+	if(Robot::holder->IsGateOpen()){
+		DEBUG_PRINT("Gate Open ");
+		state=TURN_FLYWHEELS_ON;
+	}
+
+}
+//==========================================================================================
+// ShootBall::TurnFlywheelsOn()
+//==========================================================================================
+// - Turn on the flywheels
+// - Wait for a minimum delay
+// - Wait until flywheels are at target speed
+// - Then Push the ball
+//==========================================================================================
+void ShootBall::TurnFlywheelsOn(){
+	Robot::holder->HoldBall();
+	Robot::shooter->EnableFlywheels();
+	if(Robot::shooter->IsAtSpeed()){
+		DEBUG_PRINT("Flywheels at speed, PushBall started ..");
+		state=PUSH_BALL;
+	}
+}
+
+//==========================================================================================
+// ShootBall::PushBall()
+//==========================================================================================
+// - Send a Push request to the Holder
+// - Wait a minimum period to see if the ball has left
+// - If the ball is still present assume the shot failed and the ball is stuck and exit
+//   Assume the holder state machine will try to eject the ball
+// - Otherwise, assume the shot succeeded and reset the shooter
+//==========================================================================================
+void ShootBall::PushBall(){
+	Robot::holder->PushBall();
+	if(!Timing())
+		SetDeltaTimeout(PUSH_DELAY);
+	else if(CheckTimeout()){
+		if(Robot::holder->IsBallPresent()){ // Error
+			DEBUG_PRINT("Shoot Error (ball did not leave before timeout) - Exiting");
+			finished=true;
+		}
+		else
+			state=RESET;
+	}
+}
+
+//==========================================================================================
+// ShootBall::Reset()
+//==========================================================================================
+// - Reset the shooter and holder
+//==========================================================================================
+void ShootBall::Reset(){
+	DEBUG_PRINT("Shot Complete - Resetting Subsystems");
+	//double min=Robot::shooter->GetMinAngle();
+	//Robot::shooter->SetTargetAngle(min);
+	Robot::shooter->Reset();
+	Robot::holder->Reset();
+	finished=true;
+}
+
+

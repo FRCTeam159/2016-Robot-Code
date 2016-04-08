@@ -4,25 +4,25 @@
  *  Created on: Feb 19, 2016
  *      Author: alpiner
  */
+#include <Commands/ExecShooter.h>
 #include "Assignments.h"
 #include <Subsystems/Shooter.h>
-#include <Commands/InitShooter.h>
 
 #define FWSPEED 300
-#define FP 0.001
+#define FP 0.002
 #define FI 0.00001
 #define FD 0.0001
 
-#define AP 0.08
-#define AI 0.001
+#define AP 0.02
+#define AI 0.0005
 #define AD 0.3
 #define FVMAX 1000
 #define FVMIN -1000
 #define AMIN 0
 #define AMAX 70
-#define MAX_SPEED_ERROR 10
+#define MAX_SPEED_ERROR 50
 #define MAX_ANGLE_ERROR 1
-#define SETZEROSPEED -0.6
+#define GOTO_LOWER_SPEED -0.6
 
 Shooter::Shooter() : Subsystem("Shooter"),
 	angleMotor(SHOOTER_ANGLE,false),
@@ -69,13 +69,21 @@ void Shooter::Log() {
 }
 
 void Shooter::InitDefaultCommand() {
-	SetDefaultCommand(new InitShooter());
+	SetDefaultCommand(new ExecShooter());
+}
+
+void Shooter::Execute() {
+	Log();
+	if(!initialized){
+		angleMotor.SetVoltage(GOTO_LOWER_SPEED);
+		if(AtLowerLimit())
+			SetInitialized();
+	}
 }
 
 double Shooter::PIDGet() {
 	return accel.GetAngle();
 }
-
 
 void Shooter::AutonomousInit(){
 	std::cout << "Shooter::AutonomousInit"<<std::endl;
@@ -102,7 +110,6 @@ void Shooter::LogAngle(double d) {
 
 // Initialize
 void Shooter::Init(){
-	//angleMotor.SetDebug(2);
 	initialized=false;
 	angleMotor.SetTolerance(MAX_ANGLE_ERROR);
 	angleMotor.ClearIaccum();
@@ -111,6 +118,10 @@ void Shooter::Init(){
 	leftFWMotor.SetVelocity(0);
 	rightFWMotor.SetVelocity(0);
 	Log();
+}
+
+void Shooter::Reset(){
+	Disable();
 }
 
 void Shooter::Disable(){
@@ -125,7 +136,6 @@ void Shooter::Disable(){
 
 	angle=0;
 	initialized=false;
-
 	Log();
 }
 // Set the shooter angle
@@ -135,6 +145,7 @@ void Shooter::SetTargetAngle(double a){
 	angle=a;
 	angleMotor.SetDistance(angle);
 	angleMotor.EnablePID();
+	//angleMotor.SetDebug(1);
 }
 
 // Set the shooter angle
@@ -204,7 +215,7 @@ bool Shooter::IsInitialized() {
 }
 
 void Shooter::GoToLowerLimitSwitch() {
-	angleMotor.SetVoltage(SETZEROSPEED);
+	angleMotor.SetVoltage(GOTO_LOWER_SPEED);
 }
 
 bool Shooter::AtLowerLimit() {
@@ -216,7 +227,8 @@ bool Shooter::TestIsInitialized() {
 		return true;
 	}
 	else{
-		angleMotor.SetVoltage(SETZEROSPEED);
+		angleMotor.SetVoltage(GOTO_LOWER_SPEED);
 		return false;
 	}
 }
+

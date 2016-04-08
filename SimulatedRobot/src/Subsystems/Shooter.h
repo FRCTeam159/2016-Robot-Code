@@ -58,6 +58,8 @@ public:
 	void SetInitialized();
 
 	bool TestIsInitialized();
+	void Execute();
+	void Reset();
 
 };
 

@@ -5,19 +5,19 @@
  *      Author: alpiner
  */
 
-#ifndef SRC_COMMANDS_INITSHOOTER_H_
-#define SRC_COMMANDS_INITSHOOTER_H_
+#ifndef SRC_COMMANDS_EXECSHOOTER_H_
+#define SRC_COMMANDS_EXECSHOOTER_H_
 
 #include <Commands/Command.h>
 
-class InitShooter: public Command {
+class ExecShooter: public Command {
 public:
-	InitShooter();
+	ExecShooter();
 	void Initialize();
 	void Execute();
 	bool IsFinished();
 	void End();
-	void Interrupted() {End();}
+	void Interrupted();
 };
 
-#endif /* SRC_COMMANDS_INITSHOOTER_H_ */
+#endif /* SRC_COMMANDS_EXECSHOOTER_H_ */

@@ -8,11 +8,15 @@
 #include <Subsystems/Holder.h>
 #include "Assignments.h"
 
-#define GATEMOTORSPEED 0.1
-#define PUSHMOTORSPEED 1.0
-#define PUSHHOLDSPEED 0.02
+#define GATE_OPEN_SPEED 0.25
+#define GATE_REMOVE_SPEED -0.5
+#define GATE_CLOSE_SPEED -0.3
 
-#define BALLDETECTVALUE 0.5
+#define PUSH_SPEED 1.0
+#define PUSH_HOLD_SPEED 0.02
+#define PUSH_REMOVE_SPEED -0.25
+
+#define BALL_DETECT_VALUE 0.5
 
 Holder::Holder() : Subsystem("Holder"),
 	gateMotor(HOLDER_GATE,false),pushMotor(HOLDER_PUSH,false),
@@ -59,37 +63,38 @@ bool Holder::IsGateClosed(){
 }
 // ===========================================================================================================
 // Holder::IsBallPresent
-// ===========================================================================================================
 // - return true if the ball is in the holder
-// - Problems in simulation mode
-//   o for Gazebo simulation need to use an ultrasonic sensor (because IRSensor isn't supported yet)
-//   o but sensor doesn't detect other surfaces of the robot (i.e. need some external object)
-//   o also, if no object is detected the value returned is not changed from what was last detected (bug?)
-//   o A problem is that if the ball is initially in the holder the sensor returns some value (e.g. 2.9)
-//     but if the sensor is at a low angle (e.g. 0) the value is unchanged when the ball is ejected
-//     (because no other object is detected when the ball isn't present)
-//   o The workaround was to point the sensor downward and increase the radius so that it detects
-//     the ground plane when the ball isn't present
+// - note: using sonar in simulation
 // ===========================================================================================================
 bool Holder::IsBallPresent(){
 	double distance=ballSensor.GetAverageVoltage();
 	//std::cout<<"ballSensor:"<<distance<<std::endl;
-	return distance<BALLDETECTVALUE?true:false;
+	return distance<BALL_DETECT_VALUE?true:false;
 }
 
 void Holder::OpenGate(){
-	gateMotor.Set(GATEMOTORSPEED);
+	gateMotor.Set(GATE_OPEN_SPEED);
 }
 void Holder::CloseGate(){
-	gateMotor.Set(-GATEMOTORSPEED);
-}
-void Holder::PushBall(bool t){
-	if(t)
-		pushMotor.Set(PUSHMOTORSPEED);
+	if(!IsGateClosed())
+		gateMotor.Set(GATE_CLOSE_SPEED);
 	else
-		pushMotor.Set(push_hold_speed);
+		gateMotor.Set(0);
 }
 
+void Holder::PushBall(){
+	pushMotor.Set(PUSH_SPEED);
+	pushRequested=true;
+}
+void Holder::HoldBall(){
+	pushRequested=false;
+	gateMotor.Set(GATE_OPEN_SPEED);
+	pushMotor.Set(push_hold_speed);
+}
+void Holder::RemoveBall(){
+	gateMotor.Set(GATE_REMOVE_SPEED);
+	pushMotor.Set(PUSH_REMOVE_SPEED);
+}
 bool Holder::IsInitialized() {
 	return initialized;
 }
@@ -101,13 +106,23 @@ void Holder::SetInitialized() {
 
 void Holder::Initialize() {
 	if(!IsGateClosed())
-		gateMotor.Set(-GATEMOTORSPEED);
+		gateMotor.Set(GATE_CLOSE_SPEED);
+	else
+		gateMotor.Set(0);
 }
 
+void Holder::Reset(){
+	initialized=false;
+	gateMotor.Set(0);
+	pushMotor.Set(0);
+}
+void Holder::SetPushHoldSpeed(double d) {
+	push_hold_speed=d;
+}
 // ===========================================================================================================
 // Holder::Execute
 // ===========================================================================================================
-// Called repeatedly from Default Command (ExecHolder) in Teleop Mode
+// Called repeatedly from Default Command (ExecHolder) while in Teleop Mode
 // - if !initialized, goto lower limit switch (close gate)
 // - else if ball is present pinch ball (open gate)
 // ===========================================================================================================
@@ -117,20 +132,8 @@ void Holder::Execute() {
 		if(IsGateClosed())
 			SetInitialized();
 		else
-			gateMotor.Set(-GATEMOTORSPEED);
-	}
-	else if(IsBallPresent()){
-		gateMotor.Set(GATEMOTORSPEED);
-		pushMotor.Set(push_hold_speed);
-	}
-	else{
-		if(!IsGateClosed())
-			gateMotor.Set(-GATEMOTORSPEED);
-		else
-			gateMotor.Set(0);
+			gateMotor.Set(GATE_CLOSE_SPEED);
 	}
 }
 
-void Holder::SetPushHoldSpeed(double d) {
-	push_hold_speed=d;
-}
+

@@ -22,14 +22,5 @@ void ToggleMode::Initialize() {
 	else
 		Robot::SetMode(SHOOTING);
 	int new_state=OI::GetMode();
-	if(new_state==SHOOTING){
-		std::cout << "Changing Mode to Shooting"<<std::endl;
-		Robot::loader->SetLoading(false);
-	}
-	else{
-		std::cout << "Changing Mode to Loading"<<std::endl;
-		Robot::loader->SetLoading(true);
-	}
-
 	last_state=new_state;
 }

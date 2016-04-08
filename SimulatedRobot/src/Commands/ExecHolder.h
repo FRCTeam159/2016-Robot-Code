@@ -11,6 +11,23 @@
 #include <Commands/Command.h>
 
 class ExecHolder: public Command {
+private:
+	int state;
+	double elapsed_time;
+	bool timing=false;
+	void SetDeltaTimeout(double t);
+	bool CheckTimeout();
+	bool Timing() { return timing;}
+
+	void FindZero();
+	void WaitForBallToEnter();
+	void GoToForwardLimit();
+	void WaitForPushRequest();
+	void WaitForBallToLeave();
+	void GoToReverseLimit();
+	void RemoveBall();
+	void PushError();
+
 public:
 	ExecHolder();
 	void Initialize();

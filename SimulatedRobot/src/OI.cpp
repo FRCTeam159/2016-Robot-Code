@@ -10,10 +10,9 @@
 #include "Commands/ShootBall.h"
 #include "Commands/StepShooterAngle.h"
 #include "Commands/StepLoaderAngle.h"
-#include "Commands/LoadBall.h"
 #include "Commands/ToggleGate.h"
 #include "Commands/ToggleRollers.h"
-#include <Commands/CancelLoad.h>
+#include <Commands/ToggleLoad.h>
 
 int OI::mode=SHOOTING;
 
@@ -50,11 +49,10 @@ OI::OI() :
     downBtnCmnd1.WhenPressed(new ToggleGate());
 
     // case 1: LOADER mode
-    upBtnCmnd2.WhenPressed(new LoadBall());
+    upBtnCmnd2.WhenPressed(new ToggleLoad());
     rightBtnCmnd2.WhenPressed(new StepLoaderAngle(5));
     leftBtnCmnd2.WhenPressed(new StepLoaderAngle(-5));
-    downBtnCmnd2.WhenPressed(new CancelLoad()); // cancel load
-    //downBtnCmnd2.WhenPressed(new ToggleRollers()); // cancel load
+    downBtnCmnd2.WhenPressed(new ToggleRollers());
 }
 
 Joystick* OI::GetJoystick() {

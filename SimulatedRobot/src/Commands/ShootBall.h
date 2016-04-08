@@ -11,12 +11,21 @@
 #include <Commands/Command.h>
 
 class ShootBall: public Command {
+private:
 	int state;
 	double elapsed_time;
+	bool timing=false;
+	bool finished=false;
+
 	void OpenGate();
 	void TurnFlywheelsOn();
 	void PushBall();
-	void ResetShooter();
+	void Reset();
+
+	void SetDeltaTimeout(double t);
+	bool Timing() { return timing;}
+	bool CheckTimeout();
+
 public:
 	ShootBall();
 	void Initialize();

@@ -57,6 +57,8 @@ public:
 	void Initialize();
 	void Execute();
 	void CancelLoad();
+	void ExecLoad();
+
 	bool Loading();
 	void SetLoading(bool b);
 

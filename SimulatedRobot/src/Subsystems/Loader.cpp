@@ -12,7 +12,7 @@
 #define EXPEL_ROLLER_SPEED 0.5
 
 #define SETZEROSPEED -0.2
-#define LIFT_ASSIST_SPEED 0.3
+#define LIFT_ASSIST_SPEED 0.2
 
 #define MED_ANGLE 6
 #define HIGH_ANGLE 12
@@ -71,8 +71,9 @@ void Loader::Execute() {
 // ===========================================================================================================
 void Loader::SetLow() {
 	StopRollers();
-	liftMotor.Disable();
+	liftMotor.Disable(); // disable PID control
 	GoToZeroLimitSwitch();
+	loading=false;
 }
 
 // ===========================================================================================================
@@ -83,16 +84,20 @@ void Loader::LoadBall() {
 	liftMotor.Disable();
 	liftMotor.Set(LIFT_ASSIST_SPEED);
 	roller_speed=LOAD_ROLLER_SPEED;
+	loading=true;
+	ExecLoad();
 }
 
+void Loader::ExecLoad() {
+	liftMotor.Set(LIFT_ASSIST_SPEED);
+	SpinRollers(true);
+}
 void Loader::CancelLoad()
 {
 	SetLow();
-//	liftMotor.SetSetpoint(HIGH_ANGLE);
-//	roller_speed=EXPEL_ROLLER_SPEED;
-//	SpinRollers(false);
-//	cancelling=true;
+	cancelling=true;
 }
+
 bool Loader::LifterAtLowerLimit() {
 	return lowerLimit.Get();
 }
@@ -110,6 +115,7 @@ void Loader::Disable(){
 	rollerMotor.Disable();
 	initialized=false;
 	roller_speed=0;
+	loading=false;
 	Log();
 }
 
@@ -161,7 +167,6 @@ void Loader::SpinRollers(bool forward) {
 	else
 		rollerMotor.Set(-roller_speed);
 	rollers_on=true;
-	liftMotor.Set(LIFT_ASSIST_SPEED);
 }
 
 bool Loader::RollersAreOn() {
@@ -169,7 +174,10 @@ bool Loader::RollersAreOn() {
 }
 
 void Loader::GoToZeroLimitSwitch() {
-	liftMotor.SetVoltage(SETZEROSPEED);
+	if(!LifterAtLowerLimit())
+		liftMotor.SetVoltage(SETZEROSPEED);
+	else
+		liftMotor.SetVoltage(0);
 }
 
 void Loader::SetInitialized() {
