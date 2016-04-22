@@ -21,11 +21,11 @@ enum motorIDs {  // PWM or CAN ids
 };
 
 enum dioIDs {  // limit switch ids
-	GATE_MIN     = 0,
-	GATE_MAX     = 1,
-	LOADER_MIN   = 2,
-	LOADER_MAX   = 3,
-	SHOOTER_MIN  = 4,
+	GATE_MIN     = 9,
+	GATE_MAX     = 10,
+	LOADER_MIN   = 21,
+	LOADER_MAX   = 22,
+	SHOOTER_MIN  = 17,
 };
 
 enum AnalogIDs {  // limit switch ids

@@ -8,7 +8,7 @@
 #include "Assignments.h"
 #include <Subsystems/Shooter.h>
 
-#define FWSPEED 300
+#define FWSPEED 100
 #define FP 0.002
 #define FI 0.00001
 #define FD 0.0001
@@ -16,13 +16,17 @@
 #define AP 0.02
 #define AI 0.0005
 #define AD 0.3
-#define FVMAX 1000
-#define FVMIN -1000
 #define AMIN 0
 #define AMAX 70
-#define MAX_SPEED_ERROR 50
+#define MAX_SPEED_ERROR 10
 #define MAX_ANGLE_ERROR 1
 #define GOTO_LOWER_SPEED -0.6
+
+#ifdef SIMULATION
+#define ENCODER_TICKS 360
+#else
+#define ENCODER_TICKS 900
+#endif
 
 Shooter::Shooter() : Subsystem("Shooter"),
 	angleMotor(SHOOTER_ANGLE,false),
@@ -36,19 +40,19 @@ Shooter::Shooter() : Subsystem("Shooter"),
 	max_angle=AMAX; // max elevation (degrees)
 	min_angle=AMIN;
 
-	leftFWMotor.SetInputRange(FVMIN,FVMAX);
-	rightFWMotor.SetInputRange(FVMIN,FVMAX);
 
 	leftFWMotor.SetPID(GPMotor::SPEED, FP, FI, FD);
-	leftFWMotor.SetDistancePerPulse(RPD(1)); // 1 degree = 0.01745 radians
+	leftFWMotor.SetDistancePerPulse(1.0/ENCODER_TICKS); // 1 degree = 0.01745 radians
 	leftFWMotor.SetTolerance(MAX_SPEED_ERROR);
 
 	rightFWMotor.SetPID(GPMotor::SPEED,  FP, FI, FD);
-	rightFWMotor.SetDistancePerPulse(RPD(1));
+	rightFWMotor.SetDistancePerPulse(1.0/ENCODER_TICKS);
 	rightFWMotor.SetTolerance(MAX_SPEED_ERROR);
 
 	flywheel_target=FWSPEED;
 	flywheel_speed=0;
+
+	//leftFWMotor.SetDebug(1);
 
 	angle=0;
 	angleMotor.SetPID(AP, AI, AD,this);
@@ -96,9 +100,9 @@ void Shooter::TeleopInit(){
 void Shooter::DisabledInit(){
 	std::cout << "Shooter::DisabledInit"<<std::endl;
 	Disable();
-	angleMotor.SetDebug(0);
-	leftFWMotor.SetDebug(0);
-	rightFWMotor.SetDebug(0);
+	//angleMotor.SetDebug(0);
+	//leftFWMotor.SetDebug(0);
+	//rightFWMotor.SetDebug(0);
 }
 
 void Shooter::LogSpeed(double d) {

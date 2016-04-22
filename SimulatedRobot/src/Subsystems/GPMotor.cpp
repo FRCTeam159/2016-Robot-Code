@@ -145,7 +145,10 @@ double GPMotor::ReturnPIDInput(){
 	}
 }
 double GPMotor::PIDGet(){
-	return ReturnPIDInput();
+	double d= ReturnPIDInput();
+	//if(IsEnabled() && (debug & 1))
+	//	std::cout<<id<<" PIDGet:"<<d<<" setpoint:"<<pid->GetSetpoint()<<std::endl;
+	return d;
 }
 
 void GPMotor::SetSetpoint(double value){
@@ -162,7 +165,7 @@ void GPMotor::SetVelocity(double value){
 #else
 	if(pid)
 		pid->SetSetpoint(value);
-	Talon::Set(value);
+	//Talon::Set(value);
 #endif
 }
 

@@ -117,7 +117,7 @@ void ExecHolder::Execute() {
 //==========================================================================================
 // - Wait for ball to enter
 // - Then delay to give the ball time to settle
-// - Then pinch the ball (goto forward limit)
+// - Then pinch the ball (goto forward limit)z
 //==========================================================================================
 void ExecHolder::WaitForBallToEnter() {
 	Robot::holder->CloseGate();
