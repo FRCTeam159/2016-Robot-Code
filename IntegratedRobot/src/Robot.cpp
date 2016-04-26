@@ -155,7 +155,8 @@ private:
 		mydrive->ConfigForPID();
 		forwardCamera->StartCapture();
 		visionState = 0;
-		loader->SetLow();
+		loader->SetManual();
+		loadingManually = true;
 		holder->TeleopInit(); //configuring for teleop
 		flyWheelOne->SetControlMode(CANTalon::kPercentVbus);
 		flyWheelTwo->SetControlMode(CANTalon::kPercentVbus);
@@ -200,7 +201,7 @@ private:
 			}
 			else if (visionState==GetReverseImage||visionState==SendReverseImage)
 			{
-				if(!(loader->GetState()==Loader::LOW))//loader is doing something
+				if(!((loader->GetState()==Loader::LOW)||loader->GetState()==Loader::MANUAL))//loader is doing something
 					{loader->Cancel();}
 				else
 					{visionState=GetForwardImage;}//switch to forward camera
